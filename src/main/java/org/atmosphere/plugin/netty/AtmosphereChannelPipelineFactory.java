@@ -31,7 +31,7 @@
  *See the License for the specific language governing permissions and
  *limitations under the License.
  */
-package org.atmosphere.plugin.netty.netty;
+package org.atmosphere.plugin.netty;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;

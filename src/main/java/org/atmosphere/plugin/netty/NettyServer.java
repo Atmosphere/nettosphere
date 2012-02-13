@@ -31,8 +31,11 @@
  *See the License for the specific language governing permissions and
  *limitations under the License.
  */
-package org.atmosphere.plugin.netty.netty;
+package org.atmosphere.plugin.netty;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.Executors;
 
@@ -54,12 +57,10 @@ public final class NettyServer {
 	private final ServerBootstrap bootstrap;
 	private final SocketAddress localSocket;
 
-	NettyServer(final ChannelPipelineFactory pipelineFactory,
-			final SocketAddress localSocket) {
+	NettyServer(final ChannelPipelineFactory pipelineFactory,final SocketAddress localSocket) {
 		this.pipelineFactory = pipelineFactory;
 		this.localSocket = localSocket;
 		this.bootstrap = buildBootstrap();
-
 	}
 
 	public void startServer() {
@@ -86,5 +87,14 @@ public final class NettyServer {
 		bootstrap.setPipelineFactory(pipelineFactory);
 		return bootstrap;
 	}
+
+
+    public static void main(String[] args) throws Exception{
+        NettyServer s = new NettyServer(new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler()),  new InetSocketAddress("127.0.0.1", 8080));
+        s.startServer();
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        br.readLine();
+
+    }
 
 }
