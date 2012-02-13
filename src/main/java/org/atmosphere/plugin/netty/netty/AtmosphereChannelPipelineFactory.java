@@ -27,10 +27,10 @@ import static org.jboss.netty.channel.Channels.pipeline;
 class AtmosphereChannelPipelineFactory implements
 		ChannelPipelineFactory {
 
-	private final transient NettyAtmosphereHandler jerseyHandler;
+	private final transient NettyAtmosphereHandler nettyAtmosphereHandler;
 
-	public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler jerseyHandler) {
-		this.jerseyHandler = jerseyHandler;
+	public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler nettyAtmosphereHandler) {
+		this.nettyAtmosphereHandler = nettyAtmosphereHandler;
 	}
 
 	/**
@@ -42,7 +42,7 @@ class AtmosphereChannelPipelineFactory implements
 		final ChannelPipeline pipeline = pipeline();
 		pipeline.addLast("decoder", new HttpRequestDecoder());
 		pipeline.addLast("encoder", new HttpResponseEncoder());
-		pipeline.addLast("jerseyHandler", jerseyHandler);
+		pipeline.addLast("jerseyHandler", nettyAtmosphereHandler);
 		return pipeline;
 	}
 
