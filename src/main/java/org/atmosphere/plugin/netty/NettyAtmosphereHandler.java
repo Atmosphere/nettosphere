@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.util.Collections;
@@ -37,7 +38,10 @@ import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBufferFactory;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -80,13 +84,14 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
+        String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
 
         AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
-        AtmosphereRequest r = requestBuilder.requestURI(requestUri.toURL().toString())
+        AtmosphereRequest r = requestBuilder.requestURI("/")
                 .requestURL(requestUri.toURL().toString())
                 .headers(getHeaders(request))
                 .method(request.getMethod().getName())
-                .contentType(request.getHeaders("Content-Type").get(0))
+                .contentType(ct)
                 .inputStream(new ChannelBufferInputStream(request.getContent()))
                 .build();
 
@@ -127,6 +132,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     private final static class NettyWriter implements AsyncIOWriter {
 
         private final Channel channel;
+        private final HeapChannelBufferFactory bufferFactory = new HeapChannelBufferFactory();
 
         public NettyWriter(Channel channel) {
             this.channel = channel;
@@ -143,6 +149,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,
                     HttpResponseStatus.valueOf(errorCode));
             channel.write(response);
+            channel.close();
         }
 
         @Override
@@ -157,7 +164,8 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
         @Override
         public void write(byte[] data, int offset, int length) throws IOException {
-            channel.write(ByteBuffer.wrap(data, offset, length));
+            channel.write(bufferFactory.getBuffer(data, offset, length));
+            channel.close();
         }
 
         @Override
@@ -196,193 +204,4 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             return Collections.enumeration(initParams.values());
         }
     }
-
-    private final static class NettyServletContext implements ServletContext {
-
-        private final Builder b;
-
-        private NettyServletContext(Builder b) {
-            this.b = b;
-        }
-
-        public final static class Builder {
-
-            private String contextPath = "";
-            private final Map<String, Object> attributes = new HashMap<String, Object>();
-            private final Map<String, String> initParams = new HashMap<String, String>();
-            private String basePath = "/";
-
-            public Builder putAttribute(String s, Object o) {
-                attributes.put(s, o);
-                return this;
-            }
-
-            public Builder contextPath(String s) {
-                this.contextPath = s;
-                return this;
-            }
-
-            public NettyServletContext build() {
-                File f = null;
-                try {
-                    f = new File(".");
-                    f.createNewFile();
-                } catch (IOException e) {
-                    logger.warn("", e);
-                }
-                f.deleteOnExit();
-                basePath = f.getAbsolutePath() + "/";
-                return new NettyServletContext(this);
-            }
-
-        }
-
-        @Override
-        public String getContextPath() {
-            return b.contextPath;
-        }
-
-        @Override
-        public ServletContext getContext(String uripath) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int getMajorVersion() {
-            return 2;
-        }
-
-        @Override
-        public int getMinorVersion() {
-            return 5;
-        }
-
-        @Override
-        public String getMimeType(String file) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Set getResourcePaths(String path) {
-            File[] files = new File(b.basePath + path).listFiles();
-            Set<String> s = new HashSet<String>();
-            if (files != null) {
-                for (File f : files) {
-                    if (f.isDirectory()) {
-                        Set inner = getResourcePaths(f.getAbsolutePath());
-                        s.addAll(inner);
-                    } else {
-                        s.add(f.getAbsolutePath());
-                    }
-                }
-            }
-            return s;
-        }
-
-        @Override
-        public URL getResource(String path) throws MalformedURLException {
-            return URI.create("file://" + b.basePath + path).toURL();
-        }
-
-        @Override
-        public InputStream getResourceAsStream(String path) {
-            try {
-                return new FileInputStream(new File(URI.create("file://" + b.basePath + path)));
-            } catch (FileNotFoundException e) {
-                logger.trace("", e);
-            }
-            return null;
-        }
-
-        @Override
-        public RequestDispatcher getRequestDispatcher(String path) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public RequestDispatcher getNamedDispatcher(String name) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Servlet getServlet(String name) throws ServletException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Enumeration getServlets() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Enumeration getServletNames() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void log(String msg) {
-            logger.info(msg);
-        }
-
-        @Override
-        public void log(Exception exception, String msg) {
-            logger.error(msg, exception);
-        }
-
-        @Override
-        public void log(String message, Throwable throwable) {
-            logger.error(message, throwable);
-        }
-
-        @Override
-        public String getRealPath(String path) {
-            try {
-                return URI.create("file://" + b.basePath + path).toURL().toString();
-            } catch (MalformedURLException e) {
-                logger.error("", e);
-            }
-            return null;
-        }
-
-        @Override
-        public String getServerInfo() {
-            return "Netty-Atmosphere/1.0";
-        }
-
-        @Override
-        public String getInitParameter(String name) {
-            return b.initParams.get(name);
-        }
-
-        @Override
-        public Enumeration getInitParameterNames() {
-            return Collections.enumeration(b.initParams.values());
-        }
-
-        @Override
-        public Object getAttribute(String name) {
-            return b.attributes.get(name);
-        }
-
-        @Override
-        public Enumeration getAttributeNames() {
-            return Collections.enumeration(b.attributes.keySet());
-        }
-
-        @Override
-        public void setAttribute(String name, Object object) {
-            b.attributes.put(name, object);
-        }
-
-        @Override
-        public void removeAttribute(String name) {
-            b.attributes.remove(name);
-        }
-
-        @Override
-        public String getServletContextName() {
-            return "Atmosphere";
-        }
-    }
-
 }
