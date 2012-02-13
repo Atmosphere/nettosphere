@@ -13,9 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-/**
- * NOTE: This code was inspired/duplicated from APL 2 project called https://github.com/devsprint/jersey-netty-container
- */
 package org.atmosphere.plugin.netty.netty;
 
 import java.io.IOException;
