@@ -82,8 +82,9 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
-            AtmosphereResponse.Builder responseBuilder = new AtmosphereResponse.Builder();
-            responseBuilder.asyncIOWriter(new NettyWriter(context.getChannel()))
+            AtmosphereResponse.Builder responseBuilder = new AtmosphereResponse.Builder()
+                    .writeHeader(true)
+                    .asyncIOWriter(new NettyWriter(context.getChannel()))
                     .atmosphereRequest(r);
 
             as.doCometSupport(r, responseBuilder.build());
