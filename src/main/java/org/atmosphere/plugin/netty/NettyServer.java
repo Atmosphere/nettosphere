@@ -13,24 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-/**
- * NOTE: This code was inspired/duplicated from APL 2 project called https://github.com/devsprint/jersey-netty-container
- */
-/**
- * Copyright (C) 2011 Gabriel Ciuloaica (gciuloaica@gmail.com)
- *
- *Licensed under the Apache License, Version 2.0 (the "License");
- *you may not use this file except in compliance with the License.
- *You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *Unless required by applicable law or agreed to in writing, software
- *distributed under the License is distributed on an "AS IS" BASIS,
- *WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *See the License for the specific language governing permissions and
- *limitations under the License.
- */
 package org.atmosphere.plugin.netty;
 
 import java.io.BufferedReader;
@@ -51,26 +33,26 @@ import org.slf4j.LoggerFactory;
 
 public final class NettyServer {
 
-	private static final Logger LOG = LoggerFactory.getLogger(NettyServer.class);
+	private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
 	private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
 	private final ChannelPipelineFactory pipelineFactory;
 	private final ServerBootstrap bootstrap;
 	private final SocketAddress localSocket;
 
-	NettyServer(final ChannelPipelineFactory pipelineFactory,final SocketAddress localSocket) {
-		this.pipelineFactory = pipelineFactory;
-		this.localSocket = localSocket;
+	public NettyServer(Config config) {
+		this.pipelineFactory = new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler(config));
+		this.localSocket = new InetSocketAddress(config.host(), config.port());
 		this.bootstrap = buildBootstrap();
 	}
 
 	public void startServer() {
-		LOG.info("Starting server....");
+		logger.info("Starting server....");
 		final Channel serverChannel = bootstrap.bind(localSocket);
 		ALL_CHANNELS.add(serverChannel);
 	}
 
 	public void stopServer() {
-		LOG.info("Stopping server....");
+		logger.info("Stopping server....");
 		final ChannelGroupFuture future = ALL_CHANNELS.close();
 		future.awaitUninterruptibly();
 		bootstrap.getFactory().releaseExternalResources();
@@ -90,11 +72,12 @@ public final class NettyServer {
 
 
     public static void main(String[] args) throws Exception{
-        NettyServer s = new NettyServer(new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler()),  new InetSocketAddress("127.0.0.1", 8080));
+        Config.Builder b = new Config.Builder();
+        b.path(args[0]).port(8080).host("127.0.0.1");
+        NettyServer s = new NettyServer(b.build());
         s.startServer();
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         br.readLine();
-
     }
 
 }
