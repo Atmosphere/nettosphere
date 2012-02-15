@@ -20,6 +20,7 @@ import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
+import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
@@ -93,6 +94,8 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .writeHeader(true)
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
+                    .header("Server", "Atmosphere-" + Version.getRawVersion())
+                    .header("Transfer-Encoding", "chunked")
                     .atmosphereRequest(r);
 
             as.doCometSupport(r, responseBuilder.build());
