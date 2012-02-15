@@ -19,12 +19,11 @@ import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
-import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -48,7 +47,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
@@ -77,7 +80,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
             String url = requestUri.toURL().toString();
             int l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
-            final Map<String,Object> attributes = new HashMap<String, Object>();
+            final Map<String, Object> attributes = new HashMap<String, Object>();
 
             AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
             AtmosphereRequest r = requestBuilder.requestURI(url.substring(l))
@@ -89,23 +92,18 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
-            NettyWriter w = new NettyWriter(context.getChannel());
+            FutureWriter w = new FutureWriter(context.getChannel());
             AtmosphereResponse.Builder responseBuilder = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
                     .header("Server", "Atmosphere-" + Version.getRawVersion())
-                    .header("Transfer-Encoding", "chunked")
+//                    .header("Transfer-Encoding", "chunked")
                     .atmosphereRequest(r);
 
             as.doCometSupport(r, responseBuilder.build());
 
-            try {
-                w.flush();
-            } finally {
-                w.close();
-            }
-
+            w.close();
         } catch (ServletException e) {
             throw new IOException(e);
         }
@@ -134,15 +132,15 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
     }
 
-    private final static class NettyWriter implements AsyncIOWriter {
+    private final static class FutureWriter implements AsyncIOWriter {
 
         private final Channel channel;
         private final HeapChannelBufferFactory bufferFactory = new HeapChannelBufferFactory();
-        private final ChannelBufferOutputStream os;
+        private final AtomicInteger pendingWrite = new AtomicInteger();
+        private final AtomicBoolean asyncClose = new AtomicBoolean(false);
 
-        public NettyWriter(Channel channel) {
+        public FutureWriter(Channel channel) {
             this.channel = channel;
-            os = new ChannelBufferOutputStream(ChannelBuffers.dynamicBuffer());
         }
 
         @Override
@@ -161,30 +159,37 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         @Override
         public void write(String data) throws IOException {
             byte[] b = data.getBytes("ISO-8859-1");
-            os.write(b, 0, b.length);
+            write(b);
         }
 
         @Override
         public void write(byte[] data) throws IOException {
-            os.write(data, 0, data.length);
+            write(data, 0, data.length);
         }
 
         @Override
-        public void write(byte[] data, int offset, int length) throws IOException {
-            os.write(data, offset, length);
+        public synchronized void write(byte[] data, int offset, int length) throws IOException {
+            pendingWrite.incrementAndGet();
+            channel.write(bufferFactory.getBuffer(data, offset, length)).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && asyncClose.get())) {
+                        channel.close();
+                    }
+                }
+            });
         }
 
+        @Override
         public void flush() {
-            channel.write(os.buffer());
         }
 
         @Override
         public void close() throws IOException {
-            channel.close().addListener(ChannelFutureListener.CLOSE);
-        }
-
-        void suspend() throws IOException {
-            channel.close();
+            asyncClose.set(true);
+            if (pendingWrite.get() == 0) {
+                channel.close();
+            }
         }
 
     }
