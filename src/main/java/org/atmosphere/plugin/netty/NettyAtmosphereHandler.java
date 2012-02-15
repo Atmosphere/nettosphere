@@ -44,12 +44,17 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -79,9 +84,23 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         try {
             final HttpRequest request = (HttpRequest) messageEvent.getMessage();
             final String base = getBaseUri(request);
-            final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
+            final URI requestUri = new URI(base.substring(0, base.length() - 1) + sanitizeUri(request.getUri()));
             String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
-            String url = requestUri.toURL().toString();
+
+            String queryString = requestUri.getQuery();
+            Map<String, String[]> qs = new HashMap<String, String[]>();
+            if (queryString != null) {
+                String[] s = queryString.split("&");
+                for (String a : s) {
+                    String[] q = a.split("=");
+                    String[] z = new String[]{q.length > 1 ? q[1] : ""};
+                    qs.put(q[0], z);
+                }
+            }
+
+            String u = requestUri.toURL().toString();
+            int last = u.indexOf("?") == -1 ? u.length() :  u.indexOf("?");
+            String url = u.substring(0, last);
             int l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
             final Map<String, Object> attributes = new HashMap<String, Object>();
 
@@ -92,6 +111,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .method(request.getMethod().getName())
                     .contentType(ct)
                     .attributes(attributes)
+                    .queryStrings(qs)
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
@@ -181,7 +201,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
-            c.write(data,offset,length);
+            c.write(data, offset, length);
             channel.write(c.buffer()).addListener(listener);
         }
 
@@ -236,5 +256,28 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         public Enumeration getInitParameterNames() {
             return Collections.enumeration(initParams.values());
         }
+    }
+
+    private String sanitizeUri(String uri) {
+        // Decode the path.
+        try {
+            uri = URLDecoder.decode(uri, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            try {
+                uri = URLDecoder.decode(uri, "ISO-8859-1");
+            } catch (UnsupportedEncodingException e1) {
+                throw new Error();
+            }
+        }
+
+        uri = uri.replace('/', File.separatorChar);
+
+        if (uri.contains(File.separator + ".") ||
+                uri.contains("." + File.separator) ||
+                uri.startsWith(".") || uri.endsWith(".")) {
+            return null;
+        }
+
+        return uri;
     }
 }

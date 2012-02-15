@@ -206,7 +206,7 @@
                 </executions>
                 <configuration>
                     <arguments>
-                        <argument>http://localhost:8080/index.html</argument>
+                        <argument>/Users/jfarcand/workspace/atmosphere/samples/jquery-pubsub/target/atmosphere-jquery-pubsub/</argument>
                     </arguments>
                     <mainClass>org.atmosphere.plugin.netty.NettyServer</mainClass>
                 </configuration>
