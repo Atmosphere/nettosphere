@@ -23,7 +23,10 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.util.Version;
+import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.buffer.ChannelBufferOutputStream;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -178,7 +181,11 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         @Override
         public void write(byte[] data, int offset, int length) throws IOException {
             pendingWrite.incrementAndGet();
-            channel.write(bufferFactory.getBuffer(data, offset, length)).addListener(listener);
+            final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+
+            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
+            c.write(data,offset,length);
+            channel.write(c.buffer()).addListener(listener);
         }
 
         @Override
