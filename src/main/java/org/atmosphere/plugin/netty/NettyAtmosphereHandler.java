@@ -15,10 +15,13 @@
  */
 package org.atmosphere.plugin.netty;
 
+import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
@@ -36,6 +39,7 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.jvm.hotspot.runtime.Frame;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -47,9 +51,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -73,6 +74,8 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void messageReceived(final ChannelHandlerContext context,
                                 final MessageEvent messageEvent) throws URISyntaxException, IOException {
+        FutureWriter w = null;
+        boolean suspend = false;
         try {
             final HttpRequest request = (HttpRequest) messageEvent.getMessage();
             final String base = getBaseUri(request);
@@ -92,20 +95,24 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
-            FutureWriter w = new FutureWriter(context.getChannel());
-            AtmosphereResponse.Builder responseBuilder = new AtmosphereResponse.Builder()
+            w = new FutureWriter(context.getChannel());
+            AtmosphereResponse response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
                     .header("Server", "Atmosphere-" + Version.getRawVersion())
-//                    .header("Transfer-Encoding", "chunked")
-                    .atmosphereRequest(r);
+                    .atmosphereRequest(r).build();
 
-            as.doCometSupport(r, responseBuilder.build());
+            as.doCometSupport(r, response);
 
-            w.close();
+            Object o = r.getAttribute(NettyCometSupport.SUSPEND);
+            suspend = (Boolean) (o == null ? false : o);
         } catch (ServletException e) {
             throw new IOException(e);
+        } finally {
+            if (w != null && !suspend) {
+                w.close();
+            }
         }
     }
 
@@ -138,6 +145,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         private final HeapChannelBufferFactory bufferFactory = new HeapChannelBufferFactory();
         private final AtomicInteger pendingWrite = new AtomicInteger();
         private final AtomicBoolean asyncClose = new AtomicBoolean(false);
+        private final ML listener = new ML();
 
         public FutureWriter(Channel channel) {
             this.channel = channel;
@@ -168,16 +176,9 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         }
 
         @Override
-        public synchronized void write(byte[] data, int offset, int length) throws IOException {
+        public void write(byte[] data, int offset, int length) throws IOException {
             pendingWrite.incrementAndGet();
-            channel.write(bufferFactory.getBuffer(data, offset, length)).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && asyncClose.get())) {
-                        channel.close();
-                    }
-                }
-            });
+            channel.write(bufferFactory.getBuffer(data, offset, length)).addListener(listener);
         }
 
         @Override
@@ -192,6 +193,14 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             }
         }
 
+        private final class ML implements ChannelFutureListener {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && asyncClose.get())) {
+                    channel.close();
+                }
+            }
+        }
     }
 
     private final static class NettyServletConfig implements ServletConfig {

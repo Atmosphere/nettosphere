@@ -152,7 +152,7 @@ public class NettyServletContext implements ServletContext {
                 }
             }
         } catch (IOException e) {
-            logger.debug("", e);
+            logger.trace("", e);
         }
         return s;
     }
@@ -167,7 +167,7 @@ public class NettyServletContext implements ServletContext {
         try {
             return new FileInputStream(new File(URI.create("file://" + b.basePath + path)));
         } catch (FileNotFoundException e) {
-            logger.debug("", e);
+            logger.trace("", e);
         }
         return null;
     }
