@@ -127,6 +127,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
             Object o = r.getAttribute(NettyCometSupport.SUSPEND);
             suspend = (Boolean) (o == null ? false : o);
+            w.resumeOnBroadcast(suspend);
         } catch (ServletException e) {
             throw new IOException(e);
         } finally {
@@ -166,9 +167,14 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         private final AtomicInteger pendingWrite = new AtomicInteger();
         private final AtomicBoolean asyncClose = new AtomicBoolean(false);
         private final ML listener = new ML();
+        private boolean resumeOnBroadcast = false;
 
         public FutureWriter(Channel channel) {
             this.channel = channel;
+        }
+
+        public void resumeOnBroadcast(boolean resumeOnBroadcast) {
+            this.resumeOnBroadcast = resumeOnBroadcast;
         }
 
         @Override
@@ -220,7 +226,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         private final class ML implements ChannelFutureListener {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && asyncClose.get())) {
+                if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get()))) {
                     channel.close();
                 }
             }
