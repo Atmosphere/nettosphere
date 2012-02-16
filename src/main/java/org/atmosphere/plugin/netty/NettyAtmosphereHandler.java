@@ -25,7 +25,6 @@ import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -90,6 +89,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     @Override
     public void messageReceived(final ChannelHandlerContext context, final MessageEvent messageEvent) throws URISyntaxException, IOException {
+
         ChannelAsyncIOWriter w = null;
         boolean resumeOnBroadcast = false;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
@@ -102,12 +102,11 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             String queryString = requestUri.getQuery();
             Map<String, String[]> qs = new HashMap<String, String[]>();
             if (queryString != null) {
-                String[] s = queryString.split("&");
-                for (String a : s) {
-                    String[] q = a.split("=");
-                    String[] z = new String[]{q.length > 1 ? q[1] : ""};
-                    qs.put(q[0], z);
-                }
+                parseQueryString(qs, queryString);
+            }
+
+            if (ct.equalsIgnoreCase("application/x-www-form-urlencoded")) {
+                parseQueryString(qs, new String(request.getContent().array(), "UTF-8"));
             }
 
             String u = requestUri.toURL().toString();
@@ -169,13 +168,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        // Close the connection when an exception is raised.
-        logger.warn("Unexpected exception from downstream.", e.getCause());
-        e.getChannel().close();
-    }
-
     private Map<String, String> getHeaders(final HttpRequest request) {
         final Map<String, String> headers = new HashMap<String, String>();
 
@@ -190,6 +182,17 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private String getBaseUri(final HttpRequest request) {
         return "http://" + request.getHeader(HttpHeaders.Names.HOST) + "/";
 
+    }
+
+    private void parseQueryString(Map<String, String[]> qs, String queryString){
+        if (queryString != null) {
+            String[] s = queryString.split("&");
+            for (String a : s) {
+                String[] q = a.split("=");
+                String[] z = new String[]{q.length > 1 ? q[1] : ""};
+                qs.put(q[0], z);
+            }
+        }
     }
 
     private final static class NettyServletConfig implements ServletConfig {
@@ -222,4 +225,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             return Collections.enumeration(initParams.values());
         }
     }
+
+
 }
