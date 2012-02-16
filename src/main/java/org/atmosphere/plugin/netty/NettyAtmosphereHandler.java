@@ -17,6 +17,7 @@ package org.atmosphere.plugin.netty;
 
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
@@ -26,7 +27,6 @@ import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
@@ -35,12 +35,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -49,13 +46,13 @@ import java.util.Map;
 /**
  * Bridge the Atmosphere Framework with Netty.
  */
-public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
+public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
     private final AtmosphereServlet as;
     private final Config config;
 
     public NettyAtmosphereHandler(Config config) {
-        super();
+        super(config.path());
         this.config = config;
         as = new AtmosphereServlet();
 
@@ -92,12 +89,12 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(final ChannelHandlerContext context,
-                                final MessageEvent messageEvent) throws URISyntaxException, IOException {
+    public void messageReceived(final ChannelHandlerContext context, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         ChannelAsyncIOWriter w = null;
         boolean resumeOnBroadcast = false;
+        final HttpRequest request = (HttpRequest) messageEvent.getMessage();
+        String method = request.getMethod().getName();
         try {
-            final HttpRequest request = (HttpRequest) messageEvent.getMessage();
             final String base = getBaseUri(request);
             final URI requestUri = new URI(base.substring(0, base.length() - 1) + sanitizeUri(request.getUri()));
             String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
@@ -122,8 +119,9 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
             AtmosphereRequest r = requestBuilder.requestURI(url.substring(l))
                     .requestURL(url)
+                    .pathInfo(url.substring(l))
                     .headers(getHeaders(request))
-                    .method(request.getMethod().getName())
+                    .method(method)
                     .contentType(ct)
                     .attributes(attributes)
                     .queryStrings(qs)
@@ -148,6 +146,16 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             Object o = r.getAttribute(NettyCometSupport.SUSPEND);
             resumeOnBroadcast = (Boolean) (o == null ? false : o);
             w.resumeOnBroadcast(resumeOnBroadcast && !streamingTransport);
+        } catch (AtmosphereMappingException ex) {
+            if (method.equalsIgnoreCase("GET")) {
+                logger.trace("Unable to map the reques {}, trying static file", messageEvent.getMessage());
+                try {
+                    super.messageReceived(context, messageEvent);
+                } catch (Exception e) {
+                    logger.error("Unable to process request", e);
+                    throw new IOException(e);
+                }
+            }
         } catch (Throwable e) {
             logger.error("Unable to process request", e);
             throw new IOException(e);
@@ -213,27 +221,5 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         public Enumeration getInitParameterNames() {
             return Collections.enumeration(initParams.values());
         }
-    }
-
-    private String sanitizeUri(String uri) {
-        try {
-            uri = URLDecoder.decode(uri, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            try {
-                uri = URLDecoder.decode(uri, "ISO-8859-1");
-            } catch (UnsupportedEncodingException e1) {
-                throw new Error();
-            }
-        }
-
-        uri = uri.replace('/', File.separatorChar);
-
-        if (uri.contains(File.separator + ".") ||
-                uri.contains("." + File.separator) ||
-                uri.startsWith(".") || uri.endsWith(".")) {
-            return null;
-        }
-
-        return uri;
     }
 }
