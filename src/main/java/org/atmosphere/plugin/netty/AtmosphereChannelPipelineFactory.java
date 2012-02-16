@@ -41,24 +41,25 @@ import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import static org.jboss.netty.channel.Channels.pipeline;
 
 class AtmosphereChannelPipelineFactory implements
-		ChannelPipelineFactory {
+        ChannelPipelineFactory {
 
-	private final transient NettyAtmosphereHandler nettyAtmosphereHandler;
+    private final transient NettyAtmosphereHandler nettyAtmosphereHandler;
 
-	public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler nettyAtmosphereHandler) {
-		this.nettyAtmosphereHandler = nettyAtmosphereHandler;
-	}
+    public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler nettyAtmosphereHandler) {
+        this.nettyAtmosphereHandler = nettyAtmosphereHandler;
+    }
 
-	/**
-	 * Retrieve the channel pipeline factory.
-	 * 
-	 * @see org.jboss.netty.channel.ChannelPipelineFactory#getPipeline()
-	 */
-	public ChannelPipeline getPipeline() {
-		final ChannelPipeline pipeline = pipeline();
-		pipeline.addLast("decoder", new HttpRequestDecoder());
-		pipeline.addLast("nettyAtmosphereHandler", nettyAtmosphereHandler);
-		return pipeline;
-	}
+    /**
+     * Retrieve the channel pipeline factory.
+     *
+     * @see org.jboss.netty.channel.ChannelPipelineFactory#getPipeline()
+     */
+    public ChannelPipeline getPipeline() {
+        final ChannelPipeline pipeline = pipeline();
+        pipeline.addLast("decoder", new HttpRequestDecoder());
+        pipeline.addLast("encoder", new HttpResponseEncoder());
+        pipeline.addLast("nettyAtmosphereHandler", nettyAtmosphereHandler);
+        return pipeline;
+    }
 
 }

@@ -129,6 +129,9 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             throw new IOException(e);
         } finally {
             if (w != null && !suspend) {
+                if (!w.byteWritten()) {
+                    w.writeError(200, "OK");
+                }
                 w.close();
             }
         }
@@ -165,9 +168,14 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         private final AtomicBoolean asyncClose = new AtomicBoolean(false);
         private final ML listener = new ML();
         private boolean resumeOnBroadcast = false;
+        private boolean byteWritten = false;
 
         public FutureWriter(Channel channel) {
             this.channel = channel;
+        }
+
+        public boolean byteWritten() {
+            return byteWritten;
         }
 
         public void resumeOnBroadcast(boolean resumeOnBroadcast) {
@@ -205,6 +213,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
             c.write(data, offset, length);
             channel.write(c.buffer()).addListener(listener);
+            byteWritten = true;
         }
 
         @Override
