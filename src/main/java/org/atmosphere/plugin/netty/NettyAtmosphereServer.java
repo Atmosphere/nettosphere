@@ -108,6 +108,7 @@ public final class NettyAtmosphereServer {
         while (!(a.equals("quit"))) {
             a = br.readLine();
         }
+        System.exit(-1);
     }
 
 }

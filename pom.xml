@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-jersey</artifactId>
+            <artifactId>atmosphere-runtime</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -206,7 +206,7 @@
                 </executions>
                 <configuration>
                     <arguments>
-                        <argument>/Users/jfarcand/workspace/atmosphere/samples/jquery-pubsub/target/atmosphere-jquery-pubsub/</argument>
+                        <argument>/Users/jfarcand/workspace/atmosphere/samples/chat/target/atmosphere-chat</argument>
                     </arguments>
                     <mainClass>org.atmosphere.plugin.netty.NettyAtmosphereServer</mainClass>
                 </configuration>

@@ -214,12 +214,10 @@ public class NettyServletContext implements ServletContext {
 
     @Override
     public String getRealPath(String path) {
-        try {
-            return URI.create("file://" + b.basePath + path).toURL().toString();
-        } catch (MalformedURLException e) {
-            logger.error("", e);
+        if (path.startsWith("/")) {
+            path = path.substring(1);
         }
-        return null;
+        return b.basePath + path;
     }
 
     @Override
