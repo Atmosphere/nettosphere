@@ -20,6 +20,7 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -94,7 +95,7 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     public void messageReceived(final ChannelHandlerContext context,
                                 final MessageEvent messageEvent) throws URISyntaxException, IOException {
         ChannelAsyncIOWriter w = null;
-        boolean suspend = false;
+        boolean resumeOnBroadcast = false;
         try {
             final HttpRequest request = (HttpRequest) messageEvent.getMessage();
             final String base = getBaseUri(request);
@@ -139,14 +140,19 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
             as.doCometSupport(r, response);
 
+            String transport = request.getHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
+            boolean streamingTransport = false;
+            if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
+                streamingTransport = true;
+            }
             Object o = r.getAttribute(NettyCometSupport.SUSPEND);
-            suspend = (Boolean) (o == null ? false : o);
-            w.resumeOnBroadcast(suspend);
+            resumeOnBroadcast = (Boolean) (o == null ? false : o);
+            w.resumeOnBroadcast(resumeOnBroadcast && !streamingTransport);
         } catch (Throwable e) {
             logger.error("Unable to process request", e);
             throw new IOException(e);
         } finally {
-            if (w != null && !suspend) {
+            if (w != null && !resumeOnBroadcast) {
                 if (!w.byteWritten()) {
                     w.writeError(200, "OK");
                 }

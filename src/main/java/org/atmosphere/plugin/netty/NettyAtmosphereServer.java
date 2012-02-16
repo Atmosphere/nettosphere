@@ -107,10 +107,6 @@ public final class NettyAtmosphereServer {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (!(a.equals("quit"))) {
             a = br.readLine();
-
-            if (!(s.equals("quit"))) {
-                System.out.println("You typed: " + s);
-            }
         }
     }
 
