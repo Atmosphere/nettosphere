@@ -15,6 +15,12 @@
  */
 package org.atmosphere.plugin.netty;
 
+import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterCache;
+import org.atmosphere.cpr.BroadcasterFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,11 +51,31 @@ public class Config {
         return b.applicationPath;
     }
 
+    public Class<Broadcaster> broadcaster() {
+        return b.broadcasterClass;
+    }
+
+    public Map<String, AtmosphereHandler<?,?>> handlersMap() {
+        return b.handlers;
+    }
+
+    public BroadcasterFactory broadcasterFactory() {
+        return b.broadcasterFactory;
+    }
+
+    public Class<BroadcasterCache<?,?>> broadcasterCache(){
+        return b.broadcasterCache;
+    }
+
     public final static class Builder {
         private String applicationPath = "/";
         private String host = "localhost";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
+        private final Map<String, AtmosphereHandler<?,?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
+        private Class<Broadcaster> broadcasterClass;
+        private BroadcasterFactory broadcasterFactory;
+        private Class<BroadcasterCache<?,?>> broadcasterCache;
 
         public Builder path(String applicationPath) {
             this.applicationPath = applicationPath;
@@ -66,8 +92,28 @@ public class Config {
             return this;
         }
 
-        public Builder addInitParam(String name, String value) {
+        public Builder initParam(String name, String value) {
             initParams.put(name, value);
+            return this;
+        }
+
+        public Builder handler(String path, AtmosphereHandler<?,?> c) {
+            handlers.put(path,c);
+            return this;
+        }
+
+        public Builder broadcaster(Class<Broadcaster> broadcasterClass) {
+            this.broadcasterClass = broadcasterClass;
+            return this;
+        }
+
+        public Builder broadcasterFactory(BroadcasterFactory broadcasterFactory) {
+            this.broadcasterFactory = broadcasterFactory;
+            return this;
+        }
+
+        public Builder broadcasterCache(Class<BroadcasterCache<?,?>> broadcasterCache) {
+            this.broadcasterCache = broadcasterCache;
             return this;
         }
 

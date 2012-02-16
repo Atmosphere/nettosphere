@@ -16,6 +16,7 @@
 package org.atmosphere.plugin.netty;
 
 import org.atmosphere.container.NettyCometSupport;
+import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
@@ -56,6 +57,32 @@ public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
         super();
         this.config = config;
         as = new AtmosphereServlet();
+
+        if (config.broadcaster() != null) {
+            as.setDefaultBroadcasterClassName(config.broadcaster().getName());
+        }
+
+        try {
+            if (config.broadcasterFactory() != null) {
+                as.setBroadcasterFactory(config.broadcasterFactory());
+            }
+        } catch (Throwable t) {
+            logger.trace("", t);
+        }
+
+        if (config.broadcasterCache() != null) {
+            try {
+                as.setBroadcasterCacheClassName(config.broadcasterCache().getName());
+            } catch (Throwable t) {
+                logger.trace("", t);
+            }
+        }
+
+        Map<String, AtmosphereHandler<?, ?>> handlersMap = config.handlersMap();
+        for (Map.Entry<String, AtmosphereHandler<?, ?>> e : handlersMap.entrySet()) {
+            as.addAtmosphereHandler(e.getKey(), e.getValue());
+        }
+
         try {
             as.init(new NettyServletConfig(config.initParams(), new NettyServletContext.Builder().basePath(config.path()).build()));
         } catch (ServletException e) {
