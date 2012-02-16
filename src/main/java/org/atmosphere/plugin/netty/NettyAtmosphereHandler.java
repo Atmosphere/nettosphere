@@ -60,7 +60,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
     private final AtmosphereServlet as;
-    private final Map<String, String> initParams = new HashMap<String, String>();
     private final Config config;
 
     public NettyAtmosphereHandler(Config config) {
@@ -177,7 +176,6 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
         @Override
         public void redirect(String location) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
             throw new UnsupportedOperationException();
         }
 
