@@ -1,7 +1,8 @@
 The Atmosphere Framework running on top of Netty. The Server can be started using java
 
     java -cp atmosphere-netty.jar:atmosphere-runtime.jar
-          org.atmosphere.plugin.netty.NettyAtmosphereServer [/path/to/an/exploded/war/file] [host] [port]
+          org.atmosphere.plugin.netty.NettyAtmosphereServer
+                [/path/to/an/exploded/war/file] [host] [port]
 
 or embedded using
 
