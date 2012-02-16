@@ -16,28 +16,17 @@
 package org.atmosphere.plugin.netty;
 
 import org.atmosphere.container.NettyCometSupport;
-import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.util.Version;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.buffer.HeapChannelBufferFactory;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +43,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
-class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
+/**
+ * Bridge the Atmosphere Framework with Netty.
+ */
+public class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
     private final AtmosphereServlet as;
     private final Config config;
@@ -76,7 +66,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void messageReceived(final ChannelHandlerContext context,
                                 final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        FutureWriter w = null;
+        ChannelAsyncIOWriter w = null;
         boolean suspend = false;
         try {
             final HttpRequest request = (HttpRequest) messageEvent.getMessage();
@@ -96,7 +86,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             }
 
             String u = requestUri.toURL().toString();
-            int last = u.indexOf("?") == -1 ? u.length() :  u.indexOf("?");
+            int last = u.indexOf("?") == -1 ? u.length() : u.indexOf("?");
             String url = u.substring(0, last);
             int l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
             final Map<String, Object> attributes = new HashMap<String, Object>();
@@ -112,7 +102,7 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
-            w = new FutureWriter(context.getChannel());
+            w = new ChannelAsyncIOWriter(context.getChannel());
             AtmosphereResponse response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(w)
@@ -125,7 +115,8 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
             Object o = r.getAttribute(NettyCometSupport.SUSPEND);
             suspend = (Boolean) (o == null ? false : o);
             w.resumeOnBroadcast(suspend);
-        } catch (ServletException e) {
+        } catch (Throwable e) {
+            logger.error("Unable to process request", e);
             throw new IOException(e);
         } finally {
             if (w != null && !suspend) {
@@ -160,84 +151,6 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
 
     }
 
-    private final static class FutureWriter implements AsyncIOWriter {
-
-        private final Channel channel;
-        private final HeapChannelBufferFactory bufferFactory = new HeapChannelBufferFactory();
-        private final AtomicInteger pendingWrite = new AtomicInteger();
-        private final AtomicBoolean asyncClose = new AtomicBoolean(false);
-        private final ML listener = new ML();
-        private boolean resumeOnBroadcast = false;
-        private boolean byteWritten = false;
-
-        public FutureWriter(Channel channel) {
-            this.channel = channel;
-        }
-
-        public boolean byteWritten() {
-            return byteWritten;
-        }
-
-        public void resumeOnBroadcast(boolean resumeOnBroadcast) {
-            this.resumeOnBroadcast = resumeOnBroadcast;
-        }
-
-        @Override
-        public void redirect(String location) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void writeError(int errorCode, String message) throws IOException {
-            DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,
-                    HttpResponseStatus.valueOf(errorCode));
-            channel.write(response).addListener(ChannelFutureListener.CLOSE);
-        }
-
-        @Override
-        public void write(String data) throws IOException {
-            byte[] b = data.getBytes("ISO-8859-1");
-            write(b);
-        }
-
-        @Override
-        public void write(byte[] data) throws IOException {
-            write(data, 0, data.length);
-        }
-
-        @Override
-        public void write(byte[] data, int offset, int length) throws IOException {
-            pendingWrite.incrementAndGet();
-            final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
-
-            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
-            c.write(data, offset, length);
-            channel.write(c.buffer()).addListener(listener);
-            byteWritten = true;
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void close() throws IOException {
-            asyncClose.set(true);
-            if (pendingWrite.get() == 0) {
-                channel.close();
-            }
-        }
-
-        private final class ML implements ChannelFutureListener {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get()))) {
-                    channel.close();
-                }
-            }
-        }
-    }
-
     private final static class NettyServletConfig implements ServletConfig {
 
         private final Map<String, String> initParams;
@@ -270,7 +183,6 @@ class NettyAtmosphereHandler extends SimpleChannelUpstreamHandler {
     }
 
     private String sanitizeUri(String uri) {
-        // Decode the path.
         try {
             uri = URLDecoder.decode(uri, "UTF-8");
         } catch (UnsupportedEncodingException e) {

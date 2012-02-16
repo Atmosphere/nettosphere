@@ -31,53 +31,61 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.
+ */
 public final class NettyServer {
 
-	private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-	private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
-	private final ChannelPipelineFactory pipelineFactory;
-	private final ServerBootstrap bootstrap;
-	private final SocketAddress localSocket;
+    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
+    private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
+    private final ChannelPipelineFactory pipelineFactory;
+    private final ServerBootstrap bootstrap;
+    private final SocketAddress localSocket;
 
-	public NettyServer(Config config) {
-		this.pipelineFactory = new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler(config));
-		this.localSocket = new InetSocketAddress(config.host(), config.port());
-		this.bootstrap = buildBootstrap();
-	}
+    public NettyServer(Config config) {
+        this.pipelineFactory = new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler(config));
+        this.localSocket = new InetSocketAddress(config.host(), config.port());
+        this.bootstrap = buildBootstrap();
+    }
 
-	public void startServer() {
-		logger.info("Starting server....");
-		final Channel serverChannel = bootstrap.bind(localSocket);
-		ALL_CHANNELS.add(serverChannel);
-	}
+    public void startServer() {
+        final Channel serverChannel = bootstrap.bind(localSocket);
+        ALL_CHANNELS.add(serverChannel);
+    }
 
-	public void stopServer() {
-		logger.info("Stopping server....");
-		final ChannelGroupFuture future = ALL_CHANNELS.close();
-		future.awaitUninterruptibly();
-		bootstrap.getFactory().releaseExternalResources();
-		ALL_CHANNELS.clear();
+    public void stopServer() {
+        final ChannelGroupFuture future = ALL_CHANNELS.close();
+        future.awaitUninterruptibly();
+        bootstrap.getFactory().releaseExternalResources();
+        ALL_CHANNELS.clear();
 
-	}
+    }
 
-	private ServerBootstrap buildBootstrap() {
-		final ServerBootstrap bootstrap = new ServerBootstrap(
-				new NioServerSocketChannelFactory(
-						Executors.newCachedThreadPool(),
-						Executors.newCachedThreadPool()));
+    private ServerBootstrap buildBootstrap() {
+        final ServerBootstrap bootstrap = new ServerBootstrap(
+                new NioServerSocketChannelFactory(
+                        Executors.newCachedThreadPool(),
+                        Executors.newCachedThreadPool()));
 
-		bootstrap.setPipelineFactory(pipelineFactory);
-		return bootstrap;
-	}
+        bootstrap.setPipelineFactory(pipelineFactory);
+        return bootstrap;
+    }
 
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         Config.Builder b = new Config.Builder();
         b.path(args[0]).port(8080).host("127.0.0.1");
         NettyServer s = new NettyServer(b.build());
         s.startServer();
+        String a = "";
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        br.readLine();
+        while (!(a.equals("quit"))) {
+            a = br.readLine();
+
+            if (!(s.equals("quit"))) {
+                System.out.println("You typed: " + s);
+            }
+        }
     }
 
 }

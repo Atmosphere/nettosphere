@@ -18,6 +18,9 @@ package org.atmosphere.plugin.netty;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A Configuration class used to configure Atmosphere.
+ */
 public class Config {
 
     private final Builder b;
@@ -41,7 +44,6 @@ public class Config {
     public String path() {
         return b.applicationPath;
     }
-
 
     public final static class Builder {
         private String applicationPath = "/";
@@ -72,7 +74,5 @@ public class Config {
         public Config build() {
             return new Config(this);
         }
-
     }
-
 }
