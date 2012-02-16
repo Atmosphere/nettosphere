@@ -15,12 +15,12 @@
  */
 package org.atmosphere.plugin.netty;
 
-import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -91,7 +91,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void messageReceived(final ChannelHandlerContext context, final MessageEvent messageEvent) throws URISyntaxException, IOException {
 
         ChannelAsyncIOWriter w = null;
-        boolean resumeOnBroadcast = false;
+        boolean resumeOnBroadcast = true;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
         try {
@@ -137,17 +137,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             as.doCometSupport(r, response);
 
-            String transport = request.getHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
-            boolean streamingTransport = false;
+            String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
-                streamingTransport = true;
+                resumeOnBroadcast = false;
             }
-            Object o = r.getAttribute(NettyCometSupport.SUSPEND);
-            resumeOnBroadcast = (Boolean) (o == null ? false : o);
-            w.resumeOnBroadcast(resumeOnBroadcast && !streamingTransport);
+
+            w.resumeOnBroadcast(resumeOnBroadcast);
         } catch (AtmosphereMappingException ex) {
             if (method.equalsIgnoreCase("GET")) {
-                logger.trace("Unable to map the reques {}, trying static file", messageEvent.getMessage());
+                logger.trace("Unable to map the request {}, trying static file", messageEvent.getMessage());
                 try {
                     super.messageReceived(context, messageEvent);
                 } catch (Exception e) {
