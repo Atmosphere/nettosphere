@@ -19,13 +19,14 @@ import org.atmosphere.cpr.AsyncIOWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,9 +36,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * An {@link AsyncIOWriter} that bridge Atmosphere output stream with Netty's Channel.
  */
 public class ChannelAsyncIOWriter implements AsyncIOWriter {
+    private static final Logger logger = LoggerFactory.getLogger(ChannelAsyncIOWriter.class);
 
     private final Channel channel;
-    private final HeapChannelBufferFactory bufferFactory = new HeapChannelBufferFactory();
     private final AtomicInteger pendingWrite = new AtomicInteger();
     private final AtomicBoolean asyncClose = new AtomicBoolean(false);
     private final ML listener = new ML();
@@ -63,9 +64,17 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
 
     @Override
     public void writeError(int errorCode, String message) throws IOException {
-        DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,
-                HttpResponseStatus.valueOf(errorCode));
-        channel.write(response).addListener(ChannelFutureListener.CLOSE);
+        if (!channel.isOpen()) {
+            return;
+        }
+
+        try {
+            DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,
+                    HttpResponseStatus.valueOf(errorCode));
+            channel.write(response).addListener(ChannelFutureListener.CLOSE);
+        } catch (Throwable ex) {
+            logger.debug("", ex);
+        }
     }
 
     @Override
