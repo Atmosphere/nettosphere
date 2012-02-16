@@ -34,26 +34,32 @@ import org.slf4j.LoggerFactory;
 /**
  * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.
  */
-public final class NettyServer {
+public final class NettyAtmosphereServer {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereServer.class);
     private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
     private final ChannelPipelineFactory pipelineFactory;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
 
-    public NettyServer(Config config) {
+    private NettyAtmosphereServer(Config config) {
         this.pipelineFactory = new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler(config));
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();
     }
 
-    public void startServer() {
+    /**
+     * Start the server
+     */
+    public void start() {
         final Channel serverChannel = bootstrap.bind(localSocket);
         ALL_CHANNELS.add(serverChannel);
     }
 
-    public void stopServer() {
+    /**
+     * Stop the Server
+     */
+    public void stop() {
         final ChannelGroupFuture future = ALL_CHANNELS.close();
         future.awaitUninterruptibly();
         bootstrap.getFactory().releaseExternalResources();
@@ -71,13 +77,33 @@ public final class NettyServer {
         return bootstrap;
     }
 
+    /**
+     * Construct a {@link }NettyAtmosphereServer}.
+     */
+    public final static class Builder {
+
+        private Config config = new Config.Builder().build();
+
+        public Builder config(Config config) {
+            this.config = config;
+            return this;
+        }
+
+        public NettyAtmosphereServer build() {
+            return new NettyAtmosphereServer(config);
+        }
+
+    }
 
     public static void main(String[] args) throws Exception {
         Config.Builder b = new Config.Builder();
         b.path(args[0]).port(8080).host("127.0.0.1");
-        NettyServer s = new NettyServer(b.build());
-        s.startServer();
+        NettyAtmosphereServer s = new NettyAtmosphereServer(b.build());
+        s.start();
         String a = "";
+
+        logger.info("NettyAtmosphere Server started");
+        logger.info("Type quit to stop the server");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (!(a.equals("quit"))) {
             a = br.readLine();
