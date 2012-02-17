@@ -24,8 +24,11 @@ import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
@@ -41,6 +44,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
 /**
  * Bridge the Atmosphere Framework with Netty.
@@ -91,7 +97,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void messageReceived(final ChannelHandlerContext context, final MessageEvent messageEvent) throws URISyntaxException, IOException {
 
         ChannelAsyncIOWriter w = null;
-        boolean resumeOnBroadcast = true;
+        boolean resumeOnBroadcast = false;
+        boolean keptOpen = false;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
         try {
@@ -139,7 +146,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
-                resumeOnBroadcast = false;
+                keptOpen = true;
+            } else if (transport != null && transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT)) {
+                resumeOnBroadcast = true;
             }
 
             w.resumeOnBroadcast(resumeOnBroadcast);
@@ -157,13 +166,20 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             logger.error("Unable to process request", e);
             throw new IOException(e);
         } finally {
-            if (w != null && !resumeOnBroadcast) {
+            if (w != null && !resumeOnBroadcast && !keptOpen) {
                 if (!w.byteWritten()) {
                     w.writeError(200, "OK");
                 }
                 w.close();
             }
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+            throws Exception {
+        logger.debug("Exception", e.getCause());
+        super.exceptionCaught(ctx, e);
     }
 
     private Map<String, String> getHeaders(final HttpRequest request) {
@@ -182,7 +198,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     }
 
-    private void parseQueryString(Map<String, String[]> qs, String queryString){
+    private void parseQueryString(Map<String, String[]> qs, String queryString) {
         if (queryString != null) {
             String[] s = queryString.split("&");
             for (String a : s) {

@@ -90,13 +90,17 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
 
     @Override
     public void write(byte[] data, int offset, int length) throws IOException {
-        pendingWrite.incrementAndGet();
-        final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+        if (channel.isOpen()) {
+            pendingWrite.incrementAndGet();
+            final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 
-        ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
-        c.write(data, offset, length);
-        channel.write(c.buffer()).addListener(listener);
-        byteWritten = true;
+            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
+            c.write(data, offset, length);
+            channel.write(c.buffer()).addListener(listener);
+            byteWritten = true;
+        } else {
+            logger.warn("Channel closed {}", channel);
+        }
     }
 
     @Override
@@ -106,7 +110,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     @Override
     public void close() throws IOException {
         asyncClose.set(true);
-        if (pendingWrite.get() == 0) {
+        if (pendingWrite.get() == 0 && channel.isOpen()) {
             channel.close();
         }
     }
@@ -114,7 +118,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     private final class ML implements ChannelFutureListener {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
-            if (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get()))) {
+            if (channel.isOpen() && (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get())))) {
                 channel.close();
             }
         }
