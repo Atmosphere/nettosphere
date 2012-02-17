@@ -15,6 +15,7 @@
  */
 package org.atmosphere.plugin.netty;
 
+import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -22,10 +23,12 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
+import org.atmosphere.jersey.AtmosphereProviders;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
@@ -144,6 +147,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             as.doCometSupport(r, response);
 
+            NettyCometSupport.CometSupportHook hook = (NettyCometSupport.CometSupportHook) r.getAttribute(NettyCometSupport.HOOK);
+            context.setAttachment(hook);
+
             String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
                 keptOpen = true;
@@ -172,6 +178,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 }
                 w.close();
             }
+        }
+    }
+
+    @Override
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        super.channelClosed(ctx, e);
+        NettyCometSupport.CometSupportHook hook = (NettyCometSupport.CometSupportHook) ctx.getAttachment();
+        if (hook != null) {
+            hook.closed();
         }
     }
 

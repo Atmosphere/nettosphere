@@ -15,6 +15,7 @@
  */
 package org.atmosphere.plugin.netty;
 
+import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
@@ -22,6 +23,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
@@ -44,6 +46,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     private final ML listener = new ML();
     private boolean resumeOnBroadcast = false;
     private boolean byteWritten = false;
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     public ChannelAsyncIOWriter(Channel channel) {
         this.channel = channel;
@@ -111,7 +114,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     public void close() throws IOException {
         asyncClose.set(true);
         if (pendingWrite.get() == 0 && channel.isOpen()) {
-            channel.close();
+            _close();
         }
     }
 
@@ -119,8 +122,14 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
             if (channel.isOpen() && (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get())))) {
-                channel.close();
+                _close();
             }
+        }
+    }
+
+    void _close() {
+        if (!isClosed.getAndSet(true)) {
+            channel.close();
         }
     }
 }

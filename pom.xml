@@ -54,10 +54,10 @@
             <artifactId>atmosphere-runtime</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
-        <!--
+        <!-- Uncomment to enable Jersey
         <dependency>
             <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-runtime</artifactId>
+            <artifactId>atmosphere-jersey</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
         -->
