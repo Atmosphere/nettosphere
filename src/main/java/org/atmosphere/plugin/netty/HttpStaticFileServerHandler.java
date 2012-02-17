@@ -27,6 +27,7 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
+import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -215,6 +216,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
         response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
+        response.setHeader(CONTENT_LENGTH, "0");
+        response.setHeader("Server", "Atmosphere-" + Version.getRawVersion());
 
         // Close the connection as soon as the error message is sent.
         ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE);
