@@ -23,15 +23,12 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
-import org.atmosphere.jersey.AtmosphereProviders;
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
@@ -41,15 +38,13 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
 /**
  * Bridge the Atmosphere Framework with Netty.
@@ -134,6 +129,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .contentType(ct)
                     .attributes(attributes)
                     .queryStrings(qs)
+                    .remotePort(((InetSocketAddress) context.getChannel().getRemoteAddress()).getPort())
+                    .remoteAddr(((InetSocketAddress) context.getChannel().getRemoteAddress()).getAddress().getHostAddress())
+                    .remoteHost(((InetSocketAddress) context.getChannel().getRemoteAddress()).getHostName())
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
