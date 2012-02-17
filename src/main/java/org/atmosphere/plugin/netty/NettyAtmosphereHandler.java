@@ -132,6 +132,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .remotePort(((InetSocketAddress) context.getChannel().getRemoteAddress()).getPort())
                     .remoteAddr(((InetSocketAddress) context.getChannel().getRemoteAddress()).getAddress().getHostAddress())
                     .remoteHost(((InetSocketAddress) context.getChannel().getRemoteAddress()).getHostName())
+                    .localPort(((InetSocketAddress) context.getChannel().getLocalAddress()).getPort())
+                    .localAddr(((InetSocketAddress) context.getChannel().getLocalAddress()).getAddress().getHostAddress())
+                    .localName(((InetSocketAddress) context.getChannel().getLocalAddress()).getHostName())
                     .inputStream(new ChannelBufferInputStream(request.getContent()))
                     .build();
 
