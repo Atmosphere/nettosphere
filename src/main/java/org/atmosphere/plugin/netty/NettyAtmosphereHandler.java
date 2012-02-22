@@ -99,6 +99,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         boolean keptOpen = false;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
+        boolean skipClose = false;
         try {
             final String base = getBaseUri(request);
             final URI requestUri = new URI(base.substring(0, base.length() - 1) + sanitizeUri(request.getUri()));
@@ -143,6 +144,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .writeHeader(true)
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
+                    .header("Transfer-Encoding", "chunked")
                     .header("Server", "Atmosphere-" + Version.getRawVersion())
                     .atmosphereRequest(r).build();
 
@@ -163,6 +165,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             if (method.equalsIgnoreCase("GET")) {
                 logger.trace("Unable to map the request {}, trying static file", messageEvent.getMessage());
                 try {
+                    skipClose = true;
                     super.messageReceived(context, messageEvent);
                 } catch (Exception e) {
                     logger.error("Unable to process request", e);
@@ -177,7 +180,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 if (!w.byteWritten()) {
                     w.writeError(200, "OK");
                 }
-                w.close();
+                if (!skipClose) {
+                    w.close();
+                }
             }
         }
     }

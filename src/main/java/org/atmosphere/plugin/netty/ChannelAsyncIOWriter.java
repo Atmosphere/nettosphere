@@ -15,7 +15,6 @@
  */
 package org.atmosphere.plugin.netty;
 
-import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
@@ -23,7 +22,6 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
@@ -47,6 +45,10 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     private boolean resumeOnBroadcast = false;
     private boolean byteWritten = false;
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
+    private boolean headerWritten = false;
+    private final static String END = Integer.toHexString(0);
+    private final static byte[] CHUNK_DELIMITER = "\r\n".getBytes();
+    private final static byte[] ENDCHUNK = (END + "\r\n\r\n").getBytes();
 
     public ChannelAsyncIOWriter(Channel channel) {
         this.channel = channel;
@@ -93,17 +95,29 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
 
     @Override
     public void write(byte[] data, int offset, int length) throws IOException {
+
         if (channel.isOpen()) {
             pendingWrite.incrementAndGet();
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
+
+            if (headerWritten) {
+                c.write(Integer.toHexString(length - offset).getBytes("UTF-8"));
+                c.write(CHUNK_DELIMITER);
+            }
+
             c.write(data, offset, length);
+            if (headerWritten) {
+                c.write(CHUNK_DELIMITER);
+            }
+
             channel.write(c.buffer()).addListener(listener);
             byteWritten = true;
         } else {
             logger.warn("Channel closed {}", channel);
         }
+        headerWritten = true;
     }
 
     @Override
@@ -129,7 +143,15 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
 
     void _close() {
         if (!isClosed.getAndSet(true)) {
-            channel.close();
+            headerWritten = false;
+            final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
+            try {
+                c.write(ENDCHUNK);
+                channel.write(buffer).addListener(ChannelFutureListener.CLOSE);
+            } catch (IOException e) {
+                logger.trace("Close error", e);
+            }
         }
     }
 }
