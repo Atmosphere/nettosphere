@@ -1,4 +1,7 @@
-An Atmosphere Framework WebSocket and Comet Server build on top of Netty! Meteor, AtmosphereHandler, WebSocketProtocol and Jersey resource are supported.
+Netosphere: An Atmosphere Framework WebSocket and Comet Server build on top of Netty!
+=====================================================================================
+
+Meteor, AtmosphereHandler, WebSocketProtocol and Jersey resource are supported.
 
 The Server can be started using java
 

@@ -39,21 +39,33 @@ public class NettyWebSocket extends WebSocketAdapter {
         this.config = config;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void redirect(String location) throws IOException {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeError(int errorCode, String message) throws IOException {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void write(String data) throws IOException {
         channel.write(new TextWebSocketFrame(data));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void write(byte[] data) throws IOException {
         String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
@@ -66,6 +78,9 @@ public class NettyWebSocket extends WebSocketAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void write(byte[] data, int offset, int length) throws IOException {
                 String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
@@ -78,11 +93,17 @@ public class NettyWebSocket extends WebSocketAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws IOException {
         channel.close().addListener(ChannelFutureListener.CLOSE);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void flush() throws IOException {
     }
