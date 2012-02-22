@@ -54,6 +54,10 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
         this.channel = channel;
     }
 
+    public boolean isClosed() {
+        return isClosed.get();
+    }
+
     public boolean byteWritten() {
         return byteWritten;
     }

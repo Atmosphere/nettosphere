@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.testng.Assert.*;
 
-public class NettyAtmosphereTest {
+public class NettyAtmosphereTest extends BaseTest{
     private final static String RESUME = "Resume";
 
     protected int port;
@@ -55,20 +55,6 @@ public class NettyAtmosphereTest {
     @AfterMethod(alwaysRun = true)
     public void tearDownGlobal() throws Exception {
         server.stop();
-    }
-
-    protected int findFreePort() throws IOException {
-        ServerSocket socket = null;
-
-        try {
-            socket = new ServerSocket(0);
-
-            return socket.getLocalPort();
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
     }
 
     @BeforeMethod(alwaysRun = true)

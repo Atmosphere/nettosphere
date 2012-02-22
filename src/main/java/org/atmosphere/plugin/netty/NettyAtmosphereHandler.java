@@ -61,6 +61,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
@@ -76,6 +80,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final AtmosphereServlet as;
     private final Config config;
     private WebSocketServerHandshaker handshaker;
+    private final ScheduledExecutorService suspendTimer;
 
     public NettyAtmosphereHandler(Config config) {
         super(config.path());
@@ -112,6 +117,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
+        suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
     }
 
     @Override
@@ -153,7 +159,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 as.getWebSocketProtocol());
         ctx.setAttachment(processor);
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
-       
+
         processor.dispatch(r);
     }
 
@@ -181,7 +187,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + sanitizeUri(request.getUri()));
         String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
         String method = request.getMethod().getName();
-        
+
         String queryString = requestUri.getQuery();
         Map<String, String[]> qs = new HashMap<String, String[]>();
         if (queryString != null) {
@@ -220,17 +226,16 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        ChannelAsyncIOWriter w = null;
+        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel());
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
-        
+
         boolean skipClose = false;
         try {
             AtmosphereRequest r = createAtmosphereRequest(ctx, request);
 
-            w = new ChannelAsyncIOWriter(ctx.getChannel());
             AtmosphereResponse response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(w)
@@ -253,6 +258,22 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 resumeOnBroadcast = true;
             }
 
+            AtmosphereServlet.Action action = (AtmosphereServlet.Action) r.getAttribute(NettyCometSupport.SUSPEND);
+
+            if (action != null && action.type == AtmosphereServlet.Action.TYPE.SUSPEND) {
+                suspendTimer.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (!w.isClosed()) {
+                                w.close();
+                            }
+                        } catch (IOException e) {
+                            logger.trace("", e);
+                        }
+                    }
+                }, action.timeout, TimeUnit.MILLISECONDS);
+            }
             w.resumeOnBroadcast(resumeOnBroadcast);
         } catch (AtmosphereMappingException ex) {
             if (method.equalsIgnoreCase("GET")) {
@@ -282,6 +303,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     public void destroy() {
         if (as != null) as.destroy();
+        suspendTimer.shutdown();
     }
 
     @Override

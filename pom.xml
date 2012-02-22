@@ -54,13 +54,13 @@
             <artifactId>atmosphere-runtime</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
-        <!--
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-jersey</artifactId>
             <version>0.9-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
-        -->
+
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
