@@ -18,6 +18,9 @@ import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
+import com.ning.http.client.websocket.WebSocket;
+import com.ning.http.client.websocket.WebSocketTextListener;
+import com.ning.http.client.websocket.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
@@ -42,11 +45,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.testng.Assert.*;
 
 public class NettyAtmosphereTest {
+    private final static String RESUME = "Resume";
 
-    protected final Logger logger = LoggerFactory.getLogger(NettyAtmosphereTest.class);
     protected int port;
     protected NettyAtmosphereServer server;
     private String targetUrl;
+    private String wsUrl;
 
     @AfterMethod(alwaysRun = true)
     public void tearDownGlobal() throws Exception {
@@ -69,13 +73,13 @@ public class NettyAtmosphereTest {
 
     @BeforeMethod(alwaysRun = true)
     public void start() throws IOException {
-        port = findFreePort();
+        port = 8080;
         targetUrl = "http://127.0.0.1:" + port;
+        wsUrl = "ws://127.0.0.1:" + port;
     }
 
     @Test
     public void suspendLongPollingTest() throws Exception {
-        final String resume = "Resume";
         final CountDownLatch l = new CountDownLatch(1);
         final CountDownLatch suspendCD = new CountDownLatch(1);
 
@@ -93,7 +97,7 @@ public class NettyAtmosphereTest {
                             r.suspend(-1, false);
                             suspendCD.countDown();
                         } else {
-                            r.getBroadcaster().broadcast(resume);
+                            r.getBroadcaster().broadcast(RESUME);
                         }
                     }
 
@@ -162,12 +166,11 @@ public class NettyAtmosphereTest {
         l.await(5, TimeUnit.SECONDS);
 
         assertEquals(response.get().getStatusCode(), 200);
-        assertEquals(response.get().getResponseBody(), resume);
+        assertEquals(response.get().getResponseBody(), RESUME);
     }
 
     @Test
     public void suspendStreamingTest() throws Exception {
-       final String resume = "Resume";
         final CountDownLatch l = new CountDownLatch(1);
         final CountDownLatch suspendCD = new CountDownLatch(1);
 
@@ -185,7 +188,7 @@ public class NettyAtmosphereTest {
                             r.suspend(-1, true);
                             suspendCD.countDown();
                         } else {
-                            r.getBroadcaster().broadcast(resume);
+                            r.getBroadcaster().broadcast(RESUME);
                         }
                     }
 
@@ -254,6 +257,83 @@ public class NettyAtmosphereTest {
         l.await(5, TimeUnit.SECONDS);
 
         assertEquals(response.get().getStatusCode(), 200);
-        assertEquals(response.get().getResponseBody(), AtmosphereResourceImpl.createStreamingPadding("atmosphere") + resume);
+        assertEquals(response.get().getResponseBody(), AtmosphereResourceImpl.createStreamingPadding("atmosphere") + RESUME);
     }
+
+    @Test
+    public void suspendWebSocketTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+
+        Config config = new Config.Builder()
+                .path("/")
+                .port(port)
+                .host("127.0.0.1")
+                .handler("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+
+                    private final AtomicBoolean b = new AtomicBoolean(false);
+
+                    @Override
+                    public void onRequest(AtmosphereResource<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                        if (!b.getAndSet(true)) {
+                            r.suspend(-1, false);
+                        } else {
+                            r.getBroadcaster().broadcast(RESUME);
+                        }
+                    }
+
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                        if (!r.isResuming() || !r.isCancelled()) {
+                            r.getResource().getResponse().getWriter().print(r.getMessage());
+                            r.getResource().resume();
+                        }
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }).build();
+
+        server = new NettyAtmosphereServer.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        WebSocket webSocket = c.prepareGet(wsUrl + "/suspend").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+        assertNotNull(webSocket);
+        webSocket.addWebSocketListener(new WebSocketTextListener() {
+            @Override
+            public void onMessage(String message) {
+                response.set(message);
+                l.countDown();
+            }
+
+            @Override
+            public void onFragment(String fragment, boolean last) {
+            }
+
+            @Override
+            public void onOpen(WebSocket websocket) {
+            }
+
+            @Override
+            public void onClose(WebSocket websocket) {
+                l.countDown();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                l.countDown();
+            }
+        }).sendTextMessage("Ping");
+
+        l.await(5, TimeUnit.SECONDS);
+
+        webSocket.close();
+        assertEquals(response.get(), RESUME);
+
+    }
+
 }
