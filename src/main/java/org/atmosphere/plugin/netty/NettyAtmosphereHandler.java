@@ -189,6 +189,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
     }
 
+    public void destroy(){
+        if (as != null) as.destroy();
+    }
+
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);

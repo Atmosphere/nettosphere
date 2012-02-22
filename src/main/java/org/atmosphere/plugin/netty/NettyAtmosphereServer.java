@@ -41,9 +41,11 @@ public final class NettyAtmosphereServer {
     private final ChannelPipelineFactory pipelineFactory;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
+    private final NettyAtmosphereHandler handler;
 
     private NettyAtmosphereServer(Config config) {
-        this.pipelineFactory = new AtmosphereChannelPipelineFactory(new NettyAtmosphereHandler(config));
+        handler = new NettyAtmosphereHandler(config);
+        this.pipelineFactory = new AtmosphereChannelPipelineFactory(handler);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();
     }
@@ -60,11 +62,11 @@ public final class NettyAtmosphereServer {
      * Stop the Server
      */
     public void stop() {
+        handler.destroy();
         final ChannelGroupFuture future = ALL_CHANNELS.close();
         future.awaitUninterruptibly();
         bootstrap.getFactory().releaseExternalResources();
         ALL_CHANNELS.clear();
-
     }
 
     private ServerBootstrap buildBootstrap() {
