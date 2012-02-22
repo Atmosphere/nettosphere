@@ -22,6 +22,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferFactory;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
@@ -75,6 +76,11 @@ public class NettyWebSocket extends WebSocketAdapter {
         } else {
             channel.write(new TextWebSocketFrame(new String(data, offset, length, "UTF-8")));
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        channel.close().addListener(ChannelFutureListener.CLOSE);
     }
 
     @Override

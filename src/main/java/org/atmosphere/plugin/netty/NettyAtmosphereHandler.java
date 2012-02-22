@@ -288,6 +288,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
         Object o = ctx.getAttachment();
+        if (o == null) return;
+
         if (NettyCometSupport.CometSupportHook.class.isAssignableFrom(o.getClass())) {
             NettyCometSupport.CometSupportHook hook = NettyCometSupport.CometSupportHook.class.cast(o);
             if (hook != null) {

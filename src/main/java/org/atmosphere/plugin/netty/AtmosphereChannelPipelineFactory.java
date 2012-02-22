@@ -17,6 +17,7 @@ package org.atmosphere.plugin.netty;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
 import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 
@@ -39,6 +40,7 @@ class AtmosphereChannelPipelineFactory implements
     public ChannelPipeline getPipeline() {
         final ChannelPipeline pipeline = pipeline();
         pipeline.addLast("decoder", new HttpRequestDecoder());
+        pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());
         pipeline.addLast("nettyAtmosphereHandler", nettyAtmosphereHandler);
         return pipeline;

@@ -54,31 +54,41 @@
             <artifactId>atmosphere-runtime</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
-        <!-- Uncomment to enable Jersey
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-jersey</artifactId>
             <version>0.9-SNAPSHOT</version>
         </dependency>
-        -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
             <version>3.3.1.Final</version>
         </dependency>
+
+                <!-- Move to individual modules / plugins / samples as appropriate -->
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+
+                <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+         <dependency>
             <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <artifactId>logback-core</artifactId>
             <version>1.0.0</version>
-            <type>jar</type>
         </dependency>
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.0</version>
-            <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
