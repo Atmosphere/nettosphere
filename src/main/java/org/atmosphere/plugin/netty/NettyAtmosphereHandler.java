@@ -148,6 +148,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .header("Server", "Atmosphere-" + Version.getRawVersion())
                     .atmosphereRequest(r).build();
 
+            attributes.put(NettyCometSupport.CHANNEL, w);
+
             as.doCometSupport(r, response);
 
             NettyCometSupport.CometSupportHook hook = (NettyCometSupport.CometSupportHook) r.getAttribute(NettyCometSupport.HOOK);
