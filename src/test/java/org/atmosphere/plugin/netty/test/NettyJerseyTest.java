@@ -60,7 +60,7 @@ public class NettyJerseyTest extends BaseTest {
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .initParam("com.sun.jersey.config.property.packages", this.getClass().getPackage().getName())
+                .resource(Resource.class)
                 .build();
         server = new Nettosphere.Builder().config(config).build();
         server.start();

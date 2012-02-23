@@ -74,7 +74,7 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .handler("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
 
                     private final AtomicBoolean b = new AtomicBoolean(false);
 
@@ -165,7 +165,7 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .handler("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
 
                     private final AtomicBoolean suspended = new AtomicBoolean(false);
 
@@ -255,7 +255,7 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .handler("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
 
                     private final AtomicBoolean b = new AtomicBoolean(false);
 

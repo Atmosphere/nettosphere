@@ -19,7 +19,10 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.websocket.WebSocketProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import java.util.HashMap;
@@ -29,7 +32,7 @@ import java.util.Map;
  * A Configuration class used to configure Atmosphere.
  */
 public class Config {
-
+    private static final Logger logger = LoggerFactory.getLogger(Config.class);
     private final Builder b;
 
     public Config(Builder b) {
@@ -60,20 +63,8 @@ public class Config {
         return b.handlers;
     }
 
-    public Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlersMap() {
-        return b.classHandlers;
-    }
-
     public BroadcasterFactory broadcasterFactory() {
         return b.broadcasterFactory;
-    }
-
-    public Map<String, Servlet> meteorsMap() {
-        return b.meteors;
-    }
-
-    public Map<String, Class<? extends Servlet>> classMeteorsMap() {
-        return b.classMeteors;
     }
 
     public Class<? extends BroadcasterCache<?, ?>> broadcasterCache() {
@@ -90,8 +81,8 @@ public class Config {
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler<?, ?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
-        private final Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlers = new HashMap<String, Class<? extends AtmosphereHandler<?, ?>>>();
-        private final Map<String, Class<? extends Servlet>> classMeteors = new HashMap<String, Class<? extends Servlet>>();
+        private final Map<String, Class<?>> resources = new HashMap<String, Class<?>>();
+
         private final Map<String, Servlet> meteors = new HashMap<String, Servlet>();
         private Class<? extends WebSocketProtocol> webSocketProtocol;
 
@@ -119,23 +110,34 @@ public class Config {
             return this;
         }
 
-        public Builder handler(String path, AtmosphereHandler<?, ?> c) {
+        public Builder resource(String path, AtmosphereHandler<?, ?> c) {
             handlers.put(path, c);
             return this;
         }
 
-        public Builder handler(String path, Class<? extends AtmosphereHandler<?, ?>> c) {
-            classHandlers.put(path, c);
+        public Builder resource(String path, Servlet c) {
+            handlers.put(path, new ReflectorServletProcessor(c));
             return this;
         }
 
-        public Builder meteor(String path, Class<? extends Servlet> c) {
-            classMeteors.put(path, c);
-            return this;
+        public Builder resource(Class<?> c)  {
+            return resource(applicationPath, c);
         }
 
-        public Builder meteor(String path, Servlet m) {
-            meteors.put(path, m);
+        public Builder resource(String path, Class<?> c)  {
+            try {
+                if (AtmosphereHandler.class.isAssignableFrom(c)) {
+                    handlers.put(path, AtmosphereHandler.class.cast(c.newInstance()));
+                } else if (Servlet.class.isAssignableFrom(c)) {
+                    handlers.put(path, new ReflectorServletProcessor(Servlet.class.cast(c.newInstance())));
+                } else {
+                    // TODO: NOT clear
+                    applicationPath = path;
+                    initParam("com.sun.jersey.config.property.packages", c.getPackage().getName());
+                }
+            } catch (Exception ex) {
+                logger.error("Invalid resource {}", c);
+            }
             return this;
         }
 
