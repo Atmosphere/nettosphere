@@ -1,5 +1,13 @@
 Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
 -----------------------------------------------------------------------------
+Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/1.0.0-SNAPSHOT/) or use Maven
+
+     <dependency>
+         <groupId>org.atmosphere</groupId>
+         <artifactId>nettosphere</artifactId>
+         <version>1.0.0-SNAPSHOT</version>
+     </dependency>
+
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
 ### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
