@@ -114,23 +114,6 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
-    public void testProgrammaticDisconnection() {
-        logger.info("{}: running test: testProgrammaticDisconnection", getClass().getSimpleName());
-
-        AsyncHttpClient c = new AsyncHttpClient();
-        long t1 = System.currentTimeMillis();
-
-        try {
-            Response r = c.prepareGet(urlTarget + "/forever").execute().get(30, TimeUnit.SECONDS);
-            assertNotNull(r);
-        } catch (Exception e) {
-        }
-        long current = System.currentTimeMillis() - t1;
-        assertTrue(current > 20000 && current < 25000);
-        c.close();
-    }
-
     @Test(timeOut = 20000, enabled = true)
     public void testProgrammaticResume() {
         logger.info("{}: running test: testProgrammaticResume", getClass().getSimpleName());
@@ -207,7 +190,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testDelayBroadcast() {
         logger.info("{}: running test: testDelayBroadcast", getClass().getSimpleName());
 
@@ -252,7 +235,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testDelayNextBroadcast() {
         logger.info("{}: running test: testDelayNextBroadcast", getClass().getSimpleName());
 
@@ -301,7 +284,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testScheduleBroadcast() {
         logger.info("{}: running test: testScheduleBroadcast", getClass().getSimpleName());
 
@@ -347,7 +330,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testBroadcastFilter() {
         logger.info("{}: running test: testBroadcastFilter", getClass().getSimpleName());
 
@@ -391,7 +374,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testAggregateFilter() {
         logger.info("{}: running test: testAggregateFilter", getClass().getSimpleName());
 
@@ -444,11 +427,24 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
-    public void testHeaderBroadcasterCache() throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+    @Test(timeOut = 20000, enabled = true)
+    public void testHeaderBroadcasterCache() throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException {
         logger.info("{}: running test: testHeaderBroadcasterCache", getClass().getSimpleName());
 
-        atmoServlet.setBroadcasterCacheClassName(HeaderBroadcasterCache.class.getName());
+        server.stop();
+        port = findFreePort();
+        urlTarget = getUrlTarget(port);
+        Config config = new Config.Builder()
+                .path("/")
+                .port(port)
+                .host("127.0.0.1")
+                .initParam("com.sun.jersey.config.property.packages", this.getClass().getPackage().getName())
+                .broadcasterCache(HeaderBroadcasterCache.class)
+                .build();
+        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server.start();
+
+
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
         AsyncHttpClient c = new AsyncHttpClient();
@@ -489,7 +485,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = false)
+    @Test(timeOut = 20000, enabled = true)
     public void testProgrammaticDelayBroadcast() {
         logger.info("{}: running test: testDelayBroadcast", getClass().getSimpleName());
 

@@ -15,11 +15,8 @@
  */
 package org.atmosphere.plugin.netty.test;
 
-import org.atmosphere.cpr.AtmosphereServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -27,10 +24,6 @@ import java.net.ServerSocket;
 public abstract class BaseTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(BaseTest.class);
-
-    protected static final String ROOT = "/*";
-
-    protected AtmosphereServlet atmoServlet;
     public String urlTarget;
     public int port;
 

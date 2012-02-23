@@ -63,7 +63,7 @@ public class Config {
         return b.broadcasterFactory;
     }
 
-    public Class<BroadcasterCache<?,?>> broadcasterCache(){
+    public Class<? extends BroadcasterCache<?,?>> broadcasterCache(){
         return b.broadcasterCache;
     }
 
@@ -75,7 +75,7 @@ public class Config {
         private final Map<String, AtmosphereHandler<?,?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
-        private Class<BroadcasterCache<?,?>> broadcasterCache;
+        private Class<? extends BroadcasterCache<?,?>> broadcasterCache;
 
         public Builder path(String applicationPath) {
             this.applicationPath = applicationPath;
@@ -112,7 +112,7 @@ public class Config {
             return this;
         }
 
-        public Builder broadcasterCache(Class<BroadcasterCache<?,?>> broadcasterCache) {
+        public Builder broadcasterCache(Class<? extends BroadcasterCache<?,?>> broadcasterCache) {
             this.broadcasterCache = broadcasterCache;
             return this;
         }
