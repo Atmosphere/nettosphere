@@ -19,8 +19,11 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.websocket.WebSocketProcessor;
 
+import javax.servlet.Servlet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,7 +61,7 @@ public class Config {
         return b.handlers;
     }
 
-    public Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlerMap() {
+    public Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlersMap() {
         return b.classHandlers;
     }
 
@@ -66,8 +69,20 @@ public class Config {
         return b.broadcasterFactory;
     }
 
+    public Map<String, Servlet> meteorsMap() {
+        return b.meteors;
+    }
+
+    public Map<String, Class<? extends Servlet>> classMeteorsMap() {
+        return b.classMeteors;
+    }
+
     public Class<? extends BroadcasterCache<?, ?>> broadcasterCache() {
         return b.broadcasterCache;
+    }
+
+    public Class<? extends WebSocketProcessor> webSocketProcessor() {
+        return b.webSocketProcessor;
     }
 
     public final static class Builder {
@@ -77,6 +92,10 @@ public class Config {
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler<?, ?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
         private final Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlers = new HashMap<String, Class<? extends AtmosphereHandler<?, ?>>>();
+        private final Map<String, Class<? extends Servlet>> classMeteors = new HashMap<String, Class<? extends Servlet>>();
+        private final Map<String, Servlet> meteors = new HashMap<String, Servlet>();
+        private Class<? extends WebSocketProcessor> webSocketProcessor;
+
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache<?, ?>> broadcasterCache;
@@ -111,6 +130,16 @@ public class Config {
             return this;
         }
 
+        public Builder meteor(String path, Class<? extends Servlet> c) {
+            classMeteors.put(path, c);
+            return this;
+        }
+
+        public Builder meteor(String path, Servlet m) {
+            meteors.put(path, m);
+            return this;
+        }
+
         public Builder broadcaster(Class<Broadcaster> broadcasterClass) {
             this.broadcasterClass = broadcasterClass;
             return this;
@@ -123,6 +152,11 @@ public class Config {
 
         public Builder broadcasterCache(Class<? extends BroadcasterCache<?, ?>> broadcasterCache) {
             this.broadcasterCache = broadcasterCache;
+            return this;
+        }
+
+        public Builder webSocketProcessor(Class<? extends WebSocketProcessor> webSocketProcessor) {
+            this.webSocketProcessor = webSocketProcessor;
             return this;
         }
 

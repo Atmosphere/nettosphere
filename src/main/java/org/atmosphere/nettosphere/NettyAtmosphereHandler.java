@@ -23,6 +23,7 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
+import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.util.Version;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -48,6 +49,7 @@ import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -111,7 +113,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             as.addAtmosphereHandler(e.getKey(), e.getValue());
         }
 
-        Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlersMap = config.classHandlerMap();
+        Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlersMap = config.classHandlersMap();
         for (Map.Entry<String, Class<? extends AtmosphereHandler<?, ?>>> e : classHandlersMap.entrySet()) {
             try {
                 as.addAtmosphereHandler(e.getKey(), e.getValue().newInstance());
@@ -120,6 +122,26 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             } catch (IllegalAccessException e1) {
                 logger.warn("Invalid AtmosphereHandler implementation {}", e.getValue());
             }
+        }
+
+        Map<String, Servlet> meteorsMap = config.meteorsMap();
+        for (Map.Entry<String, Servlet> e : meteorsMap.entrySet()) {
+            as.addAtmosphereHandler(e.getKey(), new ReflectorServletProcessor(e.getValue()));
+        }
+
+        Map<String, Class<? extends Servlet>> classMeteorsMap = config.classMeteorsMap();
+        for (Map.Entry<String, Class<? extends Servlet>> e : classMeteorsMap.entrySet()) {
+            try {
+                as.addAtmosphereHandler(e.getKey(), new ReflectorServletProcessor(e.getValue().newInstance()));
+            } catch (InstantiationException e1) {
+                logger.warn("Invalid AtmosphereHandler implementation {}", e.getValue());
+            } catch (IllegalAccessException e1) {
+                logger.warn("Invalid AtmosphereHandler implementation {}", e.getValue());
+            }
+        }
+
+        if (config.webSocketProcessor() != null) {
+            as.setWebSocketProtocolClassName(config.webSocketProcessor().getName());
         }
 
         try {
