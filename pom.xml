@@ -7,13 +7,13 @@
         <version>5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.atmosphere.plugins</groupId>
-    <artifactId>netty-atmosphere</artifactId>
+    <groupId>org.atmosphere</groupId>
+    <artifactId>nettosphere</artifactId>
     <name>Atmosphere running on top of Netty</name>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>
-        The Atmosphere Framework running on top of the Netty Framework
+        NettoSphere: A HTLM/WebSocket server powered by Atmosphere and Netty Framework
     </description>
     <url>http://github.com/Atmosphere/netty-atmosphere</url>
     <scm>
@@ -55,42 +55,30 @@
             <version>0.9-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-jersey</artifactId>
-            <version>0.9-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
             <version>3.3.1.Final</version>
         </dependency>
 
-                <!-- Move to individual modules / plugins / samples as appropriate -->
+        <!-- Test -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>1.6.1</version>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-jersey</artifactId>
+            <version>0.9-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
-
-                <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
-        </dependency>
-         <dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.0.0</version>
+            <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.0</version>
+            <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
@@ -166,29 +154,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.0-beta-1</version>
-                <executions>
-                    <execution>
-                        <id>enforce-versions</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireMavenVersion>
-                                    <version>2.0.9</version>
-                                </requireMavenVersion>
-                                <requireJavaVersion>
-                                    <version>1.5</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.4.3</version>
                 <configuration>
@@ -241,7 +206,7 @@
                     <arguments>
                         <argument>/Users/jfarcand/workspace/atmosphere/samples/chat/target/atmosphere-chat</argument>
                     </arguments>
-                    <mainClass>org.atmosphere.plugin.netty.NettyAtmosphereServer</mainClass>
+                    <mainClass>org.atmosphere.nettosphere.netty.Nettosphere</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -267,6 +232,31 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>all</shadedClassifierName>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ComponentsXmlResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -279,8 +269,8 @@
                     <aggregate>true</aggregate>
                     <debug>true</debug>
                     <links>
-                        <link>http://java.sun.com/javaee/5/docs/api</link>
-                        <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+                        <link>http://docs.oracle.com/javaee/6/docs/api/</link>
+                        <link>http://docs.oracle.com/javase/6/docs/api/</link>
                     </links>
                     <excludePackageNames/>
                 </configuration>

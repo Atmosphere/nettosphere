@@ -1,15 +1,9 @@
-Netosphere: An Atmosphere Framework WebSocket and Comet Server build on top of Netty!
+Netosphere: An HTTP/WebSocket server based on the Atmosphere Framework and Netty!
+=================================================================================
 
+Atmosphere's Meteor, AtmosphereHandler, WebSocketProtocol and Jersey Resource are supported.
 
-Meteor, AtmosphereHandler, WebSocketProtocol and Jersey resource are supported.
-
-The Server can be started using java
-
-    java -cp atmosphere-netty.jar:atmosphere-runtime.jar
-          org.atmosphere.plugin.netty.NettyAtmosphereServer
-                [/path/to/an/exploded/war/file] [host] [port]
-
-or embedded using
+As simple as mbedded using
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
@@ -27,7 +21,13 @@ or
                     .port(8080).build())
                     .broadcaster(DefaultBroadcaster.class)
                     .handler("/*", MyAtmosphereHandler.class)
-                    .build();
+                    .build()).build();
     server.start();
+
+The Server can also be started using java
+
+    java -cp netosphere-all.jar
+          org.atmosphere.plugin.netty.NettyAtmosphereServer
+                [/path/to/an/exploded/war/file] [host] [port]
 
 If you are interested, subscribe to our mailing list (http://groups.google.com/group/atmosphere-framework) for more info!  We are on irc.freenode.net under #atmosphere-comet

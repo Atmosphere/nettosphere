@@ -28,10 +28,8 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
-import org.atmosphere.plugin.netty.Config;
-import org.atmosphere.plugin.netty.NettyAtmosphereServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.atmosphere.nettosphere.Config;
+import org.atmosphere.nettosphere.Nettosphere;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -39,19 +37,19 @@ import org.testng.annotations.Test;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class NettyAtmosphereTest extends BaseTest{
     private final static String RESUME = "Resume";
 
     protected int port;
-    protected NettyAtmosphereServer server;
+    protected Nettosphere server;
     private String targetUrl;
     private String wsUrl;
 
@@ -62,7 +60,7 @@ public class NettyAtmosphereTest extends BaseTest{
 
     @BeforeMethod(alwaysRun = true)
     public void start() throws IOException {
-        port = 8080;
+        port = findFreePort();
         targetUrl = "http://127.0.0.1:" + port;
         wsUrl = "ws://127.0.0.1:" + port;
     }
@@ -104,7 +102,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
                 }).build();
 
-        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server = new Nettosphere.Builder().config(config).build();
 
         assertNotNull(server);
         server.start();
@@ -195,7 +193,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
                 }).build();
 
-        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server = new Nettosphere.Builder().config(config).build();
 
         assertNotNull(server);
         server.start();
@@ -284,7 +282,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
                 }).build();
 
-        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server = new Nettosphere.Builder().config(config).build();
         assertNotNull(server);
         server.start();
 

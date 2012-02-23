@@ -25,8 +25,8 @@ import com.ning.http.client.Response;
 import org.atmosphere.cache.HeaderBroadcasterCache;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.HeaderConfig;
-import org.atmosphere.plugin.netty.Config;
-import org.atmosphere.plugin.netty.NettyAtmosphereServer;
+import org.atmosphere.nettosphere.Config;
+import org.atmosphere.nettosphere.Nettosphere;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -46,7 +46,7 @@ import static org.testng.Assert.fail;
 public class NettyJerseyTest extends BaseTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(NettyJerseyTest.class);
-    private NettyAtmosphereServer server;
+    private Nettosphere server;
 
     String getUrlTarget(int port) {
         return "http://127.0.0.1:" + port + "/invoke";
@@ -62,7 +62,7 @@ public class NettyJerseyTest extends BaseTest {
                 .host("127.0.0.1")
                 .initParam("com.sun.jersey.config.property.packages", this.getClass().getPackage().getName())
                 .build();
-        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server = new Nettosphere.Builder().config(config).build();
         server.start();
     }
 
@@ -441,7 +441,7 @@ public class NettyJerseyTest extends BaseTest {
                 .initParam("com.sun.jersey.config.property.packages", this.getClass().getPackage().getName())
                 .broadcasterCache(HeaderBroadcasterCache.class)
                 .build();
-        server = new NettyAtmosphereServer.Builder().config(config).build();
+        server = new Nettosphere.Builder().config(config).build();
         server.start();
 
 
