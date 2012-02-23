@@ -3,25 +3,39 @@ Netosphere: An HTTP/WebSocket server based on the Atmosphere Framework and Netty
 
 Atmosphere's Meteor, AtmosphereHandler, WebSocketProtocol and Jersey Resource are supported.
 
-As simple as mbedded using
+Deploy an AtmosphereHandler, access it using HTTP or WebSocket
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
-                    .path("/apps")
                     .host("127.0.0.1")
-                    .port(8080).build())
-                    .build();
+                    .port(8080)
+                    .handler("/*", MyAtmosphereHandler.class)
+                    .build())
+                 .build();
     server.start();
 
-or
+
+Deploy an AtmosphereHandler, define a WebSocket protocol
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
-                    .port(8080).build())
-                    .broadcaster(DefaultBroadcaster.class)
+                    .port(8080)
+                    .webSocketProtocol(JMSOverWebSocketProtocol.class)
                     .handler("/*", MyAtmosphereHandler.class)
-                    .build()).build();
+                    .build())
+                 .build();
+    server.start();
+
+Deploy a Servlet which use Meteor
+
+    NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
+                 new Config.Builder()
+                    .host("127.0.0.1")
+                    .port(8080)
+                    .meteor("/*", MyServlet.class)
+                    .build())
+                 .build();
     server.start();
 
 The Server can also be started using java

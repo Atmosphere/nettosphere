@@ -19,11 +19,10 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.atmosphere.websocket.WebSocketProcessor;
+import org.atmosphere.websocket.WebSocketProtocol;
 
 import javax.servlet.Servlet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -81,8 +80,8 @@ public class Config {
         return b.broadcasterCache;
     }
 
-    public Class<? extends WebSocketProcessor> webSocketProcessor() {
-        return b.webSocketProcessor;
+    public Class<? extends WebSocketProtocol> webSocketProtocol() {
+        return b.webSocketProtocol;
     }
 
     public final static class Builder {
@@ -94,7 +93,7 @@ public class Config {
         private final Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlers = new HashMap<String, Class<? extends AtmosphereHandler<?, ?>>>();
         private final Map<String, Class<? extends Servlet>> classMeteors = new HashMap<String, Class<? extends Servlet>>();
         private final Map<String, Servlet> meteors = new HashMap<String, Servlet>();
-        private Class<? extends WebSocketProcessor> webSocketProcessor;
+        private Class<? extends WebSocketProtocol> webSocketProtocol;
 
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
@@ -155,8 +154,8 @@ public class Config {
             return this;
         }
 
-        public Builder webSocketProcessor(Class<? extends WebSocketProcessor> webSocketProcessor) {
-            this.webSocketProcessor = webSocketProcessor;
+        public Builder webSocketProtocol(Class<? extends WebSocketProtocol> webSocketProtocol) {
+            this.webSocketProtocol = webSocketProtocol;
             return this;
         }
 
