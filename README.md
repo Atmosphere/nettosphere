@@ -1,10 +1,8 @@
 Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
-=========================================================================================================
-
+-----------------------------------------------------------------------------
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
-Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
------------------------------------------------------------------------------
+### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
@@ -16,8 +14,7 @@ Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
     server.start();
 
 
-Deploy an AtmosphereHandler, access it using HTTP or WebSocket
---------------------------------------------------------------
+### Deploy an AtmosphereHandler, access it using HTTP or WebSocket
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
@@ -29,8 +26,7 @@ Deploy an AtmosphereHandler, access it using HTTP or WebSocket
     server.start();
 
 
-Deploy an AtmosphereHandler, define a WebSocket protocol
---------------------------------------------------------
+### Deploy an AtmosphereHandler, define a WebSocket protocol
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
@@ -42,8 +38,7 @@ Deploy an AtmosphereHandler, define a WebSocket protocol
                  .build();
     server.start();
 
-Deploy a Servlet which use Meteor
----------------------------------
+### Deploy a Servlet which use Meteor
 
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
@@ -54,8 +49,7 @@ Deploy a Servlet which use Meteor
                  .build();
     server.start();
 
-The Server can also be started using java
------------------------------------------
+### The Server can also be started using java
 
     java -cp netosphere-all.jar
           org.atmosphere.plugin.netty.NettyAtmosphereServer
