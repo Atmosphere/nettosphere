@@ -260,7 +260,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             AtmosphereServlet.Action action = (AtmosphereServlet.Action) r.getAttribute(NettyCometSupport.SUSPEND);
 
-            if (action != null && action.type == AtmosphereServlet.Action.TYPE.SUSPEND) {
+            if (action != null && action.type == AtmosphereServlet.Action.TYPE.SUSPEND && action.timeout != -1) {
                 suspendTimer.schedule(new Runnable() {
                     @Override
                     public void run() {
