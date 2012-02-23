@@ -16,7 +16,6 @@
 package org.atmosphere.plugin.netty;
 
 import org.atmosphere.cpr.AtmosphereHandler;
-import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -55,15 +54,19 @@ public class Config {
         return b.broadcasterClass;
     }
 
-    public Map<String, AtmosphereHandler<?,?>> handlersMap() {
+    public Map<String, AtmosphereHandler<?, ?>> handlersMap() {
         return b.handlers;
+    }
+
+    public Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlerMap() {
+        return b.classHandlers;
     }
 
     public BroadcasterFactory broadcasterFactory() {
         return b.broadcasterFactory;
     }
 
-    public Class<? extends BroadcasterCache<?,?>> broadcasterCache(){
+    public Class<? extends BroadcasterCache<?, ?>> broadcasterCache() {
         return b.broadcasterCache;
     }
 
@@ -72,10 +75,11 @@ public class Config {
         private String host = "localhost";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
-        private final Map<String, AtmosphereHandler<?,?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
+        private final Map<String, AtmosphereHandler<?, ?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
+        private final Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlers = new HashMap<String, Class<? extends AtmosphereHandler<?, ?>>>();
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
-        private Class<? extends BroadcasterCache<?,?>> broadcasterCache;
+        private Class<? extends BroadcasterCache<?, ?>> broadcasterCache;
 
         public Builder path(String applicationPath) {
             this.applicationPath = applicationPath;
@@ -97,8 +101,13 @@ public class Config {
             return this;
         }
 
-        public Builder handler(String path, AtmosphereHandler<?,?> c) {
-            handlers.put(path,c);
+        public Builder handler(String path, AtmosphereHandler<?, ?> c) {
+            handlers.put(path, c);
+            return this;
+        }
+
+        public Builder handler(String path, Class<? extends AtmosphereHandler<?, ?>> c) {
+            classHandlers.put(path, c);
             return this;
         }
 
@@ -112,7 +121,7 @@ public class Config {
             return this;
         }
 
-        public Builder broadcasterCache(Class<? extends BroadcasterCache<?,?>> broadcasterCache) {
+        public Builder broadcasterCache(Class<? extends BroadcasterCache<?, ?>> broadcasterCache) {
             this.broadcasterCache = broadcasterCache;
             return this;
         }

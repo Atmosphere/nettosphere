@@ -112,6 +112,17 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             as.addAtmosphereHandler(e.getKey(), e.getValue());
         }
 
+        Map<String, Class<? extends AtmosphereHandler<?, ?>>> classHandlersMap = config.classHandlerMap();
+        for (Map.Entry<String, Class<? extends AtmosphereHandler<?, ?>>> e : classHandlersMap.entrySet()) {
+            try {
+                as.addAtmosphereHandler(e.getKey(), e.getValue().newInstance());
+            } catch (InstantiationException e1) {
+                logger.warn("Invalid AtmosphereHandler implementation {}", e.getValue());
+            } catch (IllegalAccessException e1) {
+                logger.warn("Invalid AtmosphereHandler implementation {}", e.getValue());
+            }
+        }
+
         try {
             as.init(new NettyServletConfig(config.initParams(), new NettyServletContext.Builder().basePath(config.path()).build()));
         } catch (ServletException e) {
