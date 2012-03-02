@@ -34,8 +34,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -74,12 +72,12 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler() {
 
                     private final AtomicBoolean b = new AtomicBoolean(false);
 
                     @Override
-                    public void onRequest(AtmosphereResource<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onRequest(AtmosphereResource r) throws IOException {
                         if (!b.getAndSet(true)) {
                             r.suspend(-1, false);
                             suspendCD.countDown();
@@ -89,7 +87,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
 
                     @Override
-                    public void onStateChange(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
                         if (!r.isResuming() || !r.isCancelled()) {
                             r.getResource().getResponse().getWriter().print(r.getMessage());
                             r.getResource().resume();
@@ -165,12 +163,12 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler() {
 
                     private final AtomicBoolean suspended = new AtomicBoolean(false);
 
                     @Override
-                    public void onRequest(AtmosphereResource<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onRequest(AtmosphereResource r) throws IOException {
                         if (!suspended.getAndSet(true)) {
                             r.suspend(-1, true);
                             suspendCD.countDown();
@@ -180,7 +178,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
 
                     @Override
-                    public void onStateChange(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
                         if (suspended.get()) {
                             r.getResource().getResponse().getWriter().print(r.getMessage());
                             r.getResource().resume();
@@ -255,12 +253,12 @@ public class NettyAtmosphereTest extends BaseTest{
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .resource("/suspend", new AtmosphereHandler<HttpServletRequest, HttpServletResponse>() {
+                .resource("/suspend", new AtmosphereHandler() {
 
                     private final AtomicBoolean b = new AtomicBoolean(false);
 
                     @Override
-                    public void onRequest(AtmosphereResource<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onRequest(AtmosphereResource r) throws IOException {
                         if (!b.getAndSet(true)) {
                             r.suspend(-1, false);
                         } else {
@@ -269,7 +267,7 @@ public class NettyAtmosphereTest extends BaseTest{
                     }
 
                     @Override
-                    public void onStateChange(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> r) throws IOException {
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
                         if (!r.isResuming() || !r.isCancelled()) {
                             r.getResource().getResponse().getWriter().print(r.getMessage());
                             r.getResource().resume();

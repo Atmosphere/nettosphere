@@ -16,6 +16,7 @@
 package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
+import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -23,7 +24,6 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
-import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.util.Version;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -78,7 +78,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
-    private final AtmosphereServlet as;
+    private final AtmosphereFramework framework;
     private final Config config;
     private WebSocketServerHandshaker handshaker;
     private final ScheduledExecutorService suspendTimer;
@@ -86,15 +86,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public NettyAtmosphereHandler(Config config) {
         super(config.path());
         this.config = config;
-        as = new AtmosphereServlet();
+        framework = new AtmosphereFramework();
 
         if (config.broadcaster() != null) {
-            as.setDefaultBroadcasterClassName(config.broadcaster().getName());
+            framework.setDefaultBroadcasterClassName(config.broadcaster().getName());
         }
 
         try {
             if (config.broadcasterFactory() != null) {
-                as.setBroadcasterFactory(config.broadcasterFactory());
+                framework.setBroadcasterFactory(config.broadcasterFactory());
             }
         } catch (Throwable t) {
             logger.trace("", t);
@@ -102,23 +102,23 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         if (config.broadcasterCache() != null) {
             try {
-                as.setBroadcasterCacheClassName(config.broadcasterCache().getName());
+                framework.setBroadcasterCacheClassName(config.broadcasterCache().getName());
             } catch (Throwable t) {
                 logger.trace("", t);
             }
         }
 
-        Map<String, AtmosphereHandler<?, ?>> handlersMap = config.handlersMap();
-        for (Map.Entry<String, AtmosphereHandler<?, ?>> e : handlersMap.entrySet()) {
-            as.addAtmosphereHandler(e.getKey(), e.getValue());
+        Map<String, AtmosphereHandler> handlersMap = config.handlersMap();
+        for (Map.Entry<String, AtmosphereHandler> e : handlersMap.entrySet()) {
+            framework.addAtmosphereHandler(e.getKey(), e.getValue());
         }
 
         if (config.webSocketProtocol() != null) {
-            as.setWebSocketProtocolClassName(config.webSocketProtocol().getName());
+            framework.setWebSocketProtocolClassName(config.webSocketProtocol().getName());
         }
 
         try {
-            as.init(new NettyServletConfig(config.initParams(), new NettyServletContext.Builder().basePath(config.path()).build()));
+            framework.init(new NettyServletConfig(config.initParams(), new NettyServletContext.Builder().basePath(config.path()).build()));
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
@@ -159,9 +159,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             this.handshaker.handshake(ctx.getChannel(), request);
         }
 
-        WebSocketProcessor processor = new WebSocketProcessor(as,
-                new NettyWebSocket(ctx.getChannel(), as.getAtmosphereConfig()),
-                as.getWebSocketProtocol());
+        WebSocketProcessor processor = new WebSocketProcessor(framework,
+                new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig()),
+                framework.getWebSocketProtocol());
         ctx.setAttachment(processor);
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
 
@@ -251,7 +251,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);
 
-            as.doCometSupport(r, response);
+            framework.doCometSupport(r, response);
 
             NettyCometSupport.CometSupportHook hook = (NettyCometSupport.CometSupportHook) r.getAttribute(NettyCometSupport.HOOK);
             ctx.setAttachment(hook);
@@ -263,9 +263,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 resumeOnBroadcast = true;
             }
 
-            AtmosphereServlet.Action action = (AtmosphereServlet.Action) r.getAttribute(NettyCometSupport.SUSPEND);
+            AtmosphereFramework.Action action = (AtmosphereFramework.Action) r.getAttribute(NettyCometSupport.SUSPEND);
 
-            if (action != null && action.type == AtmosphereServlet.Action.TYPE.SUSPEND && action.timeout != -1) {
+            if (action != null && action.type == AtmosphereFramework.Action.TYPE.SUSPEND && action.timeout != -1) {
                 suspendTimer.schedule(new Runnable() {
                     @Override
                     public void run() {
@@ -278,6 +278,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                         }
                     }
                 }, action.timeout, TimeUnit.MILLISECONDS);
+            } else if (action != null && action.type == AtmosphereFramework.Action.TYPE.RESUME) {
+                resumeOnBroadcast = false;
             }
             w.resumeOnBroadcast(resumeOnBroadcast);
         } catch (AtmosphereMappingException ex) {
@@ -307,7 +309,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     public void destroy() {
-        if (as != null) as.destroy();
+        if (framework != null) framework.destroy();
         suspendTimer.shutdown();
     }
 

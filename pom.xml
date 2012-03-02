@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-runtime</artifactId>
-            <version>0.9.0.alpha.v20120301</version>
+            <version>0.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-jersey</artifactId>
-            <version>0.9.0.alpha.v20120301</version>
+            <version>0.9-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -305,7 +305,7 @@
     </distributionManagement>
     <properties>
         <distMgmtSnapshotsUrl>http://oss.sonatype.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
-        <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
+        <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
     </properties>

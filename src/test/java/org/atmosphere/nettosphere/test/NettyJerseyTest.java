@@ -427,7 +427,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = true)
+    @Test(timeOut = 60000, enabled = true)
     public void testHeaderBroadcasterCache() throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException {
         logger.info("{}: running test: testHeaderBroadcasterCache", getClass().getSimpleName());
 
@@ -438,12 +438,11 @@ public class NettyJerseyTest extends BaseTest {
                 .path("/")
                 .port(port)
                 .host("127.0.0.1")
-                .initParam("com.sun.jersey.config.property.packages", this.getClass().getPackage().getName())
+                .resource(Resource.class)
                 .broadcasterCache(HeaderBroadcasterCache.class)
                 .build();
         server = new Nettosphere.Builder().config(config).build();
         server.start();
-
 
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
@@ -469,7 +468,7 @@ public class NettyJerseyTest extends BaseTest {
             }).get();
 
             try {
-                latch.await(20, TimeUnit.SECONDS);
+                latch.await(60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 fail(e.getMessage());
             }

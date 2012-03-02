@@ -59,7 +59,7 @@ public class Config {
         return b.broadcasterClass;
     }
 
-    public Map<String, AtmosphereHandler<?, ?>> handlersMap() {
+    public Map<String, AtmosphereHandler> handlersMap() {
         return b.handlers;
     }
 
@@ -67,7 +67,7 @@ public class Config {
         return b.broadcasterFactory;
     }
 
-    public Class<? extends BroadcasterCache<?, ?>> broadcasterCache() {
+    public Class<? extends BroadcasterCache> broadcasterCache() {
         return b.broadcasterCache;
     }
 
@@ -80,7 +80,7 @@ public class Config {
         private String host = "localhost";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
-        private final Map<String, AtmosphereHandler<?, ?>> handlers = new HashMap<String, AtmosphereHandler<?, ?>>();
+        private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
         private final Map<String, Class<?>> resources = new HashMap<String, Class<?>>();
 
         private final Map<String, Servlet> meteors = new HashMap<String, Servlet>();
@@ -88,7 +88,7 @@ public class Config {
 
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
-        private Class<? extends BroadcasterCache<?, ?>> broadcasterCache;
+        private Class<? extends BroadcasterCache> broadcasterCache;
 
         public Builder path(String applicationPath) {
             this.applicationPath = applicationPath;
@@ -110,7 +110,7 @@ public class Config {
             return this;
         }
 
-        public Builder resource(String path, AtmosphereHandler<?, ?> c) {
+        public Builder resource(String path, AtmosphereHandler c) {
             handlers.put(path, c);
             return this;
         }
@@ -151,7 +151,7 @@ public class Config {
             return this;
         }
 
-        public Builder broadcasterCache(Class<? extends BroadcasterCache<?, ?>> broadcasterCache) {
+        public Builder broadcasterCache(Class<? extends BroadcasterCache> broadcasterCache) {
             this.broadcasterCache = broadcasterCache;
             return this;
         }
