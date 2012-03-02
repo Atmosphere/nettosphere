@@ -14,11 +14,11 @@
     <description>
         NettoSphere: A HTLM/WebSocket server powered by Atmosphere and Netty Framework
     </description>
-    <url>http://github.com/Atmosphere/netty-atmosphere</url>
+    <url>http://github.com/Atmosphere/nettosphere</url>
     <scm>
-        <connection>scm:git:git@github.com:Atmosphere/netty-atmosphere.git</connection>
-        <url>https://github.com/Atmosphere/netty-atmosphere</url>
-        <developerConnection>scm:git:git@github.com:Atmosphere/netty-atmosphere.git</developerConnection>
+        <connection>scm:git:git@github.com:Atmosphere/nettosphere.git</connection>
+        <url>https://github.com/Atmosphere/nettosphere</url>
+        <developerConnection>scm:git:git@github.com:Atmosphere/nettosphere.git</developerConnection>
     </scm>
     <issueManagement>
         <system>github</system>
