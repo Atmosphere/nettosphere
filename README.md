@@ -5,7 +5,7 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>1.0.0-SNAPSHOT</version>
+         <version>1.0.0</version>
      </dependency>
 
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
