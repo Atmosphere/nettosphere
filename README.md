@@ -60,7 +60,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ### The Server can also be started using java
 
     java -cp netosphere-all.jar
-          org.atmosphere.plugin.netty.NettyAtmosphereServer
+          org.atmosphere.nettosphere.NettyAtmosphereServer
                 [/path/to/an/exploded/war/file] [host] [port]
 
 We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
