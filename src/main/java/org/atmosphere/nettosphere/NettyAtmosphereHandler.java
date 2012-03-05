@@ -247,7 +247,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
                     .header("Server", "Atmosphere-" + Version.getRawVersion())
-                    .atmosphereRequest(r).build();
+                    .request(r).build();
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);
 
