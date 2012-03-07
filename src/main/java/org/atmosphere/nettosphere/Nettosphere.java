@@ -80,7 +80,7 @@ public final class Nettosphere {
     }
 
     /**
-     * Construct a {@link NettyAtmosphereServer}.
+     * Construct a {@link Nettosphere}.
      */
     public final static class Builder {
 

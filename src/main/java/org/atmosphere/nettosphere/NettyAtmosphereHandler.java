@@ -189,7 +189,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
         final String base = getBaseUri(request);
-        final URI requestUri = new URI(base.substring(0, base.length() - 1) + sanitizeUri(request.getUri()));
+        final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
         String method = request.getMethod().getName();
 
