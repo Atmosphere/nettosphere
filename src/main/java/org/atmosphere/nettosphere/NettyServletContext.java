@@ -65,29 +65,20 @@ public class NettyServletContext implements ServletContext {
         }
 
         public Builder basePath(String basePath) {
-            this.basePath = basePath;
-            if (!basePath.endsWith("/")) {
-                this.basePath += "/";
+            this.basePath = basePath.replaceAll("\\\\", "/");;
+            if (!basePath.endsWith(File.pathSeparator)) {
+                this.basePath += File.pathSeparator;
             }
             return this;
         }
 
         public NettyServletContext build() {
-            File f = null;
-            try {
-                f = new File(basePath);
-                f.createNewFile();
-            } catch (IOException e) {
-                logger.warn("", e);
-            }
-            f.deleteOnExit();
             try {
                 URL url = URI.create("file://" + basePath + "WEB-INF/classes/").toURL();
                 URL url2 = URI.create("file://" + basePath + "WEB-INF/lib/").toURL();
                 URLClassLoader urlC = new URLClassLoader(new URL[]{url, url2},
                         Thread.currentThread().getContextClassLoader());
                 Thread.currentThread().setContextClassLoader(urlC);
-
             } catch (IOException e) {
                 logger.warn("", e);
             }
