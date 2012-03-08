@@ -30,6 +30,7 @@ import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
+import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -79,8 +80,12 @@ public class NettyAtmosphereTest extends BaseTest{
                     @Override
                     public void onRequest(AtmosphereResource r) throws IOException {
                         if (!b.getAndSet(true)) {
-                            r.suspend(-1, false);
-                            suspendCD.countDown();
+                            r.suspend(-1, false).addEventListener(new WebSocketEventListenerAdapter() {
+                                @Override
+                                public void onSuspend(AtmosphereResourceEvent e) {
+                                    suspendCD.countDown();
+                                }
+                            });
                         } else {
                             r.getBroadcaster().broadcast(RESUME);
                         }

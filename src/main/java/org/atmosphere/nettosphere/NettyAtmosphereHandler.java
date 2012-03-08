@@ -21,7 +21,6 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
-import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.util.Version;
@@ -49,7 +48,6 @@ import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
