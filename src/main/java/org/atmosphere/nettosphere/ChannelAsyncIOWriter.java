@@ -119,7 +119,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
             channel.write(c.buffer()).addListener(listener);
             byteWritten = true;
         } else {
-            logger.warn("Channel closed {}", channel);
+            logger.warn("Trying to write on a closed channel {}", channel);
         }
         headerWritten = true;
     }
