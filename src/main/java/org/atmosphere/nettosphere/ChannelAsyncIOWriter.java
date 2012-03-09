@@ -49,6 +49,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     private final static String END = Integer.toHexString(0);
     private final static byte[] CHUNK_DELIMITER = "\r\n".getBytes();
     private final static byte[] ENDCHUNK = (END + "\r\n\r\n").getBytes();
+    private long lastWrite = 0;
 
     public ChannelAsyncIOWriter(Channel channel) {
         this.channel = channel;
@@ -118,10 +119,15 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
 
             channel.write(c.buffer()).addListener(listener);
             byteWritten = true;
+            lastWrite = System.currentTimeMillis();
         } else {
             logger.warn("Trying to write on a closed channel {}", channel);
         }
         headerWritten = true;
+    }
+
+    public long lastTick() {
+        return lastWrite == -1 ? System.currentTimeMillis() : lastWrite;
     }
 
     @Override

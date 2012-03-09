@@ -64,9 +64,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
@@ -266,17 +268,18 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 resumeOnBroadcast = true;
             }
 
-            AtmosphereFramework.Action action = (AtmosphereFramework.Action) r.getAttribute(NettyCometSupport.SUSPEND);
-
+            final AtmosphereFramework.Action action = (AtmosphereFramework.Action) r.getAttribute(NettyCometSupport.SUSPEND);
             if (action != null && action.type == AtmosphereFramework.Action.TYPE.SUSPEND && action.timeout != -1) {
-                suspendTimer.schedule(new Runnable() {
+                final AtomicReference<Future<?>> f = new AtomicReference();
+                f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
                     @Override
                     public void run() {
-                        if (!w.isClosed()) {
+                        if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout) {
                             hook.timedOut();
+                            f.get().cancel(true);
                         }
                     }
-                }, action.timeout, TimeUnit.MILLISECONDS);
+                }, action.timeout, action.timeout, TimeUnit.MILLISECONDS));
             } else if (action != null && action.type == AtmosphereFramework.Action.TYPE.RESUME) {
                 resumeOnBroadcast = false;
             }
