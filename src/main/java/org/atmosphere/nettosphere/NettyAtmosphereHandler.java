@@ -15,7 +15,9 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.config.FrameworkConfiguration;
 import org.atmosphere.container.NettyCometSupport;
+import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereMappingException;
@@ -251,7 +253,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             framework.doCometSupport(r, response);
 
-            NettyCometSupport.CometSupportHook hook = (NettyCometSupport.CometSupportHook) r.getAttribute(NettyCometSupport.HOOK);
+            final AsynchronousProcessor.AsynchronousProcessorHook hook = (AsynchronousProcessor.AsynchronousProcessorHook) r.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
             ctx.setAttachment(hook);
 
             String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
@@ -267,12 +269,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 suspendTimer.schedule(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            if (!w.isClosed()) {
-                                w.close();
-                            }
-                        } catch (IOException e) {
-                            logger.trace("", e);
+                        if (!w.isClosed()) {
+                            hook.timedOut();
                         }
                     }
                 }, action.timeout, TimeUnit.MILLISECONDS);
@@ -317,13 +315,13 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         Object o = ctx.getAttachment();
         if (o == null) return;
 
-        if (NettyCometSupport.CometSupportHook.class.isAssignableFrom(o.getClass())) {
-            NettyCometSupport.CometSupportHook hook = NettyCometSupport.CometSupportHook.class.cast(o);
+        if (AsynchronousProcessor.AsynchronousProcessorHook.class.isAssignableFrom(o.getClass())) {
+            AsynchronousProcessor.AsynchronousProcessorHook hook = AsynchronousProcessor.AsynchronousProcessorHook.class.cast(o);
             if (hook != null) {
                 hook.closed();
             }
         } else if (WebSocketProcessor.class.isAssignableFrom(o.getClass())) {
-            WebSocketProcessor.class.cast(o).close();
+            WebSocketProcessor.class.cast(o).close(1000);
         }
     }
 

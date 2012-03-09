@@ -58,6 +58,11 @@
             <artifactId>netty</artifactId>
             <version>3.3.1.Final</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>
