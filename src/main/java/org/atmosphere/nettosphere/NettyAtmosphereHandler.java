@@ -62,6 +62,7 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -129,11 +130,13 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent.getMessage();
         if (msg instanceof HttpRequest) {
-            String connection = HttpRequest.class.cast(msg).getHeader("Connection");
-            if (connection != null && connection.equalsIgnoreCase("upgrade")) {
-                handleWebSocketHandshake(ctx, messageEvent);
-            } else {
-                handleHttp(ctx, messageEvent);
+            List<String> c = HttpRequest.class.cast(msg).getHeaders("Connection");
+            for (String connection : c) {
+                if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
+                    handleWebSocketHandshake(ctx, messageEvent);
+                } else {
+                    handleHttp(ctx, messageEvent);
+                }
             }
         } else if (msg instanceof WebSocketFrame) {
             handleWebSocketFrame(ctx, messageEvent);
