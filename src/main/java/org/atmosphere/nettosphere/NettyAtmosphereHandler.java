@@ -390,7 +390,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     private String getWebSocketLocation(HttpRequest req) {
-        return "ws://" + req.getHeader(HttpHeaders.Names.HOST);
+        return "ws://" + req.getHeader(HttpHeaders.Names.HOST) + req.getUri();
     }
 
     private final static class NettyServletConfig implements ServletConfig {
