@@ -69,19 +69,16 @@
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-jersey</artifactId>
             <version>0.9-SNAPSHOT</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.0.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.ning</groupId>
@@ -296,7 +293,7 @@
             </plugin>
         </plugins>
     </reporting>
-        <repositories>
+    <repositories>
         <repository>
             <id>oss.sonatype.org</id>
             <url>http://oss.sonatype.org/content/repositories/releases</url>
