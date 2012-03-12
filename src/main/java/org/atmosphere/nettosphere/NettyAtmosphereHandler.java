@@ -132,13 +132,23 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent.getMessage();
         if (msg instanceof HttpRequest) {
+            // Netty fail to decode headers separated by a ','
             List<String> c = HttpRequest.class.cast(msg).getHeaders("Connection");
+            String u = HttpRequest.class.cast(msg).getHeader("Upgrade");
+            boolean webSocket = false;
+            if (u != null && u.equalsIgnoreCase("websocket")) {
+                webSocket = true;
+            }
+
             for (String connection : c) {
                 if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
-                    handleWebSocketHandshake(ctx, messageEvent);
-                } else {
-                    handleHttp(ctx, messageEvent);
+                    webSocket = true;
                 }
+            }
+            if (webSocket) {
+                handleWebSocketHandshake(ctx, messageEvent);
+            } else {
+                handleHttp(ctx, messageEvent);
             }
         } else if (msg instanceof WebSocketFrame) {
             handleWebSocketFrame(ctx, messageEvent);
