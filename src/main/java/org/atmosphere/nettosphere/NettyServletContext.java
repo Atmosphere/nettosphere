@@ -65,9 +65,9 @@ public class NettyServletContext implements ServletContext {
         }
 
         public Builder basePath(String basePath) {
-            this.basePath = basePath.replaceAll("\\\\", "/");;
-            if (!basePath.endsWith(File.pathSeparator)) {
-                this.basePath += File.pathSeparator;
+            this.basePath = basePath.replaceAll("\\\\", "/");
+            if (!basePath.endsWith(File.separator)) {
+                this.basePath += File.separator;
             }
             return this;
         }
