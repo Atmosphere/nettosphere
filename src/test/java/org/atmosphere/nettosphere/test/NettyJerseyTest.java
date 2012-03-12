@@ -84,7 +84,7 @@ public class NettyJerseyTest extends BaseTest {
             String resume = r.getResponseBody();
             assertEquals(resume, "resume");
             long current = System.currentTimeMillis() - t1;
-            assertTrue(current > 5000 && current < 10000);
+            assertTrue(current > 5000 && current < 15000);
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
