@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -38,12 +37,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class NettyServletContext implements ServletContext {
-    private static final Logger logger = LoggerFactory.getLogger(NettyServletContext.class);
+public class Context implements ServletContext {
+    private static final Logger logger = LoggerFactory.getLogger(Context.class);
 
     private final Builder b;
 
-    private NettyServletContext(Builder b) {
+    private Context(Builder b) {
         this.b = b;
     }
 
@@ -72,17 +71,13 @@ public class NettyServletContext implements ServletContext {
             return this;
         }
 
-        public NettyServletContext build() {
+        public Context build() {
             try {
-                URL url = URI.create("file://" + basePath + "WEB-INF/classes/").toURL();
-                URL url2 = URI.create("file://" + basePath + "WEB-INF/lib/").toURL();
-                URLClassLoader urlC = new URLClassLoader(new URL[]{url, url2},
-                        Thread.currentThread().getContextClassLoader());
-                Thread.currentThread().setContextClassLoader(urlC);
+                Thread.currentThread().setContextClassLoader(Utils.createURLClassLoader(basePath));
             } catch (IOException e) {
                 logger.warn("", e);
             }
-            return new NettyServletContext(this);
+            return new Context(this);
         }
 
     }
@@ -156,7 +151,7 @@ public class NettyServletContext implements ServletContext {
     @Override
     public InputStream getResourceAsStream(String path) {
         try {
-            return new FileInputStream(new File(URI.create("file://" + b.basePath + path)));
+            return new FileInputStream(new File(b.basePath + path));
         } catch (FileNotFoundException e) {
             logger.trace("", e);
         }

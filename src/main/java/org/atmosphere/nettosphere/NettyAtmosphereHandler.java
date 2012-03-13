@@ -15,7 +15,6 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.atmosphere.config.FrameworkConfiguration;
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
@@ -121,7 +120,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         try {
-            framework.init(new NettyServletConfig(config.initParams(), new NettyServletContext.Builder().basePath(config.path()).build()));
+            framework.init(new NettyServletConfig(config.initParams(), new Context.Builder().basePath(config.path()).build()));
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
