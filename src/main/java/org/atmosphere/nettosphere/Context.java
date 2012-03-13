@@ -65,9 +65,6 @@ public class Context implements ServletContext {
 
         public Builder basePath(String basePath) {
             this.basePath = basePath.replaceAll("\\\\", "/");
-            if (!this.basePath.endsWith("/")) {
-                this.basePath += "/";
-            }
             return this;
         }
 
@@ -145,12 +142,18 @@ public class Context implements ServletContext {
 
     @Override
     public URL getResource(String path) throws MalformedURLException {
+        if (!path.replace("\\\\", "/").startsWith("/")) {
+            path = "/" + path;
+        }
         return URI.create("file://" + b.basePath + path).toURL();
     }
 
     @Override
     public InputStream getResourceAsStream(String path) {
         try {
+            if (!path.replace("\\\\", "/").replace("\\", "/").startsWith("/")) {
+                path = "/" + path;
+            }
             return new FileInputStream(new File(b.basePath + path));
         } catch (FileNotFoundException e) {
             logger.trace("", e);
