@@ -55,7 +55,7 @@ public class Utils {
         URL appRoot;
         URL classesURL;
 
-        if (!dirPath.endsWith(File.separator) &&
+        if (!dirPath.endsWith("/") &&
                 !dirPath.endsWith(".war") &&
                 !dirPath.endsWith(".jar")) {
             dirPath += File.separator;
