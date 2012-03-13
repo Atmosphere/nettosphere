@@ -63,4 +63,8 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
           org.atmosphere.nettosphere.Nettosphere
                 [/path/to/an/exploded/war/file] [host] [port]
 
+### Using Maven and the Git repo
+
+    mvn exec:java -Dexec.arguments='path to your exploded war file'
+
 We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
