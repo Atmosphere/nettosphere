@@ -24,7 +24,7 @@ import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
-import org.atmosphere.util.Version;
+import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -260,7 +260,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
-                    .header("Server", "Atmosphere-" + Version.getRawVersion())
+                    .header("Server", "Nettosphere-" +  Version.getRawVersion())
                     .request(r).build();
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);

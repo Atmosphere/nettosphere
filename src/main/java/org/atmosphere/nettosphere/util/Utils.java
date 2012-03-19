@@ -30,7 +30,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.atmosphere.nettosphere;
+package org.atmosphere.nettosphere.util;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

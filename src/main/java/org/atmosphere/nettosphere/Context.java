@@ -15,6 +15,7 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.nettosphere.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
