@@ -59,7 +59,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 ### The Server can also be started using java
 
-    java -cp netosphere-all.jar
+    java -cp nettosphere-all.jar
           org.atmosphere.nettosphere.Nettosphere
                 [/path/to/an/exploded/war/file] [host] [port]
 
