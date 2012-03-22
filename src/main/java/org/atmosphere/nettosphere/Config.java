@@ -81,9 +81,6 @@ public class Config {
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
-        private final Map<String, Class<?>> resources = new HashMap<String, Class<?>>();
-
-        private final Map<String, Servlet> meteors = new HashMap<String, Servlet>();
         private Class<? extends WebSocketProtocol> webSocketProtocol;
 
         private Class<Broadcaster> broadcasterClass;
