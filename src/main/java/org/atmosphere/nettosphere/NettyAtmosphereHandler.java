@@ -341,7 +341,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             if (hook != null) {
                 hook.closed();
             }
-        } else if (WebSocketProcessor.class.isAssignableFrom(o.getClass())) {
             WebSocketProcessor.class.cast(o).close(1000);
         }
     }
