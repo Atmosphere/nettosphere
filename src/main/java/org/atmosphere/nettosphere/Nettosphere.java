@@ -104,7 +104,7 @@ public final class Nettosphere {
         s.start();
         String a = "";
 
-        logger.info("NettyAtmosphere Server started");
+        logger.info("NettoSphere Server started");
         logger.info("Type quit to stop the server");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (!(a.equals("quit"))) {
