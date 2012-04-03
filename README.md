@@ -11,7 +11,7 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
 ### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
-
+```java
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
@@ -20,10 +20,10 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                     .build())
                  .build();
     server.start();
-
+```
 
 ### Deploy an AtmosphereHandler, access it using HTTP or WebSocket
-
+```java
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
@@ -32,10 +32,10 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                     .build())
                  .build();
     server.start();
-
+```
 
 ### Deploy an AtmosphereHandler, define a WebSocket protocol
-
+```java
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
@@ -45,9 +45,9 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                     .build())
                  .build();
     server.start();
-
+```
 ### Deploy a Servlet which use Meteor
-
+```java
     NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
@@ -56,7 +56,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                     .build())
                  .build();
     server.start();
-
+```
 ### The Server can also be started using java
 
     java -cp nettosphere-all.jar
