@@ -2,11 +2,13 @@ Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framewo
 -----------------------------------------------------------------------------
 Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/1.0.0-SNAPSHOT/) or use Maven
 
+```xml
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
          <version>1.1.0</version>
      </dependency>
+```
 
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
@@ -59,10 +61,11 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ```
 ### The Server can also be started using java
 
+```java
     java -cp nettosphere-all.jar
           org.atmosphere.nettosphere.Nettosphere
                 [/path/to/an/exploded/war/file] [host] [port]
-
+```
 ### Using Maven and the Git repo
 
     mvn exec:java -Dexec.arguments='path to your exploded war file'
