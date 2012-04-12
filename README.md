@@ -14,7 +14,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 ### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
 ```java
-    NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
+    Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
                     .port(8080)
@@ -26,7 +26,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 ### Deploy an AtmosphereHandler, access it using HTTP or WebSocket
 ```java
-    NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
+    Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
                     .port(8080)
@@ -38,7 +38,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 ### Deploy an AtmosphereHandler, define a WebSocket protocol
 ```java
-    NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
+    Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
                     .port(8080)
@@ -50,7 +50,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ```
 ### Deploy a Servlet which use Meteor
 ```java
-    NettyAtmosphereServer server = new NettyAtmosphereServer.Builder().config(
+    Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
                     .host("127.0.0.1")
                     .port(8080)
