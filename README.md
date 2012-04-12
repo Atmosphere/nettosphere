@@ -6,7 +6,7 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>1.2.0</version>
+         <version>1.2</version>
      </dependency>
 ```
 
