@@ -52,7 +52,7 @@ public class Config {
     }
 
     public String path() {
-        return b.applicationPath;
+        return b.staticResourcePath;
     }
 
     public Class<Broadcaster> broadcaster() {
@@ -76,7 +76,7 @@ public class Config {
     }
 
     public final static class Builder {
-        private String applicationPath = "/";
+        private String staticResourcePath = "/";
         private String host = "localhost";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
@@ -87,8 +87,13 @@ public class Config {
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
 
-        public Builder path(String applicationPath) {
-            this.applicationPath = applicationPath;
+        /**
+         * The path location of static resource (e.g html)
+         * @param staticResourcePath
+         * @return
+         */
+        public Builder resource(String staticResourcePath) {
+            this.staticResourcePath = staticResourcePath;
             return this;
         }
 
@@ -118,7 +123,7 @@ public class Config {
         }
 
         public Builder resource(Class<?> c)  {
-            return resource(applicationPath, c);
+            return resource(staticResourcePath, c);
         }
 
         public Builder resource(String path, Class<?> c)  {
@@ -129,7 +134,7 @@ public class Config {
                     handlers.put(path, new ReflectorServletProcessor(Servlet.class.cast(c.newInstance())));
                 } else {
                     // TODO: NOT clear
-                    applicationPath = path;
+                    staticResourcePath = path;
                     initParam("com.sun.jersey.config.property.packages", c.getPackage().getName());
                 }
             } catch (Exception ex) {

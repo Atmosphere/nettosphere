@@ -57,7 +57,6 @@ public class NettyJerseyTest extends BaseTest {
         port = findFreePort();
         urlTarget = getUrlTarget(port);
         Config config = new Config.Builder()
-                .path("/")
                 .port(port)
                 .host("127.0.0.1")
                 .resource(Resource.class)
@@ -435,7 +434,6 @@ public class NettyJerseyTest extends BaseTest {
         port = findFreePort();
         urlTarget = getUrlTarget(port);
         Config config = new Config.Builder()
-                .path("/")
                 .port(port)
                 .host("127.0.0.1")
                 .resource(Resource.class)

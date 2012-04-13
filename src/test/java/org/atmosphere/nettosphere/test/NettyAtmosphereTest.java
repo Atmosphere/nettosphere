@@ -70,7 +70,6 @@ public class NettyAtmosphereTest extends BaseTest{
         final CountDownLatch suspendCD = new CountDownLatch(1);
 
         Config config = new Config.Builder()
-                .path("/")
                 .port(port)
                 .host("127.0.0.1")
                 .resource("/suspend", new AtmosphereHandler() {
@@ -80,12 +79,13 @@ public class NettyAtmosphereTest extends BaseTest{
                     @Override
                     public void onRequest(AtmosphereResource r) throws IOException {
                         if (!b.getAndSet(true)) {
-                            r.suspend(-1, false).addEventListener(new WebSocketEventListenerAdapter() {
+                            r.addEventListener(new WebSocketEventListenerAdapter() {
                                 @Override
                                 public void onSuspend(AtmosphereResourceEvent e) {
                                     suspendCD.countDown();
                                 }
                             });
+                            r.suspend(-1, false);
                         } else {
                             r.getBroadcaster().broadcast(RESUME);
                         }
@@ -93,7 +93,7 @@ public class NettyAtmosphereTest extends BaseTest{
 
                     @Override
                     public void onStateChange(AtmosphereResourceEvent r) throws IOException {
-                        if (!r.isResuming() || !r.isCancelled()) {
+                        if (r.isSuspended()) {
                             r.getResource().getResponse().getWriter().print(r.getMessage());
                             r.getResource().resume();
                         }
@@ -165,7 +165,6 @@ public class NettyAtmosphereTest extends BaseTest{
         final CountDownLatch suspendCD = new CountDownLatch(1);
 
         Config config = new Config.Builder()
-                .path("/")
                 .port(port)
                 .host("127.0.0.1")
                 .resource("/suspend", new AtmosphereHandler() {
@@ -255,7 +254,6 @@ public class NettyAtmosphereTest extends BaseTest{
         final CountDownLatch l = new CountDownLatch(1);
 
         Config config = new Config.Builder()
-                .path("/")
                 .port(port)
                 .host("127.0.0.1")
                 .resource("/suspend", new AtmosphereHandler() {

@@ -99,7 +99,7 @@ public final class Nettosphere {
 
     public static void main(String[] args) throws Exception {
         Config.Builder b = new Config.Builder();
-        b.path(args[0]).port(8080).host("127.0.0.1");
+        b.resource(args[0]).port(8080).host("127.0.0.1");
         Nettosphere s = new Nettosphere(b.build());
         s.start();
         String a = "";
