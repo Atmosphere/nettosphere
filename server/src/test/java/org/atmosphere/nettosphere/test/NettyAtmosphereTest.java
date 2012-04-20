@@ -98,7 +98,6 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
         Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
 
