@@ -122,6 +122,7 @@
     <modules>
         <module>server</module>
         <module>samples/chat</module>
+        <module>samples/jersey-chat</module>
     </modules>
 
     <build>

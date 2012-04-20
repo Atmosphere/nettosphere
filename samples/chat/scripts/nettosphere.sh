@@ -13,6 +13,6 @@ export JAVA_OPTS="-Duser.timezone=GMT ${JAVA_CONFIG_OPTIONS} ${JAVA_DEBUG_OPTION
 
 echo "Starting NettoSphere:"
 PARAMETERS="-classpath lib/*: org.nettosphere.samples.chat.NettosphereChat"
-COMMAND="java ${NETTOSPHERE_OPTS} ${JAVA_OPTS} ${DEV_OPTS} ${PARAMETERS}"
+COMMAND="java -server ${NETTOSPHERE_OPTS} ${JAVA_OPTS} ${DEV_OPTS} ${PARAMETERS}"
 echo $COMMAND
 $COMMAND

@@ -110,6 +110,8 @@ import org.jboss.netty.util.CharsetUtil;
  * </pre>
  */
 public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
+    public final static String STATIC_MAPPING = SimpleChannelUpstreamHandler.class.getName() + ".staticMapping";
+    public final static String SERVICED = SimpleChannelUpstreamHandler.class.getName() + ".serviced";
 
     private final String root;
 
@@ -121,7 +123,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         HttpRequest request = (HttpRequest) e.getMessage();
         if (request.getMethod() != GET) {
-            sendError(ctx, METHOD_NOT_ALLOWED);
+            sendError(ctx, METHOD_NOT_ALLOWED, e);
             return;
         }
 
@@ -131,17 +133,17 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         }
 
         if (path == null) {
-            sendError(ctx, FORBIDDEN);
+            sendError(ctx, FORBIDDEN, e);
             return;
         }
 
         File file = new File(path);
         if (file.isHidden() || !file.exists()) {
-            sendError(ctx, NOT_FOUND);
+            sendError(ctx, NOT_FOUND, e);
             return;
         }
         if (!file.isFile()) {
-            sendError(ctx, FORBIDDEN);
+            sendError(ctx, FORBIDDEN, e);
             return;
         }
 
@@ -149,7 +151,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         try {
             raf = new RandomAccessFile(file, "r");
         } catch (FileNotFoundException fnfe) {
-            sendError(ctx, NOT_FOUND);
+            sendError(ctx, NOT_FOUND, e);
             return;
         }
         long fileLength = raf.length();
@@ -188,6 +190,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             // Close the connection when the whole content is written out.
             writeFuture.addListener(ChannelFutureListener.CLOSE);
         }
+        request.addHeader(SERVICED, "true");
     }
 
     @Override
@@ -196,12 +199,12 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         Channel ch = e.getChannel();
         Throwable cause = e.getCause();
         if (cause instanceof TooLongFrameException) {
-            sendError(ctx, BAD_REQUEST);
+            sendError(ctx, BAD_REQUEST, null);
             return;
         }
 
         if (ch.isConnected()) {
-            sendError(ctx, INTERNAL_SERVER_ERROR);
+            sendError(ctx, INTERNAL_SERVER_ERROR, null);
         }
     }
 
@@ -227,7 +230,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         return uri;
     }
 
-    private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
+    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
         response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
         response.setHeader(CONTENT_LENGTH, "0");

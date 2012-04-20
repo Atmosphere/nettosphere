@@ -38,6 +38,7 @@ import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
@@ -254,6 +255,20 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
 
+        // First let's try to see if it's a static resources
+        try {
+            request.addHeader(STATIC_MAPPING, "true");
+            super.messageReceived(ctx, messageEvent);
+
+            if (request.getHeader(SERVICED) != null) {
+                return;
+            }
+        } catch (Exception e) {
+            logger.debug("", e);
+        } finally {
+            request.addHeader(STATIC_MAPPING, "false");
+        }
+
         boolean skipClose = false;
         try {
             AtmosphereRequest r = createAtmosphereRequest(ctx, request);
@@ -319,6 +334,14 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     w.close();
                 }
             }
+        }
+    }
+
+    @Override
+    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
+        final HttpRequest request = (HttpRequest) e.getMessage();
+        if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false") ) {
+            super.sendError(ctx, status, e);
         }
     }
 
@@ -427,7 +450,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         @Override
         public Enumeration getInitParameterNames() {
-            return Collections.enumeration(initParams.values());
+            return Collections.enumeration(initParams.keySet());
         }
     }
 
