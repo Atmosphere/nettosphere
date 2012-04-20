@@ -1,4 +1,4 @@
-###Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
+## Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
 
 The easiest way to get started with NettoSphere is to download a sample and start it. You can download the [Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-chat/1.3-SNAPSHOT/) or [Jersey Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-jersey-chat/1.3-SNAPSHOT/) distribution.
 
