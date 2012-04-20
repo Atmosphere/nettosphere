@@ -43,25 +43,5 @@
 			</includes>
 			<outputDirectory>conf</outputDirectory>
 		</fileSet>
-		<!-- empty dir for work -->
-		<fileSet>
-			<directory>src/main/assembly</directory>
-			<outputDirectory>/work</outputDirectory>
-			<excludes>
-				<exclude>*</exclude>
-			</excludes>
-		</fileSet>
-		<!-- empty dir for logs -->
-		<fileSet>
-			<directory>src/main/assembly</directory>
-			<outputDirectory>/logs</outputDirectory>
-			<excludes>
-				<exclude>*</exclude>
-			</excludes>
-		</fileSet>
-		<fileSet>
-			<directory>src/main/webapp</directory>
-			<outputDirectory>root</outputDirectory>
-		</fileSet>
 	</fileSets>
 </assembly>

@@ -1,4 +1,4 @@
-index.html$(function () {
+$(function () {
     "use strict";
 
     var content = $('#content');

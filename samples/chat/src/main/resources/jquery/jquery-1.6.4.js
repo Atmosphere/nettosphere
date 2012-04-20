@@ -1,4 +1,4 @@
-application.js/*!
+/*!
  * jQuery JavaScript Library v1.6.4
  * http://jquery.com/
  *

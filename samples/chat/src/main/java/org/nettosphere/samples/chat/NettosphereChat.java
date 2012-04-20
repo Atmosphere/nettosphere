@@ -33,12 +33,12 @@ public class NettosphereChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        b.resource("/").port(8080).host("127.0.0.1").atmosphereDotXmlPath("conf/atmosphere.xml").build();
+        b.resource("./webapps").port(8080).host("127.0.0.1").atmosphereDotXmlPath("../conf/atmosphere.xml").build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
         s.start();
         String a = "";
 
-        logger.info("NettoSphere Chat Server started");
+        logger.info("NettoSphere Chat Server started on port {}", 8080);
         logger.info("Type quit to stop the server");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (!(a.equals("quit"))) {
