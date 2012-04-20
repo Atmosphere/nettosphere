@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NettyWebSocket extends WebSocketAdapter {
 
@@ -36,6 +37,7 @@ public class NettyWebSocket extends WebSocketAdapter {
     private final Channel channel;
     private final AtmosphereConfig config;
     private final ChannelBufferFactory factory = new HeapChannelBufferFactory();
+    private final AtomicBoolean firstWrite = new AtomicBoolean(false);
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
         this.channel = channel;
@@ -55,7 +57,12 @@ public class NettyWebSocket extends WebSocketAdapter {
      */
     @Override
     public void writeError(int errorCode, String message) throws IOException {
-        logger.debug("{} {}", errorCode, message);
+       if (!firstWrite.get()) {
+            logger.debug("The WebSocket handshake succeeded but the dispatched URI failed {}:{}. " +
+                    "The WebSocket connection is still open and client can continue sending messages.", message, errorCode);
+        } else {
+            logger.debug("{} {}", errorCode, message);
+        }
     }
 
     /**
