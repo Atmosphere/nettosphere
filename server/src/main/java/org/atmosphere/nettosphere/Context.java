@@ -172,16 +172,19 @@ public class Context implements ServletContext {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public Servlet getServlet(String name) throws ServletException {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public Enumeration getServlets() {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public Enumeration getServletNames() {
         throw new UnsupportedOperationException();
@@ -192,6 +195,7 @@ public class Context implements ServletContext {
         logger.info(msg);
     }
 
+    @Deprecated
     @Override
     public void log(Exception exception, String msg) {
         logger.error(msg, exception);

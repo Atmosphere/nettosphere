@@ -43,77 +43,88 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <dependencies>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-runtime</artifactId>
-            <version>${atmosphere.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-            <version>3.3.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.4</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.0.0</version>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>nettosphere</artifactId>
+                <version>${pom.version}</version>
+            </dependency>
 
-        <!-- Test -->
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-jersey</artifactId>
-            <version>${atmosphere.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning</groupId>
-            <artifactId>async-http-client</artifactId>
-            <version>1.8.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>5.8</version>
-            <scope>test</scope>
-            <classifier>jdk15</classifier>
-        </dependency>
-    </dependencies>
+            <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>atmosphere-runtime</artifactId>
+                <version>${atmosphere.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.atmosphere</groupId>
+                        <artifactId>atmosphere-compat-jbossweb</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.atmosphere</groupId>
+                        <artifactId>atmosphere-compat-tomcat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.atmosphere</groupId>
+                        <artifactId>atmosphere-compat-tomcat7</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+                <version>3.3.1.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.6.4</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>atmosphere-jersey</artifactId>
+                <version>${atmosphere.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ning</groupId>
+                <artifactId>async-http-client</artifactId>
+                <version>1.8.0-SNAPSHOT</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>5.8</version>
+                <scope>test</scope>
+                <classifier>jdk15</classifier>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <modules>
         <module>server</module>
         <module>samples/chat</module>
     </modules>
+
     <build>
-        <resources>
-            <resource>
-                <filtering>true</filtering>
-                <directory>server/src/main/java/</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>server/src/main/resources</directory>
-            </resource>
-        </resources>
-        <testSourceDirectory>server/src/test/java</testSourceDirectory>
         <extensions>
             <!-- Enabling the use of SSH -->
             <extension>
@@ -335,7 +346,7 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>0.9</atmosphere.version>
+        <atmosphere.version>1.0.0-SNAPSHOT</atmosphere.version>
     </properties>
 </project>
 

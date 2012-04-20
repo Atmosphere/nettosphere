@@ -15,6 +15,7 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
@@ -55,6 +56,10 @@ public class Config {
         return b.staticResourcePath;
     }
 
+    public String atmosphereDotXmlPath(){
+        return b.atmosphereDotXmlPath;
+    }
+
     public Class<Broadcaster> broadcaster() {
         return b.broadcasterClass;
     }
@@ -77,6 +82,7 @@ public class Config {
 
     public final static class Builder {
         private String staticResourcePath = "/";
+        private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
         private String host = "localhost";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
@@ -94,6 +100,11 @@ public class Config {
          */
         public Builder resource(String staticResourcePath) {
             this.staticResourcePath = staticResourcePath;
+            return this;
+        }
+
+        public Builder atmosphereDotXmlPath(String atmosphereDotXmlPath) {
+            this.atmosphereDotXmlPath = atmosphereDotXmlPath;
             return this;
         }
 
