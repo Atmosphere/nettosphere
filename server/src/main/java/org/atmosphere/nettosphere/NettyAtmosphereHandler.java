@@ -135,9 +135,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent.getMessage();
         if (msg instanceof HttpRequest) {
+            HttpRequest r = HttpRequest.class.cast(msg);
             // Netty fail to decode headers separated by a ','
-            List<String> c = HttpRequest.class.cast(msg).getHeaders("Connection");
-            String u = HttpRequest.class.cast(msg).getHeader("Upgrade");
+            List<String> c = r.getHeaders("Connection");
+            String u = r.getHeader("Upgrade");
             boolean webSocket = false;
             if (u != null && u.equalsIgnoreCase("websocket")) {
                 webSocket = true;
@@ -148,6 +149,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     webSocket = true;
                 }
             }
+
+            logger.debug("Handling request {}", r);
+
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
@@ -365,7 +369,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             if (hook != null) {
                 hook.closed();
             }
-        } else if (WebSocketProcessor.class.isAssignableFrom(o.getClass())) {
+        } else if (WebSocketProcessor.class.isAssignableFrom(o.getClass()) && WebSocketProcessor.class.cast(o).webSocket().resource() != null) {
             AsynchronousProcessor.AsynchronousProcessorHook hook = AsynchronousProcessor.AsynchronousProcessorHook.class.cast(
                     WebSocketProcessor.class.cast(o).webSocket().resource().getRequest().getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK));
             if (hook != null) {
