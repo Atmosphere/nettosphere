@@ -70,6 +70,7 @@ public class NettyWebSocket extends WebSocketAdapter {
      */
     @Override
     public void write(String data) throws IOException {
+        firstWrite.set(true);
         if (!channel.isOpen()) return;
         channel.write(new TextWebSocketFrame(data));
     }
@@ -79,6 +80,8 @@ public class NettyWebSocket extends WebSocketAdapter {
      */
     @Override
     public void write(byte[] data) throws IOException {
+        firstWrite.set(true);
+
         if (!channel.isOpen()) return;
         String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
         if (s != null && Boolean.parseBoolean(s)) {
@@ -95,6 +98,8 @@ public class NettyWebSocket extends WebSocketAdapter {
      */
     @Override
     public void write(byte[] data, int offset, int length) throws IOException {
+        firstWrite.set(true);
+
         if (!channel.isOpen()) return;
         String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
         if (s != null && Boolean.parseBoolean(s)) {

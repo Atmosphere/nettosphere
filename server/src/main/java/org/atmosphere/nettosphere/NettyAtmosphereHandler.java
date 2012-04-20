@@ -238,6 +238,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .headers(getHeaders(request))
                 .method(method)
                 .contentType(ct)
+                .destroyable(false)
                 .attributes(attributes)
                 .queryStrings(qs)
                 .remotePort(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getPort())
