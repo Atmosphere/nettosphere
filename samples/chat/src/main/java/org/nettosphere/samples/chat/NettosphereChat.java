@@ -33,7 +33,7 @@ public class NettosphereChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        b.resource("/").port(8080).host("127.0.0.1").;
+        b.resource("/").port(8080).host("127.0.0.1").build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
         s.start();
         String a = "";
