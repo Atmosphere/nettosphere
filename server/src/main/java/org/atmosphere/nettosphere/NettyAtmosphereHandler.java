@@ -278,7 +278,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .asyncIOWriter(w)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
-                    .header("Server", "Nettosphere-" +  Version.getRawVersion())
+                    .header("Server", "Nettosphere-" + Version.getRawVersion())
                     .request(r).build();
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);
@@ -339,8 +339,12 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     @Override
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
-        final HttpRequest request = (HttpRequest) e.getMessage();
-        if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false") ) {
+        if (e != null) {
+            final HttpRequest request = (HttpRequest) e.getMessage();
+            if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false")) {
+                super.sendError(ctx, status, e);
+            }
+        } else {
             super.sendError(ctx, status, e);
         }
     }
