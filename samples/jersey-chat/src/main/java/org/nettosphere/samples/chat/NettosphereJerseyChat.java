@@ -38,7 +38,7 @@ public class NettosphereJerseyChat {
                 .resource(ResourceChat.class)
                 .initParam(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
                 .initParam(ApplicationConfig.WEBSOCKET_METHOD, "POST")
-                 .initParam("com.sun.jersey.api.json.POJOMappingFeature", "true")
+                .initParam("com.sun.jersey.api.json.POJOMappingFeature", "true")
                 .port(8080)
                 .host("127.0.0.1")
                 .build();
