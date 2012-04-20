@@ -1,8 +1,10 @@
 ### Using the sample
 
-Build the sample and unzip the *-distribution.zip
 
 ```bash
+% mvn 
+% cd target
+% unzip nettosphere-jersey-chat.jar
 % chmod a+x ./bin/nettosphere.sh
 % ./bin/nettosphere.sh
 ```
