@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-public class NettyAtmosphereTest extends BaseTest{
+public class NettyAtmosphereTest extends BaseTest {
     private final static String RESUME = "Resume";
 
     protected int port;
@@ -62,6 +62,49 @@ public class NettyAtmosphereTest extends BaseTest{
         port = findFreePort();
         targetUrl = "http://127.0.0.1:" + port;
         wsUrl = "ws://127.0.0.1:" + port;
+    }
+
+    @Test
+    public void initParamTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final AtomicBoolean b = new AtomicBoolean(false);
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .initParam("foo", "bar")
+                .resource("/suspend", new AtmosphereHandler() {
+
+                    @Override
+                    public void onRequest(AtmosphereResource r) throws IOException {
+                        if (r.getAtmosphereConfig().getInitParameter("foo") != null) {
+                            b.set(true);
+                        }
+                        l.countDown();
+                    }
+
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<Response> response = new AtomicReference<Response>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
+
+        assertEquals(r.getStatusCode(), 200);
+        assertEquals(b.get(), true);
+
     }
 
     @Test
@@ -323,5 +366,6 @@ public class NettyAtmosphereTest extends BaseTest{
         assertEquals(response.get(), RESUME);
 
     }
+
 
 }

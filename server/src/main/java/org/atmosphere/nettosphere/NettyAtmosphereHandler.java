@@ -412,7 +412,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         @Override
         public String getServletName() {
-            return "AtmosphereServlet";
+            return "Netty";
         }
 
         @Override
