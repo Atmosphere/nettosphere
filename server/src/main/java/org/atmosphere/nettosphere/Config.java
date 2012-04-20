@@ -56,7 +56,7 @@ public class Config {
         return b.staticResourcePath;
     }
 
-    public String atmosphereDotXmlPath(){
+    public String configFile(){
         return b.atmosphereDotXmlPath;
     }
 
@@ -103,7 +103,7 @@ public class Config {
             return this;
         }
 
-        public Builder atmosphereDotXmlPath(String atmosphereDotXmlPath) {
+        public Builder configFile(String atmosphereDotXmlPath) {
             this.atmosphereDotXmlPath = atmosphereDotXmlPath;
             return this;
         }

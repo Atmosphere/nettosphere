@@ -95,7 +95,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             framework.setDefaultBroadcasterClassName(config.broadcaster().getName());
         }
 
-        framework.setAtmosphereDotXmlPath(config.atmosphereDotXmlPath());
+        framework.setAtmosphereDotXmlPath(config.configFile());
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()));
 
         try {
