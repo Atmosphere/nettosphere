@@ -185,6 +185,29 @@
                 <version>2.1</version>
             </plugin>
             <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/META-INF</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/works</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/overlays</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}</directory>
+                            <includes>
+                                <include>*.log</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.3.1</version>
