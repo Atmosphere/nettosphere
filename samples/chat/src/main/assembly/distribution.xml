@@ -23,25 +23,18 @@
 			<outputDirectory>webapps/</outputDirectory>
 		</fileSet>
 		<fileSet>
-			<directory>conf</directory>
+			<directory>src/main/conf</directory>
 			<includes>
 				<include>*.xml</include>
 			</includes>
 			<outputDirectory>conf</outputDirectory>
 		</fileSet>
 		<fileSet>
-			<directory>scripts</directory>
+			<directory>src/main/scripts</directory>
 			<includes>
 				<include>*.*</include>
 			</includes>
 			<outputDirectory>bin</outputDirectory>
-		</fileSet>
-		<fileSet>
-			<directory>src/main/config</directory>
-			<includes>
-				<include>*.*</include>
-			</includes>
-			<outputDirectory>conf</outputDirectory>
 		</fileSet>
 	</fileSets>
 </assembly>
