@@ -22,7 +22,16 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
 
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
+### Server static and dynamic resources, use atmosphere.xml to configure NettoSphere
+
+```java
+        Config.Builder b = new Config.Builder();
+        b.resource("./webapps").port(8080).host("127.0.0.1").configFile("../conf/atmosphere.xml").build();
+        Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
+```
+
 ### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
+
 ```java
     Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
@@ -35,6 +44,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ```
 
 ### Deploy an AtmosphereHandler, access it using HTTP or WebSocket
+
 ```java
     Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
@@ -47,6 +57,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ```
 
 ### Deploy an AtmosphereHandler, define a WebSocket protocol
+
 ```java
     Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
@@ -58,7 +69,9 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                  .build();
     server.start();
 ```
+
 ### Deploy a Servlet which use Meteor
+
 ```java
     Nettosphere server = new Nettosphere.Builder().config(
                  new Config.Builder()
@@ -69,6 +82,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                  .build();
     server.start();
 ```
+
 ### The Server can also be started using java
 
 ```java
