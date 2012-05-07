@@ -16,6 +16,7 @@
 package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AsyncIOWriter;
+import org.atmosphere.cpr.AsyncIOWriterAdapter;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * An {@link AsyncIOWriter} that bridge Atmosphere output stream with Netty's Channel.
  */
-public class ChannelAsyncIOWriter implements AsyncIOWriter {
+public class ChannelAsyncIOWriter extends AsyncIOWriterAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ChannelAsyncIOWriter.class);
 
     private final Channel channel;
@@ -68,14 +69,14 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     }
 
     @Override
-    public void redirect(String location) throws IOException {
+    public AsyncIOWriter redirect(String location) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeError(int errorCode, String message) throws IOException {
+    public AsyncIOWriter writeError(int errorCode, String message) throws IOException {
         if (!channel.isOpen()) {
-            return;
+            return this;
         }
 
         try {
@@ -85,21 +86,24 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
         } catch (Throwable ex) {
             logger.debug("", ex);
         }
+        return this;
     }
 
     @Override
-    public void write(String data) throws IOException {
+    public AsyncIOWriter write(String data) throws IOException {
         byte[] b = data.getBytes("ISO-8859-1");
         write(b);
+        return this;
     }
 
     @Override
-    public void write(byte[] data) throws IOException {
+    public AsyncIOWriter write(byte[] data) throws IOException {
         write(data, 0, data.length);
+        return this;
     }
 
     @Override
-    public void write(byte[] data, int offset, int length) throws IOException {
+    public AsyncIOWriter write(byte[] data, int offset, int length) throws IOException {
 
         if (channel.isOpen()) {
             pendingWrite.incrementAndGet();
@@ -124,6 +128,7 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
             logger.warn("Trying to write on a closed channel {}", channel);
         }
         headerWritten = true;
+        return this;
     }
 
     public long lastTick() {
@@ -131,7 +136,8 @@ public class ChannelAsyncIOWriter implements AsyncIOWriter {
     }
 
     @Override
-    public void flush() {
+    public AsyncIOWriter flush() {
+        return this;
     }
 
     @Override

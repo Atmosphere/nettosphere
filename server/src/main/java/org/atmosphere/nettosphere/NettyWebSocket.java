@@ -17,7 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
-import org.atmosphere.websocket.WebSocketAdapter;
+import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferFactory;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class NettyWebSocket extends WebSocketAdapter {
+public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
     private final Channel channel;
@@ -48,67 +48,75 @@ public class NettyWebSocket extends WebSocketAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void redirect(String location) throws IOException {
+    public WebSocket redirect(String location) throws IOException {
         logger.error("redirect not supported");
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void writeError(int errorCode, String message) throws IOException {
+    public WebSocket writeError(int errorCode, String message) throws IOException {
        if (!firstWrite.get()) {
             logger.debug("The WebSocket handshake succeeded but the dispatched URI failed {}:{}. " +
                     "The WebSocket connection is still open and client can continue sending messages.", message, errorCode);
         } else {
             logger.debug("{} {}", errorCode, message);
         }
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void write(String data) throws IOException {
+    public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) return;
-        channel.write(new TextWebSocketFrame(data));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void write(byte[] data) throws IOException {
-        firstWrite.set(true);
-
-        if (!channel.isOpen()) return;
-        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
-        if (s != null && Boolean.parseBoolean(s)) {
-            ChannelBuffer c = factory.getBuffer(data.length);
-            c.writeBytes(data);
-            channel.write(new BinaryWebSocketFrame(c));
-        } else {
-            channel.write(new TextWebSocketFrame(new String(data, 0, data.length, "UTF-8")));
+        if (channel.isOpen()) {
+            channel.write(new TextWebSocketFrame(data));
         }
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void write(byte[] data, int offset, int length) throws IOException {
+    public WebSocket write(byte[] data) throws IOException {
         firstWrite.set(true);
 
-        if (!channel.isOpen()) return;
-        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BLOB);
-        if (s != null && Boolean.parseBoolean(s)) {
-            ChannelBuffer c = factory.getBuffer(length - offset);
-            c.writeBytes(data);
-            channel.write(new BinaryWebSocketFrame(c));
-        } else {
-            channel.write(new TextWebSocketFrame(new String(data, offset, length, "UTF-8")));
+        if (channel.isOpen()) {
+            String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BINARY_WRITE);
+            if (s != null && Boolean.parseBoolean(s)) {
+                ChannelBuffer c = factory.getBuffer(data.length);
+                c.writeBytes(data);
+                channel.write(new BinaryWebSocketFrame(c));
+            } else {
+                channel.write(new TextWebSocketFrame(new String(data, 0, data.length, "UTF-8")));
+            }
         }
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WebSocket write(byte[] data, int offset, int length) throws IOException {
+        firstWrite.set(true);
+
+        if (channel.isOpen()) {
+            String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BINARY_WRITE);
+            if (s != null && Boolean.parseBoolean(s)) {
+                ChannelBuffer c = factory.getBuffer(length - offset);
+                c.writeBytes(data);
+                channel.write(new BinaryWebSocketFrame(c));
+            } else {
+                channel.write(new TextWebSocketFrame(new String(data, offset, length, "UTF-8")));
+            }
+        }
+        return this;
     }
 
     /**
@@ -123,6 +131,7 @@ public class NettyWebSocket extends WebSocketAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void flush() throws IOException {
+    public WebSocket flush() throws IOException {
+        return this;
     }
 }

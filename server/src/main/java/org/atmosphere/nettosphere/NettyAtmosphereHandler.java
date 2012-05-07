@@ -16,6 +16,7 @@
 package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
+import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
@@ -300,19 +301,19 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 resumeOnBroadcast = true;
             }
 
-            final AtmosphereFramework.Action action = (AtmosphereFramework.Action) r.getAttribute(NettyCometSupport.SUSPEND);
-            if (action != null && action.type == AtmosphereFramework.Action.TYPE.SUSPEND && action.timeout != -1) {
+            final Action action = (Action) r.getAttribute(NettyCometSupport.SUSPEND);
+            if (action != null && action.type() == Action.TYPE.SUSPEND && action.timeout() != -1) {
                 final AtomicReference<Future<?>> f = new AtomicReference();
                 f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
                     @Override
                     public void run() {
-                        if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout) {
+                        if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout()) {
                             hook.timedOut();
                             f.get().cancel(true);
                         }
                     }
-                }, action.timeout, action.timeout, TimeUnit.MILLISECONDS));
-            } else if (action != null && action.type == AtmosphereFramework.Action.TYPE.RESUME) {
+                }, action.timeout(), action.timeout(), TimeUnit.MILLISECONDS));
+            } else if (action != null && action.type() == Action.TYPE.RESUME) {
                 resumeOnBroadcast = false;
             }
             w.resumeOnBroadcast(resumeOnBroadcast);
