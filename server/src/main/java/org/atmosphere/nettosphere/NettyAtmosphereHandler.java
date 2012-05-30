@@ -71,6 +71,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
@@ -295,6 +296,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             ctx.setAttachment(hook);
 
             String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
+            if (transport == null) {
+                transport = (String) r.getHeader(X_ATMOSPHERE_TRANSPORT);
+            }
+
             if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
                 keptOpen = true;
             } else if (transport != null && transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT)) {
