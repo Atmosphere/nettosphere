@@ -20,13 +20,34 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
      </dependency>
 ```
 
+### Super Simple Web Application
+
+```java
+    Nettosphere server = new Nettosphere.Builder().config(
+                 new Config.Builder()
+                    .host("127.0.0.1")
+                    .port(8080)
+                    .resource(new Handler() {
+                        void handle(AtmosphereResource r) {
+                            r.getResponse().write("Hello Word".write("from Nettosphere").flush();
+                        }
+                    })
+                    .build())
+                 .build();
+    server.start();
+```
+
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
 ### Server static and dynamic resources, use atmosphere.xml to configure NettoSphere
 
 ```java
         Config.Builder b = new Config.Builder();
-        b.resource("./webapps").port(8080).host("127.0.0.1").configFile("../conf/atmosphere.xml").build();
+        b.resource("./webapps")
+            .port(8080)
+            .host("127.0.0.1")
+            .configFile("../conf/atmosphere.xml")
+            .build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
 ```
 

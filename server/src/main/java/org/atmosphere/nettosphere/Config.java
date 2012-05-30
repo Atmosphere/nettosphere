@@ -17,15 +17,18 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +59,7 @@ public class Config {
         return b.staticResourcePath;
     }
 
-    public String configFile(){
+    public String configFile() {
         return b.atmosphereDotXmlPath;
     }
 
@@ -95,6 +98,7 @@ public class Config {
 
         /**
          * The path location of static resource (e.g html)
+         *
          * @param staticResourcePath
          * @return
          */
@@ -103,41 +107,122 @@ public class Config {
             return this;
         }
 
+        /**
+         * The path location of the atmosphere.xml file.
+         *
+         * @param atmosphereDotXmlPath path location of the atmosphere.xml file.
+         * @return this
+         */
         public Builder configFile(String atmosphereDotXmlPath) {
             this.atmosphereDotXmlPath = atmosphereDotXmlPath;
             return this;
         }
 
+        /**
+         * The server's host
+         *
+         * @param host server's host
+         * @return this
+         */
         public Builder host(String host) {
             this.host = host;
             return this;
         }
 
+        /**
+         * The server's port
+         *
+         * @param port server's port
+         * @return this
+         */
         public Builder port(int port) {
             this.port = port;
             return this;
         }
 
+        /**
+         * Add some init param
+         *
+         * @param name  the name
+         * @param value the value
+         * @return this
+         */
         public Builder initParam(String name, String value) {
             initParams.put(name, value);
             return this;
         }
 
+        /**
+         * Add an {@link AtmosphereHandler} that will be mapped to the specified path
+         *
+         * @param path a mapping path
+         * @param c    an {@link AtmosphereHandler}
+         * @return this
+         */
         public Builder resource(String path, AtmosphereHandler c) {
             handlers.put(path, c);
             return this;
         }
 
+        /**
+         * Add an {@link Servlet} that will be mapped to the specified path
+         *
+         * @param path a mapping path
+         * @param c    an {@link Servlet}
+         * @return this
+         */
         public Builder resource(String path, Servlet c) {
             handlers.put(path, new ReflectorServletProcessor(c));
             return this;
         }
 
-        public Builder resource(Class<?> c)  {
+        /**
+         * Add an {@link Handler} mapped to the default, which is '/*'
+         *
+         * @param handler {@link Handler}
+         * @return this
+         */
+        public Builder handler(Handler handler) {
+            return handler("/*", handler);
+        }
+
+        /**
+         * Add an {@link Handler} that will be mapped to the specified path
+         *
+         * @param handler {@link Handler}
+         * @return this
+         */
+        public Builder handler(String path, final Handler handler) {
+            handlers.put(path, new AbstractReflectorAtmosphereHandler() {
+                @Override
+                public void onRequest(AtmosphereResource resource) throws IOException {
+                    handler.handle(resource);
+                }
+
+                @Override
+                public void destroy() {
+                }
+            });
+            return this;
+        }
+
+        /**
+         * Add a Jersey/JAX RS resource.
+         * @param c a Jersey/JAX RS resource.
+         * @return this
+         */
+        public Builder resource(Class<?> c) {
             return resource(staticResourcePath, c);
         }
 
-        public Builder resource(String path, Class<?> c)  {
+        /**
+         * Add an Jersey/JAX RS that will be mapped to the specified path
+         *
+         * @param path a mapping path
+         * @param c    an Jersey/JAX RS
+         * @return this
+         */
+        public Builder resource(String path, Class<?> c) {
             try {
                 if (AtmosphereHandler.class.isAssignableFrom(c)) {
                     handlers.put(path, AtmosphereHandler.class.cast(c.newInstance()));
@@ -154,26 +239,50 @@ public class Config {
             return this;
         }
 
+        /**
+         * Configure the default {@link Broadcaster}
+         * @param broadcasterClass a Broadcaster
+         * @return this
+         */
         public Builder broadcaster(Class<Broadcaster> broadcasterClass) {
             this.broadcasterClass = broadcasterClass;
             return this;
         }
 
+        /**
+         * Configure the default {@link BroadcasterFactory}
+         * @param broadcasterFactory a BroadcasterFactory's class
+         * @return this
+         */
         public Builder broadcasterFactory(BroadcasterFactory broadcasterFactory) {
             this.broadcasterFactory = broadcasterFactory;
             return this;
         }
 
+        /**
+         * Configure the default {@link BroadcasterCache}
+         * @param broadcasterCache a BroadcasterCache's class
+         * @return this
+         */
         public Builder broadcasterCache(Class<? extends BroadcasterCache> broadcasterCache) {
             this.broadcasterCache = broadcasterCache;
             return this;
         }
 
+        /**
+         * Configure the default {@link WebSocketProtocol}
+         * @param webSocketProtocol a WebSocketProtocol's class
+         * @return this
+         */
         public Builder webSocketProtocol(Class<? extends WebSocketProtocol> webSocketProtocol) {
             this.webSocketProtocol = webSocketProtocol;
             return this;
         }
 
+        /**
+         * Build an instance of this class.
+         * @return
+         */
         public Config build() {
             return new Config(this);
         }
