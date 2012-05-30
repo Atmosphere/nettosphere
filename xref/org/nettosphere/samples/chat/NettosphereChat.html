@@ -43,7 +43,7 @@
 <a class="jxr_linenumber" name="33" href="#33">33</a>  
 <a class="jxr_linenumber" name="34" href="#34">34</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> main(String[] args) <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="35" href="#35">35</a>          Config.Builder b = <strong class="jxr_keyword">new</strong> Config.Builder();
-<a class="jxr_linenumber" name="36" href="#36">36</a>          b.resource(<span class="jxr_string">"./webapps"</span>).port(8080).host(<span class="jxr_string">"127.0.0.1"</span>).atmosphereDotXmlPath(<span class="jxr_string">"../conf/atmosphere.xml"</span>).build();
+<a class="jxr_linenumber" name="36" href="#36">36</a>          b.resource(<span class="jxr_string">"./webapps"</span>).port(8080).host(<span class="jxr_string">"127.0.0.1"</span>).configFile(<span class="jxr_string">"../conf/atmosphere.xml"</span>).build();
 <a class="jxr_linenumber" name="37" href="#37">37</a>          <a href="../../../../org/atmosphere/nettosphere/Nettosphere.html">Nettosphere</a> s = <strong class="jxr_keyword">new</strong> Nettosphere.Builder().config(b.build()).build();
 <a class="jxr_linenumber" name="38" href="#38">38</a>          s.start();
 <a class="jxr_linenumber" name="39" href="#39">39</a>          String a = <span class="jxr_string">""</span>;
