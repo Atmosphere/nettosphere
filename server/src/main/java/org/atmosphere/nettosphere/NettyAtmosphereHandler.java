@@ -297,7 +297,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport == null) {
-                transport = (String) r.getHeader(X_ATMOSPHERE_TRANSPORT);
+                transport = r.getHeader(X_ATMOSPHERE_TRANSPORT);
             }
 
             if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
