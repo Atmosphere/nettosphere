@@ -29,7 +29,7 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
                     .port(8080)
                     .resource(new Handler() {
                         void handle(AtmosphereResource r) {
-                            r.getResponse().write("Hello Word".write("from Nettosphere").flush();
+                            r.getResponse().write("Hello World").write("from Nettosphere").flush();
                         }
                     })
                     .build())
