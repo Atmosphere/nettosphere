@@ -216,7 +216,7 @@ public class Context implements ServletContext {
 
     @Override
     public String getServerInfo() {
-        return "Netty-Atmosphere/1.0";
+        return "Nettosphere/1.0";
     }
 
     @Override
