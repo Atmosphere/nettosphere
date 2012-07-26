@@ -16,7 +16,7 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>1.4.0</version>
+         <version>1.4.1</version>
      </dependency>
 ```
 
@@ -39,6 +39,8 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
 
 All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
 
+[Top](#Top)
+
 ### Server static and dynamic resources, use atmosphere.xml to configure NettoSphere
 
 ```java
@@ -50,6 +52,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
             .build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
 ```
+[Top](#Top)
 
 ### Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket
 
@@ -63,6 +66,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                  .build();
     server.start();
 ```
+[Top](#Top)
 
 ### Deploy an AtmosphereHandler, access it using HTTP or WebSocket
 
@@ -90,6 +94,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                  .build();
     server.start();
 ```
+[Top](#Top)
 
 ### Deploy a Servlet which use Meteor
 
@@ -103,6 +108,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
                  .build();
     server.start();
 ```
+[Top](#Top)
 
 ### The Server can also be started using java
 
@@ -111,6 +117,8 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
           org.atmosphere.nettosphere.Nettosphere
                 [/path/to/an/exploded/war/file] [host] [port]
 ```
+[Top](#Top)
+
 ### Using Maven and the Git repo
 
     mvn exec:java -Dexec.arguments='path to your exploded war file'
