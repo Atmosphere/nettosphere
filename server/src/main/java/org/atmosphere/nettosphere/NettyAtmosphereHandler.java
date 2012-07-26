@@ -25,6 +25,7 @@ import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
+import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -182,13 +183,12 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             this.handshaker.handshake(ctx.getChannel(), request);
         }
 
-        WebSocketProcessor processor = new WebSocketProcessor(framework,
-                new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig()),
-                framework.getWebSocketProtocol());
+        WebSocketProcessor processor = WebSocketProcessorFactory.getDefault().newWebSocketProcessor(
+                new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig()));
         ctx.setAttachment(processor);
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
 
-        processor.dispatch(r);
+        processor.open(r);
     }
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
