@@ -1,6 +1,6 @@
 ## Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
 
-The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download the [Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-chat/1.3-SNAPSHOT/) or [Jersey Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-jersey-chat/1.3-SNAPSHOT/) distribution.
+The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download the [Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-chat/1.4.2/) or [Jersey Chat](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/samples/nettosphere-jersey-chat/1.4.2/) distribution.
 
 ```bash
    % unzip nettosphere-<name>-distribution.jar
@@ -10,13 +10,13 @@ The easiest way to get started with NettoSphere is to download a sample and star
 
 Samples are the same as then one available in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/nettosphere/blob/master/samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/nettosphere/blob/master/samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
 
-Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/1.0.0-SNAPSHOT/) or use Maven
+Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapshots/org/atmosphere/nettosphere/1.4.2/) or use Maven
 
 ```xml
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>1.4.1</version>
+         <version>1.4.2</version>
      </dependency>
 ```
 
