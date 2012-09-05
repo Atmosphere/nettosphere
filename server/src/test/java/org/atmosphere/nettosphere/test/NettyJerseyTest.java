@@ -373,7 +373,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = true)
+    @Test(timeOut = 20000, enabled = false)
     public void testAggregateFilter() {
         logger.info("{}: running test: testAggregateFilter", getClass().getSimpleName());
 

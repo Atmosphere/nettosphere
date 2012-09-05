@@ -12,7 +12,7 @@
     <version>1.4.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>
-        NettoSphere: A HTLM/WebSocket server powered by Atmosphere and Netty Framework
+        NettoSphere: A HTTP/WebSocket server powered by Atmosphere and Netty Framework
     </description>
     <url>http://github.com/Atmosphere/nettosphere</url>
     <scm>
@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
-                <version>3.4.6.Final</version>
+                <version>3.5.5.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
