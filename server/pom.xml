@@ -3,14 +3,14 @@
     <parent>
         <groupId>org.atmosphere</groupId>
         <artifactId>nettosphere-project</artifactId>
-        <version>1.4.2</version>
+        <version>1.4.3-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.atmosphere</groupId>
     <artifactId>nettosphere</artifactId>
     <name>Nettosphere Server</name>
-    <version>1.4.2</version>
+    <version>1.4.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
