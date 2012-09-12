@@ -20,6 +20,7 @@ import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResponse;
@@ -123,6 +124,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         if (config.webSocketProtocol() != null) {
             framework.setWebSocketProtocolClassName(config.webSocketProtocol().getName());
+        }
+
+        for(AtmosphereInterceptor i : config.interceptors()){
+            framework.interceptor(i);
         }
 
         try {

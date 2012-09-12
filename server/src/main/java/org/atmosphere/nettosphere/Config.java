@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterCache;
@@ -29,7 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -83,6 +86,10 @@ public class Config {
         return b.webSocketProtocol;
     }
 
+    public List<AtmosphereInterceptor> interceptors() {
+        return b.interceptors;
+    }
+
     public final static class Builder {
         private String staticResourcePath = "/";
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -95,6 +102,7 @@ public class Config {
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
+        private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
 
         /**
          * The path location of static resource (e.g html)
@@ -276,6 +284,16 @@ public class Config {
          */
         public Builder webSocketProtocol(Class<? extends WebSocketProtocol> webSocketProtocol) {
             this.webSocketProtocol = webSocketProtocol;
+            return this;
+        }
+
+        /**
+         * Add an {@link AtmosphereInterceptor}
+         * @param interceptor an {@link AtmosphereInterceptor}
+         * @return
+         */
+        public Builder interceptor(AtmosphereInterceptor interceptor){
+            interceptors.add(interceptor);
             return this;
         }
 
