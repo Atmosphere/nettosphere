@@ -54,7 +54,7 @@ public class NettyJerseyTest extends BaseTest {
 
     @BeforeMethod
     public void startServer() throws IOException {
-        port = findFreePort();
+        port = 8080;
         urlTarget = getUrlTarget(port);
         Config config = new Config.Builder()
                 .port(port)
@@ -77,7 +77,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             long t1 = System.currentTimeMillis();
-            Response r = c.prepareGet(urlTarget).execute().get(10, TimeUnit.SECONDS);
+            Response r = c.prepareGet(urlTarget).execute().get(20, TimeUnit.SECONDS);
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             String resume = r.getResponseBody();
@@ -98,13 +98,13 @@ public class NettyJerseyTest extends BaseTest {
 
         AsyncHttpClient c = new AsyncHttpClient();
         try {
-            Response r = c.prepareGet(urlTarget + "/withComments").execute().get(10, TimeUnit.SECONDS);
+            Response r = c.prepareGet(urlTarget + "/withComments").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute().get(10, TimeUnit.SECONDS);
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             String resume = r.getResponseBody();
             String[] ct = r.getContentType().toLowerCase().split(";");
             assertEquals(ct[0].trim(), "text/plain");
-            assertEquals(resume, AtmosphereResourceImpl.createStreamingPadding(null));
+            assertEquals(resume, createStreamingPadding(null));
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -197,7 +197,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -224,7 +224,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), AtmosphereResourceImpl.createStreamingPadding(null) + "foo\nbar\n");
+            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foo\nbar\n");
             assertEquals(r.getStatusCode(), 200);
         } catch (Exception e) {
             logger.error("test failed", e);
@@ -244,7 +244,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -271,7 +271,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), AtmosphereResourceImpl.createStreamingPadding(null) + "foo\nbar\n");
+            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foo\nbar\n");
             assertEquals(r.getStatusCode(), 200);
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 10000);
@@ -490,7 +490,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -517,12 +517,26 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), AtmosphereResourceImpl.createStreamingPadding(null) + "foobar\n");
+            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foobar\n");
             assertEquals(r.getStatusCode(), 200);
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
         }
         c.close();
+    }
+
+    /**
+     * Output message when Atmosphere suspend a connection.
+     *
+     * @return message when Atmosphere suspend a connection.
+     */
+    public static String createStreamingPadding(String padding) {
+        StringBuilder s = new StringBuilder();
+
+        for (int i = 0; i < 4096; i++) {
+            s.append(" ");
+        }
+        return s.toString() + "\n";
     }
 }

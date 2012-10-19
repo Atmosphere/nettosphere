@@ -28,6 +28,7 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
+import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
@@ -128,7 +129,7 @@ public class NettyAtmosphereTest extends BaseTest {
                                     suspendCD.countDown();
                                 }
                             });
-                            r.suspend(-1, false);
+                            r.suspend(-1);
                         } else {
                             r.getBroadcaster().broadcast(RESUME);
                         }
@@ -217,7 +218,7 @@ public class NettyAtmosphereTest extends BaseTest {
                     @Override
                     public void onRequest(AtmosphereResource r) throws IOException {
                         if (!suspended.getAndSet(true)) {
-                            r.suspend(-1, true);
+                            r.suspend(-1);
                             suspendCD.countDown();
                         } else {
                             r.getBroadcaster().broadcast(RESUME);
@@ -245,7 +246,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 
@@ -289,7 +290,7 @@ public class NettyAtmosphereTest extends BaseTest {
         l.await(5, TimeUnit.SECONDS);
 
         assertEquals(response.get().getStatusCode(), 200);
-        assertEquals(response.get().getResponseBody(), AtmosphereResourceImpl.createStreamingPadding("atmosphere") + RESUME);
+        assertEquals(response.get().getResponseBody(), createStreamingPadding("atmosphere") + RESUME);
     }
 
     @Test
@@ -306,7 +307,7 @@ public class NettyAtmosphereTest extends BaseTest {
                     @Override
                     public void onRequest(AtmosphereResource r) throws IOException {
                         if (!b.getAndSet(true)) {
-                            r.suspend(-1, false);
+                            r.suspend(-1);
                         } else {
                             r.getBroadcaster().broadcast(RESUME);
                         }
@@ -447,5 +448,17 @@ public class NettyAtmosphereTest extends BaseTest {
         assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
 
     }
+    /**
+     * Output message when Atmosphere suspend a connection.
+     *
+     * @return message when Atmosphere suspend a connection.
+     */
+    public static String createStreamingPadding(String padding) {
+        StringBuilder s = new StringBuilder();
 
+        for (int i = 0; i < 4096; i++) {
+            s.append(" ");
+        }
+        return s.toString() + "\n";
+    }
 }

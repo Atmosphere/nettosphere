@@ -15,7 +15,6 @@
  */
 package org.nettosphere.samples.chat;
 
-import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
 import org.slf4j.Logger;

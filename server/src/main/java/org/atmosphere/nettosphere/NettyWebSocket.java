@@ -38,56 +38,26 @@ public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
     private final Channel channel;
-    private final AtmosphereConfig config;
     private final ChannelBufferFactory factory = new HeapChannelBufferFactory();
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
+        super(config);
         this.channel = channel;
-        this.config = config;
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public WebSocket redirect(String location) throws IOException {
-        logger.error("redirect not supported");
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebSocket writeError(int errorCode, String message) throws IOException {
-       if (!firstWrite.get()) {
-            logger.debug("The WebSocket handshake succeeded but the dispatched URI failed {}:{}. " +
-                    "The WebSocket connection is still open and client can continue sending messages.", message, errorCode);
-        } else {
-            logger.debug("{} {}", errorCode, message);
-        }
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public WebSocket write(AtmosphereResponse r, String data) throws IOException {
+    public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
         if (!channel.isOpen()) throw new IOException("Connection remotely closed");
         logger.trace("WebSocket.write()");
 
         if (binaryWrite) {
-            byte[] b = webSocketResponseFilter.filter(r, data.getBytes(resource().getResponse().getCharacterEncoding()));
-            if (b != null) {
-                channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(b)));
-            }
+            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data.getBytes("UTF-8"))));
         } else {
-            String s = webSocketResponseFilter.filter(r, data);
-            if (s != null) {
-                channel.write(new TextWebSocketFrame(s));
-            }
+            channel.write(new TextWebSocketFrame(data));
         }
         lastWrite = System.currentTimeMillis();
         return this;
@@ -99,15 +69,9 @@ public class NettyWebSocket extends WebSocket {
 
         logger.trace("WebSocket.write()");
         if (binaryWrite) {
-            byte[] b = webSocketResponseFilter.filter(r, data);
-            if (b != null) {
-                channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(b)));
-            }
+            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data)));
         } else {
-            byte[] s = webSocketResponseFilter.filter(r, data);
-            if (s != null) {
-                channel.write(new TextWebSocketFrame(new String(s, 0, s.length, "UTF-8")));
-            }
+            channel.write(new TextWebSocketFrame(new String(data, "UTF-8")));
         }
         lastWrite = System.currentTimeMillis();
         return this;
@@ -121,7 +85,7 @@ public class NettyWebSocket extends WebSocket {
         firstWrite.set(true);
 
         if (channel.isOpen()) {
-            String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BINARY_WRITE);
+            String s = config().getInitParameter(ApplicationConfig.WEBSOCKET_BINARY_WRITE);
             if (s != null && Boolean.parseBoolean(s)) {
                 ChannelBuffer c = factory.getBuffer(length - offset);
                 c.writeBytes(data);
@@ -132,48 +96,16 @@ public class NettyWebSocket extends WebSocket {
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public WebSocket write(AtmosphereResponse r, byte[] data, int offset, int length) throws IOException {
-        firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
-
-        logger.trace("WebSocket.write()");
-        if (binaryWrite) {
-            if (!WebSocketResponseFilter.NoOpsWebSocketResponseFilter.class.isAssignableFrom(webSocketResponseFilter.getClass())) {
-                byte[] b = webSocketResponseFilter.filter(r, data, offset, length);
-                if (b != null) {
-                    channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(b, 0, b.length)));
-                }
-            } else {
-                channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, 0, data.length)));
-            }
-        } else {
-            String s = webSocketResponseFilter.filter(r, new String(data, offset, length, "UTF-8"));
-            if (s != null) {
-                channel.write(new TextWebSocketFrame(s));
-
-            }
-        }
-        lastWrite = System.currentTimeMillis();
-        return this;
+    public boolean isOpen() {
+        return channel.isOpen();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void close() throws IOException {
+    public void close() {
         channel.close().addListener(ChannelFutureListener.CLOSE);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebSocket flush() throws IOException {
-        return this;
     }
 }
