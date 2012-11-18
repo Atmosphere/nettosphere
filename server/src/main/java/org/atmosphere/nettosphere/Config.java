@@ -97,7 +97,7 @@ public class Config {
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
-        private Class<? extends WebSocketProtocol> webSocketProtocol;
+        private Class<? extends WebSocketProtocol> webSocketProtocol = SimpleHttpProtocol.class;
 
         private Class<Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
