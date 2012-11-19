@@ -214,7 +214,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
 
-     // Check for closing frame
+        // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
             this.handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
         } else if (frame instanceof PingWebSocketFrame) {
@@ -222,16 +222,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         } else if (frame instanceof BinaryWebSocketFrame) {
             Attachment a = (Attachment) ctx.getAttachment();
             WebSocketProcessor processor = a.p;
-            ChannelBuffer binaryData = ((BinaryWebSocketFrame) frame).getBinaryData();
-			processor.invokeWebSocketProtocol(a.w, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            ChannelBuffer binaryData = frame.getBinaryData();
+            processor.invokeWebSocketProtocol(a.w, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
-        	Attachment a = (Attachment) ctx.getAttachment();
+            Attachment a = (Attachment) ctx.getAttachment();
             WebSocketProcessor processor = a.p;
             processor.invokeWebSocketProtocol(a.w, ((TextWebSocketFrame) frame).getText());
-        }
-        else {
-	        throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
-	                .getName()));
+        } else {
+            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
+                    .getName()));
         }
     }
 
