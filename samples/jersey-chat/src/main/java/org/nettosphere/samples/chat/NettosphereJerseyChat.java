@@ -21,23 +21,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
  * A bootstrap class that start Nettosphere and the Atmosphere Chat samples.
- */
+ *
+*/
 public class NettosphereJerseyChat {
 
     private static final Logger logger = LoggerFactory.getLogger(Nettosphere.class);
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        b.resource("./webapps")
+        b.resource(new File(".").getAbsolutePath() + "/webapps")
                 .resource(ResourceChat.class)
                 .configFile("../conf/atmosphere.xml")
                 .port(8080)
                 .host("127.0.0.1")
+                .initParam("org.atmosphere.websocket.messageContentType","application/json")
+                .initParam("org.atmosphere.websocket.messageMethod","POST")
+                .initParam("com.sun.jersey.api.json.POJOMappingFeature","true")
                 .build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
         s.start();

@@ -33,38 +33,27 @@ import java.util.logging.Logger;
  *
  * @author Jeanfrancois Arcand
  */
-@Path("/chat/")
-@Produces("application/json")
+@Path("/chat")
 public class ResourceChat {
-
-    @Context
-    ServletConfig scfg;
 
     /**
      * Suspend the response without writing anything back to the client.
-     *
      * @return a white space
      */
-    @Suspend
+    @Suspend(contentType = "application/json")
     @GET
     public String suspend() {
-        Enumeration<String> e = scfg.getInitParameterNames();
-        while (e.hasMoreElements()) {
-            String key = e.nextElement();
-            String value = scfg.getInitParameter(key);
-            System.out.println("SCFG INITPARAM # " + key + "  -> " + value);
-        }
         return "";
     }
 
     /**
      * Broadcast the received message object to all suspended response. Do not write back the message to the calling connection.
-     *
      * @param message a {@link Message}
      * @return a {@link Response}
      */
     @Broadcast(writeEntity = false)
     @POST
+    @Produces("application/json")
     public Response broadcast(Message message) {
         return new Response(message.author, message.message);
     }

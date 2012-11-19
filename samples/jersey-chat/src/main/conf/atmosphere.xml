@@ -4,22 +4,7 @@
     -->
     <atmosphere-handler support-session="false" context-root="/chat"
                         class-name="org.atmosphere.handler.ReflectorServletProcessor">
-
         <property name="servletClass" value="com.sun.jersey.spi.container.servlet.ServletContainer"/>
-        <applicationConfig>
-            <param-name>org.atmosphere.websocket.messageContentType</param-name>
-            <param-value>application/json</param-value>
-        </applicationConfig>
-
-        <applicationConfig>
-            <param-name>org.atmosphere.websocket.messageMethod</param-name>
-            <param-value>POST</param-value>
-        </applicationConfig>
-
-        <applicationConfig>
-            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
-            <param-value>true</param-value>
-        </applicationConfig>
     </atmosphere-handler>
 </atmosphere-handlers>
 
