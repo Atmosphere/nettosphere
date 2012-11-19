@@ -31,6 +31,7 @@ import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
+import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
@@ -44,6 +45,7 @@ import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
@@ -212,21 +214,25 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
 
-        // Check for closing frame
+     // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
             this.handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
-            return;
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
-            return;
-        } else if (!(frame instanceof TextWebSocketFrame)) {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
-                    .getName()));
+        } else if (frame instanceof BinaryWebSocketFrame) {
+            Attachment a = (Attachment) ctx.getAttachment();
+            WebSocketProcessor processor = a.p;
+            ChannelBuffer binaryData = ((BinaryWebSocketFrame) frame).getBinaryData();
+			processor.invokeWebSocketProtocol(a.w, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+        } else if (frame instanceof TextWebSocketFrame) {
+        	Attachment a = (Attachment) ctx.getAttachment();
+            WebSocketProcessor processor = a.p;
+            processor.invokeWebSocketProtocol(a.w, ((TextWebSocketFrame) frame).getText());
         }
-
-        Attachment a = (Attachment) ctx.getAttachment();
-        WebSocketProcessor processor = a.p;
-        processor.invokeWebSocketProtocol(a.w, ((TextWebSocketFrame) frame).getText());
+        else {
+	        throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
+	                .getName()));
+        }
     }
 
     private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
