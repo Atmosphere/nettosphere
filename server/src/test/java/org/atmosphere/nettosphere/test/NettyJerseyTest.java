@@ -352,7 +352,7 @@ public class NettyJerseyTest extends BaseTest {
             });
 
             // Let Atmosphere suspend the connections.
-            Thread.sleep(2500);
+            Thread.sleep(4000);
             c.preparePost(urlTarget + "/filter").addParameter("message", "<script>foo</script>").execute().get();
 
             try {
