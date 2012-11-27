@@ -123,6 +123,8 @@
         <module>assembly</module>
         <module>samples/chat</module>
         <module>samples/jersey-chat</module>
+        <module>samples/socketio-chat</module>
+
     </modules>
 
     <build>

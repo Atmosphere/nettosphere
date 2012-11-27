@@ -134,8 +134,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             framework.interceptor(i);
         }
 
+        framework.setLibPath(config.libPath());
+
         try {
-            framework.init(new NettyServletConfig(config.initParams(), new Context.Builder().basePath(config.path()).build()));
+            framework.init(new NettyServletConfig(config.initParams(), new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build()));
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
@@ -253,7 +255,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         String u = requestUri.toURL().toString();
         int last = u.indexOf("?") == -1 ? u.length() : u.indexOf("?");
         String url = u.substring(0, last);
-        int l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
+        int l;
+
+        if (url.contains(config.mappingPath())) {
+            l =  requestUri.getAuthority().length() + requestUri.getScheme().length() + 3 + config.mappingPath().length();
+        } else {
+            l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
+        }
+
+
         final Map<String, Object> attributes = new HashMap<String, Object>();
 
         AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
@@ -265,6 +275,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .contentType(ct)
                 .destroyable(false)
                 .attributes(attributes)
+                .servletPath(config.mappingPath())
                 .queryStrings(qs)
                 .remotePort(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getPort())
                 .remoteAddr(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress())

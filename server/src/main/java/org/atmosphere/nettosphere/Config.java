@@ -91,6 +91,14 @@ public class Config {
         return b.interceptors;
     }
 
+    public String libPath() {
+        return  b.librariesPath;
+    }
+
+    public String mappingPath(){
+        return b.mappingPath;
+    }
+
     public final static class Builder {
         private String staticResourcePath = "/";
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -104,6 +112,8 @@ public class Config {
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
+        private String librariesPath = "./lib";
+        private String mappingPath = "";
 
         /**
          * The path location of static resource (e.g html)
@@ -113,6 +123,25 @@ public class Config {
          */
         public Builder resource(String staticResourcePath) {
             this.staticResourcePath = staticResourcePath;
+            return this;
+        }
+
+        /**
+         * Set the mapping path. If tyou have worked with Servlet, the mapping path is equivalent to the servlet path.
+         *
+         * @param mappingPath the path under which the application will be mapped.
+         */
+        public Builder mappingPath(String mappingPath) {
+            this.mappingPath = mappingPath;
+            return this;
+        }
+
+        /**
+         * Set the path to the library when annotation scanning is enabled. Default is "./"
+         * @param librariesPath the path to the library when annotation scanning is enabled.
+         */
+        public Builder libPath(String librariesPath) {
+            this.librariesPath = librariesPath;
             return this;
         }
 
