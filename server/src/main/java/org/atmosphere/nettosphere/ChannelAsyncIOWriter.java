@@ -136,7 +136,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     @Override
     public void close(AtmosphereResponse r) throws IOException {
         // Make sure we don't have bufferred bytes
-        if (!byteWritten && r != null) {
+        if (!byteWritten && r != null && r.getOutputStream() != null) {
             r.getOutputStream().flush();
         }
 
