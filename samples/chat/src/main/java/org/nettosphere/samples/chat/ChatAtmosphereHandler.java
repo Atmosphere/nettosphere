@@ -13,13 +13,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.nettosphere.samples.chat;
+package org.atmosphere.samples.chat;
 
-import org.atmosphere.cpr.AtmosphereHandler;
-import org.atmosphere.cpr.AtmosphereRequest;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.handler.OnMessage;
+import org.atmosphere.websocket.WebSocketEventListenerAdapter;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -29,68 +31,79 @@ import java.util.Date;
  *
  * @author Jeanfrancois Arcand
  */
-public class ChatAtmosphereHandler implements AtmosphereHandler {
+@ManagedService(path = "/chat"
+   /* Uncomment to receive connect/disconnect events for WebSocket */
+   /*, listeners = {ChatAtmosphereHandler.WebSocketEventListener.class} */)
+public class ChatAtmosphereHandler extends OnMessage<String> {
 
+    private final static Logger logger = LoggerFactory.getLogger(ChatAtmosphereHandler.class);
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    /**
+     * Echo the JSON Message we receives.
+     * @param response an {@link AtmosphereResponse}
+     * @param message  a message of type T
+     * @throws IOException
+     */
     @Override
-    public void onRequest(AtmosphereResource r) throws IOException {
+    public void onMessage(AtmosphereResponse response, String message) throws IOException {
+        response.getWriter().write(mapper.writeValueAsString(mapper.readValue(message, Data.class)));
+    }
 
-        AtmosphereRequest req = r.getRequest();
+    /**
+     * Simple listener for events.
+     */
+    public final static class WebSocketEventListener extends WebSocketEventListenerAdapter {
+        @Override
+        public void onConnect(WebSocketEvent event) {
+            logger.debug("{}", event);
+        }
 
-        // First, tell Atmosphere to allow bi-directional communication by suspending.
-        if (req.getMethod().equalsIgnoreCase("GET")) {
-            // We are using HTTP long-polling with an invite timeout
-            r.suspend();
-        // Second, broadcast message to all connected users.
-        } else if (req.getMethod().equalsIgnoreCase("POST")) {
-            r.getBroadcaster().broadcast(req.getReader().readLine().trim());
+        @Override
+        public void onDisconnect(WebSocketEvent event) {
+            logger.debug("{}", event);
         }
     }
 
-    @Override
-    public void onStateChange(AtmosphereResourceEvent event) throws IOException {
-        AtmosphereResource r = event.getResource();
-        AtmosphereResponse res = r.getResponse();
+    public final static class Data {
 
-        if (event.isSuspended()) {
-            String body = event.getMessage().toString();
+        private String message;
+        private String author;
+        private long time;
 
-            // Simple JSON -- Use Jackson for more complex structure
-            // Message looks like { "author" : "foo", "message" : "bar" }
-            String author = body.substring(body.indexOf(":") + 2, body.indexOf(",") - 1);
-            String message = body.substring(body.lastIndexOf(":") + 2, body.length() - 2);
-
-            res.getWriter().write(new Data(author, message).toString());
-            switch (r.transport()) {
-                case JSONP:
-                case LONG_POLLING:
-                    event.getResource().resume();
-                    break;
-                case WEBSOCKET :
-                case STREAMING:
-                    res.getWriter().flush();
-                    break;
-            }
-        } else if (!event.isResuming()){
-            event.broadcaster().broadcast(new Data("Someone", "say bye bye!").toString());
+        public Data() {
+            this("", "");
         }
-    }
 
-    @Override
-    public void destroy() {
-    }
-
-    private final static class Data {
-
-        private final String text;
-        private final String author;
-
-        public Data(String author, String text) {
+        public Data(String author, String message) {
             this.author = author;
-            this.text = text;
+            this.message = message;
+            this.time = new Date().getTime();
         }
 
-        public String toString() {
-            return "{ \"text\" : \"" + text + "\", \"author\" : \"" + author + "\" , \"time\" : " + new Date().getTime() + "}";
+        public String getMessage() {
+            return message;
         }
+
+        public String getAuthor() {
+            return author;
+        }
+
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+        }
+
     }
 }
