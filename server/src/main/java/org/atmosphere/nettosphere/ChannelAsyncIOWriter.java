@@ -20,6 +20,7 @@ import org.atmosphere.cpr.AsyncIOWriterAdapter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,9 +56,17 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private final static byte[] CHUNK_DELIMITER = "\r\n".getBytes();
     private final static byte[] ENDCHUNK = (END + "\r\n\r\n").getBytes();
     private long lastWrite = 0;
+    private final ByteArrayAsyncWriter buffer = new ByteArrayAsyncWriter();
+    private final boolean writeHeader;
 
     public ChannelAsyncIOWriter(Channel channel) {
         this.channel = channel;
+        this.writeHeader = false;
+    }
+
+    public ChannelAsyncIOWriter(Channel channel, boolean writeHeader) {
+        this.channel = channel;
+        this.writeHeader = writeHeader;
     }
 
     public boolean isClosed() {
@@ -100,12 +110,36 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
         return this;
     }
 
+    protected byte[] transform(AtmosphereResponse response, byte[] b, int offset, int length) throws IOException {
+        AsyncIOWriter a = response.getAsyncIOWriter();
+        try {
+            response.asyncIOWriter(buffer);
+            response.setResponse(response);
+            invokeInterceptor(response, b, offset, length);
+            return buffer.stream().toByteArray();
+        } finally {
+            buffer.close(null);
+            response.asyncIOWriter(a);
+        }
+    }
+
     @Override
     public AsyncIOWriter write(AtmosphereResponse r, byte[] data, int offset, int length) throws IOException {
 
+        boolean transform = filters.size() > 0 && r.getStatus() < 400;
+        if (transform) {
+            data = transform(r, data, offset, length);
+            offset = 0;
+            length = data.length;
+        }
+
         if (channel.isOpen()) {
-            pendingWrite.incrementAndGet();
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+            pendingWrite.incrementAndGet();
+            if (writeHeader && !headerWritten) {
+                buffer.writeBytes(constructStatusAndHeaders(r).getBytes("UTF-8"));
+                headerWritten = true;
+            }
 
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
 
@@ -167,5 +201,33 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
                 logger.trace("Close error", e);
             }
         }
+    }
+
+    // Duplicate from AtmosphereResource.constructStatusAndHeaders
+    private String constructStatusAndHeaders(AtmosphereResponse response) {
+        StringBuffer b = new StringBuffer("HTTP/1.1")
+                .append(" ")
+                .append(response.getStatus())
+                .append(" ")
+                .append(response.getStatusMessage())
+                .append("\n");
+
+        Map<String,String> headers = response.headers();
+        String contentType = response.getContentType();
+        int contentLength = -1; //FIX ME
+
+        b.append("Content-Type").append(":").append(headers.get("Content-Type") == null ? contentType : headers.get("Content-Type")).append("\n");
+        if (contentLength != -1) {
+            b.append("Content-Length").append(":").append(contentLength).append("\n");
+        }
+
+        for (String s : headers.keySet()) {
+            if (!s.equalsIgnoreCase("Content-Type")) {
+                b.append(s).append(":").append(headers.get(s)).append("\n");
+            }
+        }
+        b.deleteCharAt(b.length() - 1);
+        b.append("\r\n\r\n");
+        return b.toString();
     }
 }

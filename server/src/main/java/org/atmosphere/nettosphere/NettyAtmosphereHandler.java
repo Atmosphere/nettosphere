@@ -77,6 +77,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
@@ -290,7 +291,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel());
+        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel(), true);
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
@@ -317,6 +318,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             AtmosphereResponse response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(w)
+                    .writeHeader(false)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
                     .header("Server", "Nettosphere-" + Version.getRawVersion())
@@ -324,7 +326,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);
 
-            framework.doCometSupport(r, response);
+            Action a = framework.doCometSupport(r, response);
 
             final AsynchronousProcessor.AsynchronousProcessorHook hook = (AsynchronousProcessor.AsynchronousProcessorHook) r.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
 
@@ -333,10 +335,13 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 transport = r.getHeader(X_ATMOSPHERE_TRANSPORT);
             }
 
-            if (transport != null && transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)) {
-                keptOpen = true;
-            } else if (transport != null && transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT)) {
-                resumeOnBroadcast = true;
+            if (a.type() == Action.TYPE.SUSPEND) {
+                if (transport != null && (transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)
+                        || transport.equalsIgnoreCase(SSE_TRANSPORT))) {
+                    keptOpen = true;
+                } else if (transport != null && transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT)) {
+                    resumeOnBroadcast = true;
+                }
             }
 
             final Action action = (Action) r.getAttribute(NettyCometSupport.SUSPEND);
