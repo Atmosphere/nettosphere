@@ -114,7 +114,6 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
         AsyncIOWriter a = response.getAsyncIOWriter();
         try {
             response.asyncIOWriter(buffer);
-            response.setResponse(response);
             invokeInterceptor(response, b, offset, length);
             return buffer.stream().toByteArray();
         } finally {

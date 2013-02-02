@@ -290,7 +290,7 @@ public class NettyAtmosphereTest extends BaseTest {
         l.await(5, TimeUnit.SECONDS);
 
         assertEquals(response.get().getStatusCode(), 200);
-        assertEquals(response.get().getResponseBody(), createStreamingPadding("atmosphere") + RESUME);
+        assertEquals(response.get().getResponseBody().trim(), RESUME);
     }
 
     @Test
@@ -447,18 +447,5 @@ public class NettyAtmosphereTest extends BaseTest {
 
         assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
 
-    }
-    /**
-     * Output message when Atmosphere suspend a connection.
-     *
-     * @return message when Atmosphere suspend a connection.
-     */
-    public static String createStreamingPadding(String padding) {
-        StringBuilder s = new StringBuilder();
-
-        for (int i = 0; i < 4096; i++) {
-            s.append(" ");
-        }
-        return s.toString() + "\n";
     }
 }
