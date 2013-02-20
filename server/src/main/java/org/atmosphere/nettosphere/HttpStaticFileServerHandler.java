@@ -128,7 +128,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         }
 
         String path = root + sanitizeUri(request.getUri());
-        if (path.endsWith("/")) {
+        if (path.endsWith("/") || path.endsWith(File.separator)) {
             path += "index.html";
         }
 
