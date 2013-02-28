@@ -54,7 +54,7 @@ public class NettyJerseyTest extends BaseTest {
 
     @BeforeMethod
     public void startServer() throws IOException {
-        port = 8080;
+        port = findFreePort();
         urlTarget = getUrlTarget(port);
         Config config = new Config.Builder()
                 .port(port)
