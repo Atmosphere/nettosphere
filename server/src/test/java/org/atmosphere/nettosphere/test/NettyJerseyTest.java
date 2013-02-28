@@ -104,7 +104,7 @@ public class NettyJerseyTest extends BaseTest {
             String resume = r.getResponseBody();
             String[] ct = r.getContentType().toLowerCase().split(";");
             assertEquals(ct[0].trim(), "text/plain");
-            assertEquals(resume, createStreamingPadding(null));
+            assertEquals(resume.trim(),"");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -224,7 +224,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foo\nbar\n");
+            assertEquals(r.getResponseBody().trim(), "foo\nbar");
             assertEquals(r.getStatusCode(), 200);
         } catch (Exception e) {
             logger.error("test failed", e);
@@ -271,7 +271,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foo\nbar\n");
+            assertEquals(r.getResponseBody().trim(), "foo\nbar");
             assertEquals(r.getStatusCode(), 200);
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 10000);
@@ -505,8 +505,10 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
-            c.preparePost(urlTarget + "/programmaticDelayBroadcast").addParameter("message", "foo").execute().get();
-            c.preparePost(urlTarget + "/publishAndResume").addParameter("message", "bar").execute().get();
+            Response r = c.preparePost(urlTarget + "/programmaticDelayBroadcast").addParameter("message", "foo").execute().get();
+            assertEquals(r.getStatusCode(), 200);
+            r = c.preparePost(urlTarget + "/publishAndResume").addParameter("message", "bar").execute().get();
+            assertEquals(r.getStatusCode(), 200);
 
             try {
                 latch.await(20, TimeUnit.SECONDS);
@@ -514,29 +516,15 @@ public class NettyJerseyTest extends BaseTest {
                 fail(e.getMessage());
             }
 
-            Response r = response.get();
+            r = response.get();
 
             assertNotNull(r);
-            assertEquals(r.getResponseBody(), createStreamingPadding(null) + "foobar\n");
+            assertEquals("foobar", r.getResponseBody().trim());
             assertEquals(r.getStatusCode(), 200);
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
         }
         c.close();
-    }
-
-    /**
-     * Output message when Atmosphere suspend a connection.
-     *
-     * @return message when Atmosphere suspend a connection.
-     */
-    public static String createStreamingPadding(String padding) {
-        StringBuilder s = new StringBuilder();
-
-        for (int i = 0; i < 4096; i++) {
-            s.append(" ");
-        }
-        return s.toString() + "\n";
     }
 }
