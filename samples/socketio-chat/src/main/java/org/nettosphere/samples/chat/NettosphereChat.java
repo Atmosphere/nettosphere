@@ -15,8 +15,10 @@
  */
 package org.nettosphere.samples.chat;
 
+import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
+import org.atmosphere.socketio.cpr.SocketIOAtmosphereInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +37,9 @@ public class NettosphereChat {
         Config.Builder b = new Config.Builder();
         //b.resource("./samples/socketio-chat/src/main/resources").handlerPath("./samples/socketio-chat/target/classes/")
         b.resource("./webapps")
-                .initParam("socketio-transport", "websocket,xhr-polling,jsonp-polling")
-                .mappingPath("/")
+                .initParam(SocketIOAtmosphereInterceptor.SOCKETIO_TRANSPORT, "websocket,xhr-polling,jsonp-polling")
+                .mappingPath("/chat")
+                .interceptor(new SocketIOAtmosphereInterceptor())
                 .port(8080)
                 .host("127.0.0.1")
                 .build();
