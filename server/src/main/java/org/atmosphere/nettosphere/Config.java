@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,6 +96,10 @@ public class Config {
         return  b.librariesPath;
     }
 
+    public String handlerPath(){
+        return b.handlerPath;
+    }
+
     public String mappingPath(){
         return b.mappingPath;
     }
@@ -112,8 +117,9 @@ public class Config {
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
-        private String librariesPath = "./lib";
+        private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
+        private String handlerPath = "";
 
         /**
          * The path location of static resource (e.g html)
@@ -123,6 +129,16 @@ public class Config {
          */
         public Builder resource(String staticResourcePath) {
             this.staticResourcePath = staticResourcePath;
+            return this;
+        }
+
+        /**
+         * Set the path for {@link AtmosphereHandler}
+         * @param handlerPath
+         * return this
+         */
+        public Builder handlerPath(String handlerPath) {
+            this.handlerPath = handlerPath;
             return this;
         }
 

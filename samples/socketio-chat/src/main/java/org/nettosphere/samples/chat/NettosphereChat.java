@@ -33,9 +33,10 @@ public class NettosphereChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
+        //b.resource("./samples/socketio-chat/src/main/resources").handlerPath("./samples/socketio-chat/target/classes/")
         b.resource("./webapps")
                 .initParam("socketio-transport", "websocket,xhr-polling,jsonp-polling")
-                .mappingPath("/chat")
+                .mappingPath("/")
                 .port(8080)
                 .host("127.0.0.1")
                 .build();

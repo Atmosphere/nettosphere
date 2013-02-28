@@ -135,7 +135,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             framework.interceptor(i);
         }
 
-        framework.setLibPath(config.libPath());
+        if (!config.handlerPath().isEmpty()) {
+            framework.setHandlersPath(config.handlerPath());
+        }
 
         try {
             framework.init(new NettyServletConfig(config.initParams(), new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build()));
