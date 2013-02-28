@@ -35,6 +35,7 @@ public class NettosphereJerseyChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
+        //b.resource("./samples/jersey-chat/src/main/resources")
         b.resource(new File(".").getAbsolutePath() + "/webapps")
                 .resource(ResourceChat.class)
                 .configFile("../conf/atmosphere.xml")

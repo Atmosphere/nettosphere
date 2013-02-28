@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.atmosphere.samples.chat;
+package org.nettosphere.samples.chat;
 
 import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.cpr.AtmosphereResponse;

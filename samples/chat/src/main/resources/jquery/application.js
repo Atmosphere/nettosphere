@@ -13,16 +13,16 @@ $(function () {
     var transport = 'websocket';
 
     // We are now ready to cut the request
-    var request = { url: document.location.toString() + 'chat',
-        contentType : "application/json",
-        logLevel : 'debug',
-        transport : transport ,
-        trackMessageLength : true,
-        enableProtocol : true,
+    var request = { url: document.location.protocol + "//" + document.location.host + '/chat',
+        contentType: "application/json",
+        logLevel: 'debug',
+        transport: transport,
+        trackMessageLength: true,
+        enableProtocol: true,
         fallbackTransport: 'long-polling'};
 
 
-    request.onOpen = function(response) {
+    request.onOpen = function (response) {
         content.html($('<p>', { text: 'Atmosphere connected using ' + response.transport }));
         input.removeAttr('disabled').focus();
         status.text('Choose name:');
@@ -30,7 +30,7 @@ $(function () {
     };
 
     <!-- For demonstration of how you can customize the fallbackTransport using the onTransportFailure function -->
-    request.onTransportFailure = function(errorMsg, request) {
+    request.onTransportFailure = function (errorMsg, request) {
         jQuery.atmosphere.info(errorMsg);
         if (window.EventSource) {
             request.fallbackTransport = "sse";
@@ -61,18 +61,18 @@ $(function () {
         }
     };
 
-    request.onClose = function(response) {
+    request.onClose = function (response) {
         logged = false;
     };
 
-    request.onError = function(response) {
+    request.onError = function (response) {
         content.html($('<p>', { text: 'Sorry, but there\'s some problem with your '
             + 'socket or the server is down' }));
     };
 
     subSocket = socket.subscribe(request);
 
-    input.keydown(function(e) {
+    input.keydown(function (e) {
         if (e.keyCode === 13) {
             var msg = $(this).val();
 
@@ -92,8 +92,7 @@ $(function () {
     });
 
     function addMessage(author, message, color, datetime) {
-        content.append('<p><span style="color:' + color + '">' + author + '</span> @ ' +
-            + (datetime.getHours() < 10 ? '0' + datetime.getHours() : datetime.getHours()) + ':'
+        content.append('<p><span style="color:' + color + '">' + author + '</span> @ ' + +(datetime.getHours() < 10 ? '0' + datetime.getHours() : datetime.getHours()) + ':'
             + (datetime.getMinutes() < 10 ? '0' + datetime.getMinutes() : datetime.getMinutes())
             + ': ' + message + '</p>');
     }
