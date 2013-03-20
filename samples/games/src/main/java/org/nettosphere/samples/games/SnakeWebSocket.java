@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Jeanfrancois Arcand
  */
 @WebSocketHandlerService(path = "/snake")
-public class Games implements WebSocketHandler {
+public class SnakeWebSocket implements WebSocketHandler {
 
 
     public static final int PLAYFIELD_WIDTH = 640;
@@ -75,7 +75,7 @@ public class Games implements WebSocketHandler {
         return value;
     }
 
-    public Games() {
+    public SnakeWebSocket() {
         this.id = snakeIds.getAndIncrement();
     }
 

@@ -413,11 +413,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         if (o == null) return;
 
         WebSocket w = o.w;
-        AsynchronousProcessor.AsynchronousProcessorHook hook = AsynchronousProcessor.AsynchronousProcessorHook.class.cast(
-                w.resource().getRequest().getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK));
-        if (hook != null) {
-            hook.closed();
-        }
         o.p.close(w, 1000);
     }
 
