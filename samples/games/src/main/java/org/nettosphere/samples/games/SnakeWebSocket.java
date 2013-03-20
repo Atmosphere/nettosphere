@@ -15,22 +15,13 @@
  */
 package org.nettosphere.samples.games;
 
-import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.WebSocketHandlerService;
-import org.atmosphere.cpr.AtmosphereResponse;
-import org.atmosphere.handler.OnMessage;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProcessor;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Simple AtmosphereHandler that implement the logic to build a Chat application.
@@ -61,9 +52,9 @@ public class SnakeWebSocket extends SnakeGame implements WebSocketHandler {
         Snake snake = new Snake(id, webSocket);
 
         webSocket.resource().getRequest().setAttribute("snake", snake);
-        SnakeTimer.addSnake(snake);
+        snakeBroadcaster.addSnake(snake);
         StringBuilder sb = new StringBuilder();
-        for (Iterator<Snake> iterator = SnakeTimer.getSnakes().iterator();
+        for (Iterator<Snake> iterator = snakeBroadcaster.getSnakes().iterator();
              iterator.hasNext(); ) {
             snake = iterator.next();
             sb.append(String.format("{id: %d, color: '%s'}",
@@ -72,14 +63,14 @@ public class SnakeWebSocket extends SnakeGame implements WebSocketHandler {
                 sb.append(',');
             }
         }
-        SnakeTimer.broadcast(String.format("{'type': 'join','data':[%s]}",
+        snakeBroadcaster.broadcast(String.format("{'type': 'join','data':[%s]}",
                 sb.toString()));
     }
 
     @Override
     public void onClose(WebSocket webSocket) {
-        SnakeTimer.removeSnake(snake(webSocket));
-        SnakeTimer.broadcast(String.format("{'type': 'leave', 'id': %d}",
+        snakeBroadcaster.removeSnake(snake(webSocket));
+        snakeBroadcaster.broadcast(String.format("{'type': 'leave', 'id': %d}",
                 ((Integer) webSocket.resource().getRequest().getAttribute("id"))));
     }
 
