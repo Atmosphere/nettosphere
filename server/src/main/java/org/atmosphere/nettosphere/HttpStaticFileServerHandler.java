@@ -41,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 
 import org.atmosphere.util.Version;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -113,10 +114,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     public final static String STATIC_MAPPING = SimpleChannelUpstreamHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelUpstreamHandler.class.getName() + ".serviced";
 
-    private final String root;
+    private final List<String> paths;
 
-    public HttpStaticFileServerHandler(String root) {
-        this.root = root;
+    public HttpStaticFileServerHandler(List<String> paths) {
+        this.paths = paths;
     }
 
     @Override
@@ -127,33 +128,43 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             return;
         }
 
-        String path = root + sanitizeUri(request.getUri());
-        if (path.endsWith("/") || path.endsWith(File.separator)) {
-            path += "index.html";
+        RandomAccessFile raf = null;
+        boolean found = true;
+        for (String p: paths) {
+            String path = p + sanitizeUri(request.getUri());
+            if (path.endsWith("/") || path.endsWith(File.separator)) {
+                path += "index.html";
+            }
+
+            if (path == null) {
+                found = false;
+                continue;
+            }
+
+            File file = new File(path);
+            if (file.isHidden() || !file.exists()) {
+                found = false;
+                continue;
+            }
+            if (!file.isFile()) {
+                found = false;
+                continue;
+            }
+
+            try {
+                raf = new RandomAccessFile(file, "r");
+                found = true;
+            } catch (FileNotFoundException fnfe) {
+                found = false;
+                continue;
+            }
         }
 
-        if (path == null) {
-            sendError(ctx, FORBIDDEN, e);
-            return;
-        }
-
-        File file = new File(path);
-        if (file.isHidden() || !file.exists()) {
+        if (!found) {
             sendError(ctx, NOT_FOUND, e);
             return;
         }
-        if (!file.isFile()) {
-            sendError(ctx, FORBIDDEN, e);
-            return;
-        }
 
-        RandomAccessFile raf;
-        try {
-            raf = new RandomAccessFile(file, "r");
-        } catch (FileNotFoundException fnfe) {
-            sendError(ctx, NOT_FOUND, e);
-            return;
-        }
         long fileLength = raf.length();
 
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);

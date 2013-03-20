@@ -60,8 +60,8 @@ public class Config {
         return b.initParams;
     }
 
-    public String path() {
-        return b.staticResourcePath;
+    public List<String> path() {
+        return b.paths;
     }
 
     public String configFile() {
@@ -92,20 +92,20 @@ public class Config {
         return b.interceptors;
     }
 
-    public String libPath() {
-        return  b.librariesPath;
+    public String scanLib() {
+        return b.librariesPath;
     }
 
-    public String handlerPath(){
-        return b.handlerPath;
+    public List<Class<?>> scanPackages() {
+        return b.packages;
     }
 
-    public String mappingPath(){
+    public String mappingPath() {
         return b.mappingPath;
     }
 
     public final static class Builder {
-        private String staticResourcePath = "/";
+        private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
         private String host = "localhost";
         private int port = 8080;
@@ -119,31 +119,10 @@ public class Config {
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
         private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
-        private String handlerPath = "";
+        private final List<Class<?>> packages = new ArrayList<Class<?>>();
 
         /**
-         * The path location of static resource (e.g html)
-         *
-         * @param staticResourcePath
-         * @return
-         */
-        public Builder resource(String staticResourcePath) {
-            this.staticResourcePath = staticResourcePath;
-            return this;
-        }
-
-        /**
-         * Set the path for {@link AtmosphereHandler}
-         * @param handlerPath
-         * return this
-         */
-        public Builder handlerPath(String handlerPath) {
-            this.handlerPath = handlerPath;
-            return this;
-        }
-
-        /**
-         * Set the mapping path. If tyou have worked with Servlet, the mapping path is equivalent to the servlet path.
+         * Set the mapping path. If you have worked with Servlet, the mapping path is equivalent to the servlet path.
          *
          * @param mappingPath the path under which the application will be mapped.
          */
@@ -153,10 +132,12 @@ public class Config {
         }
 
         /**
-         * Set the path to the library when annotation scanning is enabled. Default is "./"
+         * Set the path to the library when annotation scanning is enabled. Default is "./". Use this method
+         * when your annotated resource is packaged inside the jar/zip.
+         *
          * @param librariesPath the path to the library when annotation scanning is enabled.
          */
-        public Builder libPath(String librariesPath) {
+        public Builder scanLibrary(String librariesPath) {
             this.librariesPath = librariesPath;
             return this;
         }
@@ -207,6 +188,17 @@ public class Config {
         }
 
         /**
+         * Add a path to scan when looking for static resources like javascript file, html, etc.
+         *
+         * @param path
+         * @return this
+         */
+        public Builder resource(String path) {
+            paths.add(path);
+            return this;
+        }
+
+        /**
          * Add an {@link AtmosphereHandler} that will be mapped to the specified path
          *
          * @param path a mapping path
@@ -236,8 +228,8 @@ public class Config {
          * @param handler {@link Handler}
          * @return this
          */
-        public Builder handler(Handler handler) {
-            return handler("/*", handler);
+        public Builder resource(Handler handler) {
+            return resource("/*", handler);
         }
 
         /**
@@ -246,7 +238,7 @@ public class Config {
          * @param handler {@link Handler}
          * @return this
          */
-        public Builder handler(String path, final Handler handler) {
+        public Builder resource(String path, final Handler handler) {
             handlers.put(path, new AbstractReflectorAtmosphereHandler() {
                 @Override
                 public void onRequest(AtmosphereResource resource) throws IOException {
@@ -261,19 +253,21 @@ public class Config {
         }
 
         /**
-         * Add a Jersey/JAX RS resource.
-         * @param c a Jersey/JAX RS resource.
+         * Add an annotated class. The annotation can be from Atmosphere or Jersey.
+         *
+         * @param c an annotated class. The annotation can be from Atmosphere or Jersey.
          * @return this
          */
         public Builder resource(Class<?> c) {
-            return resource(staticResourcePath, c);
+            packages.add(c);
+            return this;
         }
 
         /**
-         * Add an Jersey/JAX RS that will be mapped to the specified path
+         * Add an {@link AtmosphereHandler} or {@link Servlet} class
          *
          * @param path a mapping path
-         * @param c    an Jersey/JAX RS
+         * @param c    an {@link AtmosphereHandler} or {@link Servlet} class
          * @return this
          */
         public Builder resource(String path, Class<?> c) {
@@ -283,9 +277,7 @@ public class Config {
                 } else if (Servlet.class.isAssignableFrom(c)) {
                     handlers.put(path, new ReflectorServletProcessor(Servlet.class.cast(c.newInstance())));
                 } else {
-                    // TODO: NOT clear
-                    staticResourcePath = path;
-                    initParam("com.sun.jersey.config.property.packages", c.getPackage().getName());
+                    throw new IllegalStateException("You class must implements AtmosphereHandler or be a Servlet");
                 }
             } catch (Exception ex) {
                 logger.error("Invalid resource {}", c);
@@ -295,6 +287,7 @@ public class Config {
 
         /**
          * Configure the default {@link Broadcaster}
+         *
          * @param broadcasterClass a Broadcaster
          * @return this
          */
@@ -305,6 +298,7 @@ public class Config {
 
         /**
          * Configure the default {@link BroadcasterFactory}
+         *
          * @param broadcasterFactory a BroadcasterFactory's class
          * @return this
          */
@@ -315,6 +309,7 @@ public class Config {
 
         /**
          * Configure the default {@link BroadcasterCache}
+         *
          * @param broadcasterCache a BroadcasterCache's class
          * @return this
          */
@@ -325,6 +320,7 @@ public class Config {
 
         /**
          * Configure the default {@link WebSocketProtocol}
+         *
          * @param webSocketProtocol a WebSocketProtocol's class
          * @return this
          */
@@ -335,19 +331,24 @@ public class Config {
 
         /**
          * Add an {@link AtmosphereInterceptor}
+         *
          * @param interceptor an {@link AtmosphereInterceptor}
          * @return
          */
-        public Builder interceptor(AtmosphereInterceptor interceptor){
+        public Builder interceptor(AtmosphereInterceptor interceptor) {
             interceptors.add(interceptor);
             return this;
         }
 
         /**
          * Build an instance of this class.
+         *
          * @return
          */
         public Config build() {
+            if (paths.isEmpty()) {
+                paths.add("/");
+            }
             return new Config(this);
         }
     }

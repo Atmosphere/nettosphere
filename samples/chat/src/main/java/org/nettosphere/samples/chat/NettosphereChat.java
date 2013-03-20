@@ -33,8 +33,12 @@ public class NettosphereChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        //b.resource("./samples/chat/src/main/resources").libPath(".").port(8080).host("127.0.0.1").build();
-        b.resource("./webapps").libPath(".").port(8080).host("127.0.0.1").build();
+        //b.resource.libPath(".").port(8080).host("127.0.0.1").build();
+        b.resource(ChatAtmosphereHandler.class)
+                .resource("./webapps")
+                // for debugging inside IntelJ
+                .resource("./samples/chat/src/main/resources")
+                .port(8080).host("127.0.0.1").build();
         Nettosphere s = new Nettosphere.Builder().config(b.build()).build();
         s.start();
         String a = "";

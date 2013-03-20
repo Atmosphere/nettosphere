@@ -27,7 +27,6 @@ import com.ning.http.client.websocket.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
@@ -375,7 +374,7 @@ public class NettyAtmosphereTest extends BaseTest {
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
-                .handler(new Handler() {
+                .resource(new Handler() {
 
                     @Override
                     public void handle(AtmosphereResource r) {
@@ -429,7 +428,7 @@ public class NettyAtmosphereTest extends BaseTest {
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
-                .handler(new Handler() {
+                .resource(new Handler() {
 
                     @Override
                     public void handle(AtmosphereResource r) {

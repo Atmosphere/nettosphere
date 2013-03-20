@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,7 +65,15 @@ public class Context implements ServletContext {
             return this;
         }
 
-        public Builder basePath(String basePath) {
+        public Builder basePath(List<String> paths) {
+
+            String basePath = ".";
+            for (String p: paths) {
+                if (new File(p.replaceAll("\\\\", "/")).exists()) {
+                    basePath = p;
+                    break;
+                }
+            }
             this.basePath = basePath.replaceAll("\\\\", "/");
             return this;
         }

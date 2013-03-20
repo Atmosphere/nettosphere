@@ -35,10 +35,10 @@ public class NettosphereJerseyChat {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        //b.resource("./samples/jersey-chat/src/main/resources")
-        b.resource(new File(".").getAbsolutePath() + "/webapps")
-                .resource(ResourceChat.class)
-                .configFile("../conf/atmosphere.xml")
+        b.resource(ResourceChat.class)
+                .resource("./webapps")
+                // for debugging inside IntelJ
+                .resource("./samples/jersey-chat/src/main/resources")
                 .port(8080)
                 .host("127.0.0.1")
                 .initParam("org.atmosphere.websocket.messageContentType","application/json")
