@@ -38,54 +38,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Jeanfrancois Arcand
  */
 @WebSocketHandlerService(path = "/snake")
-public class SnakeWebSocket implements WebSocketHandler {
-
-
-    public static final int PLAYFIELD_WIDTH = 640;
-    public static final int PLAYFIELD_HEIGHT = 480;
-    public static final int GRID_SIZE = 10;
-
-    private static final AtomicInteger snakeIds = new AtomicInteger(0);
-    private static final Random random = new Random();
-    private final int id;
-    private Snake snake;
-
-    public static String getRandomHexColor() {
-        float hue = random.nextFloat();
-        // sat between 0.1 and 0.3
-        float saturation = (random.nextInt(2000) + 1000) / 10000f;
-        float luminance = 0.9f;
-        Color color = Color.getHSBColor(hue, saturation, luminance);
-        return '#' + Integer.toHexString(
-                (color.getRGB() & 0xffffff) | 0x1000000).substring(1);
-    }
-
-
-    public static Location getRandomLocation() {
-        int x = roundByGridSize(random.nextInt(PLAYFIELD_WIDTH));
-        int y = roundByGridSize(random.nextInt(PLAYFIELD_HEIGHT));
-        return new Location(x, y);
-    }
-
-
-    private static int roundByGridSize(int value) {
-        value = value + (GRID_SIZE / 2);
-        value = value / GRID_SIZE;
-        value = value * GRID_SIZE;
-        return value;
-    }
-
-    public SnakeWebSocket() {
-        this.id = snakeIds.getAndIncrement();
-    }
-
-
-    @Override
-    public void onByteMessage(WebSocket webSocket, byte[] data, int offset, int length) throws IOException {
-    }
+public class SnakeWebSocket extends SnakeGame implements WebSocketHandler {
 
     @Override
     public void onTextMessage(WebSocket webSocket, String message) throws IOException {
+        Snake snake = snake(webSocket);
         if ("west".equals(message)) {
             snake.setDirection(Direction.WEST);
         } else if ("north".equals(message)) {
@@ -99,12 +56,16 @@ public class SnakeWebSocket implements WebSocketHandler {
 
     @Override
     public void onOpen(WebSocket webSocket) throws IOException {
-        this.snake = new Snake(id, webSocket);
+        int id = snakeIds.getAndIncrement();
+        webSocket.resource().getRequest().setAttribute("id", id);
+        Snake snake = new Snake(id, webSocket);
+
+        webSocket.resource().getRequest().setAttribute("snake", snake);
         SnakeTimer.addSnake(snake);
         StringBuilder sb = new StringBuilder();
         for (Iterator<Snake> iterator = SnakeTimer.getSnakes().iterator();
              iterator.hasNext(); ) {
-            Snake snake = iterator.next();
+            snake = iterator.next();
             sb.append(String.format("{id: %d, color: '%s'}",
                     Integer.valueOf(snake.getId()), snake.getHexColor()));
             if (iterator.hasNext()) {
@@ -117,12 +78,21 @@ public class SnakeWebSocket implements WebSocketHandler {
 
     @Override
     public void onClose(WebSocket webSocket) {
-        SnakeTimer.removeSnake(snake);
+        SnakeTimer.removeSnake(snake(webSocket));
         SnakeTimer.broadcast(String.format("{'type': 'leave', 'id': %d}",
-                Integer.valueOf(id)));
+                ((Integer) webSocket.resource().getRequest().getAttribute("id"))));
     }
 
     @Override
     public void onError(WebSocket webSocket, WebSocketProcessor.WebSocketException t) {
     }
+
+    @Override
+    public void onByteMessage(WebSocket webSocket, byte[] data, int offset, int length) throws IOException {
+    }
+
+    private Snake snake(WebSocket webSocket) {
+        return (Snake) webSocket.resource().getRequest().getAttribute("snake");
+    }
+
 }

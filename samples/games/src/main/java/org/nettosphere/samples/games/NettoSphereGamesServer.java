@@ -33,8 +33,7 @@ public class NettoSphereGamesServer {
 
     public static void main(String[] args) throws IOException {
         Config.Builder b = new Config.Builder();
-        //b.resource.libPath(".").port(8080).host("127.0.0.1").build();
-        b.resource(Games.class)
+        b.resource(SnakeWebSocket.class)
                 .resource("./webapps")
                 // for debugging inside IntelJ
                 .resource("./samples/games/src/main/resources")

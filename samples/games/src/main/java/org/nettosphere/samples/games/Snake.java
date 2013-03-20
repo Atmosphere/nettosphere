@@ -39,13 +39,13 @@ public class Snake {
     public Snake(int id, WebSocket webSocket) {
         this.id = id;
         this.webSocket = webSocket;
-        this.hexColor = Games.getRandomHexColor();
+        this.hexColor = SnakeWebSocket.getRandomHexColor();
         resetState();
     }
 
     private void resetState() {
         this.direction = Direction.NONE;
-        this.head = Games.getRandomLocation();
+        this.head = SnakeWebSocket.getRandomLocation();
         this.tail.clear();
         this.length = DEFAULT_LENGTH;
     }
@@ -71,17 +71,17 @@ public class Snake {
 
     public synchronized void update(Collection<Snake> snakes) {
         Location nextLocation = head.getAdjacentLocation(direction);
-        if (nextLocation.x >= Games.PLAYFIELD_WIDTH) {
+        if (nextLocation.x >= SnakeWebSocket.PLAYFIELD_WIDTH) {
             nextLocation.x = 0;
         }
-        if (nextLocation.y >= Games.PLAYFIELD_HEIGHT) {
+        if (nextLocation.y >= SnakeWebSocket.PLAYFIELD_HEIGHT) {
             nextLocation.y = 0;
         }
         if (nextLocation.x < 0) {
-            nextLocation.x = Games.PLAYFIELD_WIDTH;
+            nextLocation.x = SnakeWebSocket.PLAYFIELD_WIDTH;
         }
         if (nextLocation.y < 0) {
-            nextLocation.y = Games.PLAYFIELD_HEIGHT;
+            nextLocation.y = SnakeWebSocket.PLAYFIELD_HEIGHT;
         }
         if (direction != Direction.NONE) {
             tail.addFirst(head);
