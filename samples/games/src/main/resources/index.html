@@ -21,7 +21,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Multiplayer Snake</title>
+    <title>NettoSphere Snake</title>
     <style type="text/css">
         #playground {
             width: 640px;
@@ -71,6 +71,7 @@
         Game.interval = null;
         Game.direction = 'none';
         Game.gridSize = 10;
+        Game.transport = 'websocket';
 
         function Snake() {
             this.snakeBody = [];
@@ -190,28 +191,38 @@
             var request = {url : host,
                 transport: 'websocket',
                 enableProtocol: true,
+                trackMessageLength: true,
                 logLevel: 'debug'};
 
             request.onOpen = function (response) {
                 // Socket open.. start the game loop.
-                Console.log('Info: WebSocket connection opened.');
+                Console.log('Info: ' + Game.transport + ' connection opened.');
                 Console.log('Info: Press an arrow key to begin.');
                 Game.startGameLoop();
-                setInterval(function() {
-                    // Prevent server read timeout.
-                    Game.socket.push('ping');
-                }, 5000);
             };
 
             request.onClose = function (response) {
-                Console.log('Info: WebSocket closed.');
+                Console.log('Info: ' + Game.transport + ' closed.');
                 Game.stopGameLoop();
+            };
+
+            request.onTransportFailure = function(errorMsg, request) {
+                jQuery.atmosphere.info(errorMsg);
+                if (window.EventSource) {
+                    request.fallbackTransport = "sse";
+                }
+                Game.transport = request.fallbackTransport;
             };
 
             request.onMessage = function (response) {
                 var message = response.responseBody;
-                // _Potential_ security hole, consider using json lib to parse data in production.
-                var packet = eval('(' + message + ')');
+                var packet;
+                try {
+                    packet = eval('(' + message + ')'); //jQuery.parseJSON(message);
+                } catch (e) {
+                    console.log('Message: ', message);
+                    return;
+                }
 
                 switch (packet.type) {
                     case 'update':

@@ -16,6 +16,7 @@
  */
 package org.nettosphere.samples.games;
 
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.websocket.WebSocket;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class Snake {
     private static final int DEFAULT_LENGTH = 5;
 
     private final int id;
-    private final WebSocket webSocket;
+    private final AtmosphereResource resource;
 
     private Direction direction;
     private int length = DEFAULT_LENGTH;
@@ -36,10 +37,10 @@ public class Snake {
     private final Deque<Location> tail = new ArrayDeque<Location>();
     private final String hexColor;
 
-    public Snake(int id, WebSocket webSocket) {
+    public Snake(int id, AtmosphereResource resource) {
         this.id = id;
-        this.webSocket = webSocket;
         this.hexColor = SnakeWebSocket.getRandomHexColor();
+        this.resource = resource;
         resetState();
     }
 
@@ -62,11 +63,7 @@ public class Snake {
 
 
     protected void sendMessage(String msg) {
-        try {
-            webSocket.write(msg);
-        } catch (IOException ioe) {
-            // Ignore
-        }
+        resource.getResponse().write(msg);
     }
 
     public synchronized void update(Collection<Snake> snakes) {

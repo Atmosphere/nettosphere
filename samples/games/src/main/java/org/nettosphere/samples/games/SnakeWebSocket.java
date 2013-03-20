@@ -24,54 +24,28 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Simple AtmosphereHandler that implement the logic to build a Chat application.
+ * Simple WebSocketHandlerService that implement the logic to build a Snake Application.
+ * The Game's code itself is taken from Apache Tomcat.
  *
  * @author Jeanfrancois Arcand
  */
-@WebSocketHandlerService(path = "/snake")
+// Uncomment if you want to only support WebSocket.
+//@WebSocketHandlerService(path = "/snake")
 public class SnakeWebSocket extends SnakeGame implements WebSocketHandler {
 
     @Override
     public void onTextMessage(WebSocket webSocket, String message) throws IOException {
-        Snake snake = snake(webSocket);
-        if ("west".equals(message)) {
-            snake.setDirection(Direction.WEST);
-        } else if ("north".equals(message)) {
-            snake.setDirection(Direction.NORTH);
-        } else if ("east".equals(message)) {
-            snake.setDirection(Direction.EAST);
-        } else if ("south".equals(message)) {
-            snake.setDirection(Direction.SOUTH);
-        }
+        onMessage(webSocket.resource(), message);
     }
 
     @Override
     public void onOpen(WebSocket webSocket) throws IOException {
-        int id = snakeIds.getAndIncrement();
-        webSocket.resource().getRequest().setAttribute("id", id);
-        Snake snake = new Snake(id, webSocket);
-
-        webSocket.resource().getRequest().setAttribute("snake", snake);
-        snakeBroadcaster.addSnake(snake);
-        StringBuilder sb = new StringBuilder();
-        for (Iterator<Snake> iterator = snakeBroadcaster.getSnakes().iterator();
-             iterator.hasNext(); ) {
-            snake = iterator.next();
-            sb.append(String.format("{id: %d, color: '%s'}",
-                    Integer.valueOf(snake.getId()), snake.getHexColor()));
-            if (iterator.hasNext()) {
-                sb.append(',');
-            }
-        }
-        snakeBroadcaster.broadcast(String.format("{'type': 'join','data':[%s]}",
-                sb.toString()));
+        super.onOpen(webSocket.resource());
     }
 
     @Override
     public void onClose(WebSocket webSocket) {
-        snakeBroadcaster.removeSnake(snake(webSocket));
-        snakeBroadcaster.broadcast(String.format("{'type': 'leave', 'id': %d}",
-                ((Integer) webSocket.resource().getRequest().getAttribute("id"))));
+        super.onClose(webSocket.resource());
     }
 
     @Override
@@ -82,8 +56,5 @@ public class SnakeWebSocket extends SnakeGame implements WebSocketHandler {
     public void onByteMessage(WebSocket webSocket, byte[] data, int offset, int length) throws IOException {
     }
 
-    private Snake snake(WebSocket webSocket) {
-        return (Snake) webSocket.resource().getRequest().getAttribute("snake");
-    }
 
 }
