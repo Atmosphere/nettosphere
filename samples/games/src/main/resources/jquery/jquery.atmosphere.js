@@ -340,12 +340,6 @@ jQuery.atmosphere = function() {
                 _request.ctime = jQuery.now();
 
                 if (_request.transport != 'websocket' && _request.transport != 'sse') {
-                    // Gives a chance to the connection to be established before calling the callback
-                    if (!_request.enableProtocol) {
-                        setTimeout(function() {
-                            _open('opening', _request.transport, _request);
-                        }, 500);
-                    }
                     _executeRequest();
 
                 } else if (_request.transport == 'websocket') {
@@ -1766,17 +1760,24 @@ jQuery.atmosphere = function() {
                     // TODO: Clearly I need to come with something better than that solution
                     if (rq.lastMessage == xdr.responseText) return;
 
-                    if (rq.executeCallbackBeforeReconnect) {
-                        xdrCallback(xdr);
+                    if (!rq.isOpen) {
+                        _open('opening', rq.transport, rq);
+                        rq.isOpen = true;
                     }
 
-                    if (rq.transport == "long-polling" && (rq.reconnect && (rq.maxRequest == -1 || rq.requestCount++ < rq.maxRequest))) {
-                        xdr.status = 200;
-                        _reconnect(xdr, rq, false);
-                    }
+                    if (jQuery.trim(xdr.responseText).length != 0) {
+                        if (rq.executeCallbackBeforeReconnect) {
+                            xdrCallback(xdr);
+                        }
 
-                    if (!rq.executeCallbackBeforeReconnect) {
-                        xdrCallback(xdr);
+                        if (rq.transport == "long-polling" && (rq.reconnect && (rq.maxRequest == -1 || rq.requestCount++ < rq.maxRequest))) {
+                            xdr.status = 200;
+                            _reconnect(xdr, rq, false);
+                        }
+
+                        if (!rq.executeCallbackBeforeReconnect) {
+                            xdrCallback(xdr);
+                        }
                     }
                     rq.lastMessage = xdr.responseText;
                 };
@@ -1895,6 +1896,10 @@ jQuery.atmosphere = function() {
                                     text = text.substring(0, text.length - 1);
 
                                     _handleProtocol(rq, text);
+                                    if (!rq.isOpen) {
+                                        _open('opening', rq.transport, rq);
+                                        rq.isOpen = true;
+                                    }
                                     return text;
 
                                 };
