@@ -16,9 +16,7 @@
 package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AsyncIOWriter;
-import org.atmosphere.cpr.AsyncIOWriterAdapter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -132,6 +130,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
             length = data.length;
         }
 
+        logger.trace("About to write to {}", r.resource() != null ? r.resource().uuid() : "null");
         if (channel.isOpen()) {
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
             pendingWrite.incrementAndGet();
@@ -156,7 +155,8 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
             byteWritten = true;
             lastWrite = System.currentTimeMillis();
         } else {
-            logger.warn("Trying to write on a closed channel {}", channel);
+            logger.debug("Trying to write on a closed channel {}", channel);
+            throw new IOException("Channel closed");
         }
         headerWritten = true;
         return this;
