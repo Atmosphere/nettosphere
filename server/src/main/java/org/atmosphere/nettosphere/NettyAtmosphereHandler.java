@@ -23,11 +23,13 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.Version;
+import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -59,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -70,6 +73,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -93,6 +97,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final Config config;
     private WebSocketServerHandshaker handshaker;
     private final ScheduledExecutorService suspendTimer;
+    private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
 
     public NettyAtmosphereHandler(Config config) {
         super(config.path());
@@ -104,7 +109,17 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         framework.setAtmosphereDotXmlPath(config.configFile());
-        framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()));
+        framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
+            public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
+                Action a = super.suspended(request, response);
+                AtmosphereResource r = request.resource();
+                HttpSession s = request.getSession(true);
+                if (s != null) {
+                    sessions.put(r.uuid(), request.getSession(true));
+                }
+                return a;
+            }
+        });
         try {
             if (config.broadcasterFactory() != null) {
                 framework.setBroadcasterFactory(config.broadcasterFactory());
@@ -135,7 +150,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         if (!config.scanPackages().isEmpty()) {
-            for (Class<?> s: config.scanPackages()){
+            for (Class<?> s : config.scanPackages()) {
                 framework.addAnnotationPackage(s);
             }
         }
@@ -167,7 +182,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 }
             }
 
-            logger.debug("Handling request {}", r);
+            logger.trace("Handling request {}", r);
 
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
@@ -262,14 +277,30 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         int l;
 
         if (url.contains(config.mappingPath())) {
-            l =  requestUri.getAuthority().length() + requestUri.getScheme().length() + 3 + config.mappingPath().length();
+            l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3 + config.mappingPath().length();
         } else {
             l = requestUri.getAuthority().length() + requestUri.getScheme().length() + 3;
         }
 
+        HttpSession session = null;
+        String[] transport = qs.get(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
+        if (transport != null && transport.length > 0) {
+            String[] uuid = qs.get(HeaderConfig.X_ATMOSPHERE_TRACKING_ID);
+            if (uuid != null && uuid.length > 0) {
+                // TODO: Session is only supported until an unsubscribe is received.
+                if (transport[0].equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
+                    sessions.remove(uuid[0]);
+                } else {
+                    session = sessions.get(uuid[0]);
+
+                    if (session == null) {
+                        session = new FakeHttpSession("-1", null, System.currentTimeMillis(), -1);
+                    }
+                }
+            }
+        }
 
         final Map<String, Object> attributes = new HashMap<String, Object>();
-
         AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
         AtmosphereRequest r = requestBuilder.requestURI(url.substring(l))
                 .requestURL(url)
@@ -280,6 +311,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
+                .session(session)
                 .queryStrings(qs)
                 .remotePort(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getPort())
                 .remoteAddr(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress())
