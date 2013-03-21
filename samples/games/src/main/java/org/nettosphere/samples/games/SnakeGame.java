@@ -17,7 +17,6 @@ package org.nettosphere.samples.games;
 
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.atmosphere.websocket.WebSocket;
 
 import java.awt.*;
 import java.io.IOException;
@@ -63,10 +62,10 @@ public class SnakeGame {
 
     public void onOpen(AtmosphereResource resource) throws IOException {
         int id = snakeIds.getAndIncrement();
-        resource.getRequest().setAttribute("id", id);
+        resource.session().setAttribute("id", id);
         Snake snake = new Snake(id, resource);
 
-        resource.getRequest().setAttribute("snake", snake);
+        resource.session().setAttribute("snake", snake);
         snakeBroadcaster.addSnake(snake);
         StringBuilder sb = new StringBuilder();
         for (Iterator<Snake> iterator = snakeBroadcaster.getSnakes().iterator();
@@ -85,11 +84,11 @@ public class SnakeGame {
     public void onClose(AtmosphereResource resource) {
         snakeBroadcaster.removeSnake(snake(resource));
         snakeBroadcaster.broadcast(String.format("{'type': 'leave', 'id': %d}",
-                ((Integer) resource.getRequest().getAttribute("id"))));
+                ((Integer) resource.session().getAttribute("id"))));
     }
 
     protected Snake snake(AtmosphereResource resource) {
-        return (Snake) resource.getRequest().getAttribute("snake");
+        return (Snake) resource.session().getAttribute("snake");
     }
 
     protected void onMessage(AtmosphereResource resource, String message) {

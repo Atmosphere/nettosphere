@@ -113,11 +113,8 @@ Game.initialize = function () {
             }
         }
     }, false);
-    if (window.location.protocol == 'http:') {
-        Game.connect('http://' + window.location.host + '/snake');
-    } else {
-        Game.connect('https://' + window.location.host + '/snake');
-    }
+
+    Game.connect(document.location.toString() + 'snake');
 };
 
 Game.setDirection = function (direction) {
@@ -203,8 +200,10 @@ Game.connect = (function (host) {
     };
 
     request.onClose = function (response) {
-        Console.log('Info: ' + Game.transport + ' closed.');
-        Game.stopGameLoop();
+        if (response.state == "unsubscribe") {
+            Console.log('Info: ' + Game.transport + ' closed.');
+            Game.stopGameLoop();
+        }
     };
 
     request.onTransportFailure = function (errorMsg, request) {

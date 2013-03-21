@@ -24,10 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -99,6 +97,6 @@ public class SnakeBroadcaster {
                 }
                 return "";
             }
-        }, TICK_DELAY, TimeUnit.MILLISECONDS);
+        }, TICK_DELAY, TICK_DELAY, TimeUnit.MILLISECONDS);
     }
 }

@@ -18,15 +18,20 @@ package org.nettosphere.samples.games;
 import org.atmosphere.config.service.Get;
 import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.Post;
+import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.AtmosphereResourceFactory;
+import org.atmosphere.cpr.HeaderConfig;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @ManagedService(path = "/snake")
 public class SnakeManagedService extends SnakeGame {
+
+    private final ConcurrentLinkedQueue<String> uuids = new ConcurrentLinkedQueue<String>();
 
     @Get
     public void onOpen(final AtmosphereResource resource) {
@@ -34,7 +39,10 @@ public class SnakeManagedService extends SnakeGame {
             @Override
             public void onSuspend(AtmosphereResourceEvent event) {
                 try {
-                    SnakeManagedService.super.onOpen(resource);
+                    if (!uuids.contains(resource.uuid())) {
+                        SnakeManagedService.super.onOpen(resource);
+                        uuids.add(resource.uuid());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -43,7 +51,12 @@ public class SnakeManagedService extends SnakeGame {
 
             @Override
             public void onDisconnect(AtmosphereResourceEvent event) {
-                SnakeManagedService.super.onClose(resource);
+                AtmosphereRequest request = event.getResource().getRequest();
+                String s = request.getHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
+                if (s != null && s.equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
+                    SnakeManagedService.super.onClose(resource);
+                    uuids.remove(resource.uuid());
+                }
             }
         });
     }
