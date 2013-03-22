@@ -130,7 +130,7 @@ public class Config {
         /**
          * Set an SSLEngine in order enable SSL
          * @param engine
-         * @return
+         * @return this
          */
         public Builder engine(SSLEngine engine) {
             this.engine = engine;
@@ -141,6 +141,7 @@ public class Config {
          * Set the mapping path. If you have worked with Servlet, the mapping path is equivalent to the servlet path.
          *
          * @param mappingPath the path under which the application will be mapped.
+         * @return this
          */
         public Builder mappingPath(String mappingPath) {
             this.mappingPath = mappingPath;
@@ -152,6 +153,7 @@ public class Config {
          * when your annotated resource is packaged inside the jar/zip.
          *
          * @param librariesPath the path to the library when annotation scanning is enabled.
+         * @return this
          */
         public Builder scanLibrary(String librariesPath) {
             this.librariesPath = librariesPath;
