@@ -113,7 +113,7 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 20000, enabled = true)
+    @Test(timeOut = 20000, enabled = false)
     public void testProgrammaticResume() {
         logger.info("{}: running test: testProgrammaticResume", getClass().getSimpleName());
 
