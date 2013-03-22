@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
- * A bootstrap class that start Nettosphere and the Atmosphere Chat samples.
+ * A bootstrap class that start Nettosphere and Snake!.
  */
 public class NettoSphereGamesServer {
 

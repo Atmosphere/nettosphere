@@ -12,7 +12,7 @@ JAVA_CONFIG_OPTIONS="-Xms4096m -Xmx4096m -XX:NewSize=256m -XX:MaxNewSize=256m -X
 export JAVA_OPTS="-Duser.timezone=GMT ${JAVA_CONFIG_OPTIONS} ${JAVA_DEBUG_OPTIONS} "
 
 echo "Starting NettoSphere:"
-PARAMETERS="-classpath lib/*: org.nettosphere.samples.chat.NettosphereChat"
+PARAMETERS="-classpath lib/*: org.nettosphere.samples.games.NettoSphereGamesServer"
 COMMAND="java -server ${NETTOSPHERE_OPTS} ${JAVA_OPTS} ${DEV_OPTS} ${PARAMETERS}"
 echo $COMMAND
 $COMMAND
