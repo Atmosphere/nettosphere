@@ -29,6 +29,7 @@ import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLEngine;
 import javax.servlet.Servlet;
 import java.io.File;
 import java.io.IOException;
@@ -104,6 +105,10 @@ public class Config {
         return b.mappingPath;
     }
 
+    public SSLEngine engine() {
+        return b.engine;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -120,6 +125,17 @@ public class Config {
         private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
+        private SSLEngine engine;
+
+        /**
+         * Set an SSLEngine in order enable SSL
+         * @param engine
+         * @return
+         */
+        public Builder engine(SSLEngine engine) {
+            this.engine = engine;
+            return this;
+        }
 
         /**
          * Set the mapping path. If you have worked with Servlet, the mapping path is equivalent to the servlet path.

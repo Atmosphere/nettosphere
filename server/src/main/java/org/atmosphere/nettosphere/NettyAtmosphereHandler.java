@@ -482,6 +482,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
     }
 
+    Config config(){
+        return config;
+    }
+
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
         // Generate an error page if response status code is not OK (200).
         if (res.getStatus().getCode() != 200) {

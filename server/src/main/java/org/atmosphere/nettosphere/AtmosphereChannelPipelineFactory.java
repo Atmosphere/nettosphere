@@ -20,6 +20,7 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
 import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
+import org.jboss.netty.handler.ssl.SslHandler;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
@@ -27,9 +28,11 @@ class AtmosphereChannelPipelineFactory implements
         ChannelPipelineFactory {
 
     private final transient NettyAtmosphereHandler nettyAtmosphereHandler;
+    private final transient Config config;
 
     public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler nettyAtmosphereHandler) {
         this.nettyAtmosphereHandler = nettyAtmosphereHandler;
+        config = nettyAtmosphereHandler.config();
     }
 
     /**
@@ -39,6 +42,11 @@ class AtmosphereChannelPipelineFactory implements
      */
     public ChannelPipeline getPipeline() {
         final ChannelPipeline pipeline = pipeline();
+
+        if (config.engine() != null) {
+            pipeline.addLast("ssl", new SslHandler(config.engine()));
+        }
+
         pipeline.addLast("decoder", new HttpRequestDecoder());
         pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());

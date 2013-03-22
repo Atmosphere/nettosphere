@@ -17,10 +17,12 @@ package org.atmosphere.nettosphere.test;
 
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
+import com.ning.http.client.SSLEngineFactory;
 import com.ning.http.client.websocket.WebSocket;
 import com.ning.http.client.websocket.WebSocketTextListener;
 import com.ning.http.client.websocket.WebSocketUpgradeHandler;
@@ -36,7 +38,19 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -447,4 +461,86 @@ public class NettyAtmosphereTest extends BaseTest {
         assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
 
     }
+
+    @Test
+    public void httspHandlerTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final SSLContext sslContext = createSSLContext();
+        SSLEngine e = sslContext.createSSLEngine();
+        e.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+        e.setUseClientMode(false);
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .engine(e)
+                .resource(new Handler() {
+
+                    @Override
+                    public void handle(AtmosphereResource r) {
+                        r.getResponse().write("Hello World from Nettosphere").closeStreamOrWriter();
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setSSLEngineFactory(new SSLEngineFactory() {
+
+            @Override
+            public SSLEngine newSSLEngine() throws GeneralSecurityException {
+                    SSLEngine sslEngine = sslContext.createSSLEngine();
+                    sslEngine.setUseClientMode(true);
+                    sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+                    return sslEngine;
+            }
+        }).build());
+        Response response = c.prepareGet("https://127.0.0.1:" + port).execute().get();
+        assertNotNull(response);
+
+        assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
+
+    }
+
+    private static SSLContext createSSLContext() {
+        try {
+            InputStream keyStoreStream = BaseTest.class.getResourceAsStream("ssltest-cacerts.jks");
+            char[] keyStorePassword = "changeit".toCharArray();
+            KeyStore ks = KeyStore.getInstance("JKS");
+            ks.load(keyStoreStream, keyStorePassword);
+
+            // Set up key manager factory to use our key store
+            char[] certificatePassword = "changeit".toCharArray();
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(ks, certificatePassword);
+
+            // Initialize the SSLContext to work with our key managers.
+            KeyManager[] keyManagers = kmf.getKeyManagers();
+            TrustManager[] trustManagers = new TrustManager[]{DUMMY_TRUST_MANAGER};
+            SecureRandom secureRandom = new SecureRandom();
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(keyManagers, trustManagers, secureRandom);
+            return sslContext;
+        } catch (Exception e) {
+            throw new Error("Failed to initialize SSLContext", e);
+        }
+    }
+
+    private static final AtomicBoolean TRUST_SERVER_CERT = new AtomicBoolean(true);
+    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        }
+
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            if (!TRUST_SERVER_CERT.get()) {
+                throw new CertificateException("Server certificate not trusted.");
+            }
+        }
+    };
 }
