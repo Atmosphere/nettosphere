@@ -16,21 +16,25 @@ Download Nettosphere [here](https://oss.sonatype.org/content/repositories/snapsh
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>1.4.2</version>
+         <version>2.0.0.rc1</version>
      </dependency>
 ```
 
-or test out upcoming release, which is powered by Atmosphere 1.1.0
-
-```xml
-     <dependency>
-         <groupId>org.atmosphere</groupId>
-         <artifactId>nettosphere</artifactId>
-         <version>2.0.0.beta1</version>
-     </dependency>
-```
 
 ### Super Simple Web Application
+
+```java
+    Nettosphere server = new Nettosphere.Builder().config(
+                 new Config.Builder()
+                    .host("127.0.0.1")
+                    .port(8080)
+                    .resource(MyClass.class)
+                    .build())
+                 .build();
+    server.start();
+```
+
+or
 
 ```java
     Nettosphere server = new Nettosphere.Builder().config(

@@ -15,13 +15,11 @@
  */
 package org.nettosphere.samples.games;
 
-import org.atmosphere.config.service.WebSocketHandlerService;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProcessor;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Simple WebSocketHandlerService that implement the logic to build a Snake Application.

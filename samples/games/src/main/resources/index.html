@@ -187,7 +187,7 @@ Game.run = (function () {
 
 Game.connect = (function (host) {
     var request = {url: host,
-        transport: 'websocket',
+        transport: 'sse',
         enableProtocol: true,
         trackMessageLength: true,
         logLevel: 'debug'};
