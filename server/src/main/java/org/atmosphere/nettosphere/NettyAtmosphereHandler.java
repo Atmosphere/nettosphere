@@ -259,6 +259,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
+        long cl = HttpHeaders.getContentLength(request);
         String method = request.getMethod().getName();
 
         String queryString = requestUri.getQuery();
@@ -308,6 +309,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .headers(getHeaders(request))
                 .method(method)
                 .contentType(ct)
+                .contentLength(cl)
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
