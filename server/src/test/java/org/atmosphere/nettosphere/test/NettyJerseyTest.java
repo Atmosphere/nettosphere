@@ -452,7 +452,9 @@ public class NettyJerseyTest extends BaseTest {
             c.preparePost(urlTarget).addParameter("message", "cachememe").execute().get();
 
             //Suspend
-            Response r = c.prepareGet(urlTarget + "/subscribeAndResume").addHeader(HeaderConfig.X_CACHE_DATE, String.valueOf(t1)).execute(new AsyncCompletionHandler<Response>() {
+            Response r = c.prepareGet(urlTarget + "/subscribeAndResume")
+                    .addHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, HeaderConfig.LONG_POLLING_TRANSPORT)
+                    .addHeader(HeaderConfig.X_CACHE_DATE, String.valueOf(t1)).execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
