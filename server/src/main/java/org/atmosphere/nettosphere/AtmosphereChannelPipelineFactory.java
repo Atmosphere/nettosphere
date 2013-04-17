@@ -22,6 +22,8 @@ import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 
+import javax.net.ssl.SSLEngine;
+
 import static org.jboss.netty.channel.Channels.pipeline;
 
 class AtmosphereChannelPipelineFactory implements
@@ -43,8 +45,10 @@ class AtmosphereChannelPipelineFactory implements
     public ChannelPipeline getPipeline() {
         final ChannelPipeline pipeline = pipeline();
 
-        if (config.engine() != null) {
-            pipeline.addLast("ssl", new SslHandler(config.engine()));
+        if (config.sslContext() != null) {
+            SSLEngine e = config.sslContext().createSSLEngine();
+            config.sslContextListener().onPostCreate(e);
+            pipeline.addLast("ssl", new SslHandler(e));
         }
 
         pipeline.addLast("decoder", new HttpRequestDecoder());

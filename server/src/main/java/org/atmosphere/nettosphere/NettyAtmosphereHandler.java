@@ -28,7 +28,6 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
-import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
@@ -78,6 +77,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
@@ -98,6 +98,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private WebSocketServerHandshaker handshaker;
     private final ScheduledExecutorService suspendTimer;
     private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
+    private final AtomicBoolean isShutdown = new AtomicBoolean();
 
     public NettyAtmosphereHandler(Config config) {
         super(config.path());
@@ -166,6 +167,12 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent.getMessage();
+
+        if (isShutdown.get()) {
+            sendError(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE, messageEvent);
+            return;
+        }
+
         if (msg instanceof HttpRequest) {
             HttpRequest r = HttpRequest.class.cast(msg);
             // Netty fail to decode headers separated by a ','
@@ -182,8 +189,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 }
             }
 
-            logger.trace("Handling request {}", r);
-
+            logger.debug("Handling request {}", r);
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
@@ -203,14 +209,13 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             return;
         }
 
-        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                getWebSocketLocation(request), null, false);
+        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
         handshaker = wsFactory.newHandshaker(request);
 
-        if (this.handshaker == null) {
+        if (handshaker == null) {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
-            this.handshaker.handshake(ctx.getChannel(), request);
+            handshaker.handshake(ctx.getChannel(), request);
         }
 
         WebSocketProcessor processor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
@@ -237,7 +242,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
-            this.handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
+            handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
         } else if (frame instanceof BinaryWebSocketFrame) {
@@ -358,7 +363,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     .writeHeader(false)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
-                    .header("Server", "Nettosphere-" + Version.getRawVersion())
+                    .header("Server", "Nettosphere/2.0")
                     .request(r).build();
 
             r.setAttribute(NettyCometSupport.CHANNEL, w);
@@ -436,6 +441,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     public void destroy() {
+        isShutdown.set(true);
         if (framework != null) framework.destroy();
         suspendTimer.shutdown();
     }

@@ -74,7 +74,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void start() throws IOException {
-        port = findFreePort();
+        port = 8080;
         targetUrl = "http://127.0.0.1:" + port;
         wsUrl = "ws://127.0.0.1:" + port;
     }
@@ -466,14 +466,10 @@ public class NettyAtmosphereTest extends BaseTest {
     public void httspHandlerTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
         final SSLContext sslContext = createSSLContext();
-        SSLEngine e = sslContext.createSSLEngine();
-        e.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
-        e.setUseClientMode(false);
-
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
-                .engine(e)
+                .sslContext(sslContext)
                 .resource(new Handler() {
 
                     @Override
@@ -543,4 +539,86 @@ public class NettyAtmosphereTest extends BaseTest {
             }
         }
     };
+
+    @Test
+    public void closeTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final CountDownLatch suspendCD = new CountDownLatch(1);
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .resource("/suspend", new AtmosphereHandler() {
+
+
+                    @Override
+                    public void onRequest(AtmosphereResource r) throws IOException {
+                        r.addEventListener(new WebSocketEventListenerAdapter() {
+                            @Override
+                            public void onSuspend(AtmosphereResourceEvent e) {
+                                suspendCD.countDown();
+                            }
+                        });
+                        r.suspend(60, TimeUnit.SECONDS);
+                    }
+
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<HttpResponseHeaders> response = new AtomicReference<HttpResponseHeaders>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        c.prepareGet(targetUrl + "/suspend").execute(new AsyncHandler<Response>() {
+
+            final Response.ResponseBuilder b = new Response.ResponseBuilder();
+
+            @Override
+            public void onThrowable(Throwable t) {
+                l.countDown();
+            }
+
+            @Override
+            public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                response.set(headers);
+                l.countDown();
+                return STATE.ABORT;
+            }
+
+            @Override
+            public Response onCompleted() throws Exception {
+                return null;
+            }
+        });
+
+        suspendCD.await(5, TimeUnit.SECONDS);
+
+        Thread.sleep(2000);
+
+        server.stop();
+        l.await(20, TimeUnit.SECONDS);
+
+        assertNotNull(response.get());
+    }
+
 }

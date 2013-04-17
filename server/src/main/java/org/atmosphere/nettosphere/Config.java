@@ -24,12 +24,13 @@ import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.handler.ReflectorServletProcessor;
+import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLContext;
 import javax.servlet.Servlet;
 import java.io.File;
 import java.io.IOException;
@@ -105,8 +106,12 @@ public class Config {
         return b.mappingPath;
     }
 
-    public SSLEngine engine() {
-        return b.engine;
+    public SSLContext sslContext() {
+        return b.context;
+    }
+
+    public SSLContextListener sslContextListener(){
+        return b.listener;
     }
 
     public final static class Builder {
@@ -125,15 +130,26 @@ public class Config {
         private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
-        private SSLEngine engine;
+        private SSLContext context;
+        private SSLContextListener listener = SSLContextListener.DEFAULT;
 
         /**
-         * Set an SSLEngine in order enable SSL
-         * @param engine
+         * Set an SSLContext in order enable SSL
+         * @param context
          * @return this
          */
-        public Builder engine(SSLEngine engine) {
-            this.engine = engine;
+        public Builder sslContext(SSLContext context) {
+            this.context = context;
+            return this;
+        }
+
+        /**
+         * Add a {@link SSLContextListener}
+         * @param listener
+         * @return this
+         */
+        public Builder sslContextListener(SSLContextListener listener) {
+            this.listener = listener;
             return this;
         }
 
