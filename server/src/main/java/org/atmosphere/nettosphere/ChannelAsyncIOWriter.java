@@ -168,7 +168,10 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
     @Override
     public void close(AtmosphereResponse r) throws IOException {
-        if (writeHeader && !headerWritten) {
+
+        if (!channel.isOpen()) return;
+
+        if (writeHeader && !headerWritten && r != null) {
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 
             buffer.writeBytes(constructStatusAndHeaders(r).getBytes("UTF-8"));
