@@ -22,7 +22,6 @@ import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
-import org.atmosphere.cache.HeaderBroadcasterCache;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
@@ -83,27 +82,6 @@ public class NettyJerseyTest extends BaseTest {
             assertEquals(resume, "resume");
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 15000);
-        } catch (Exception e) {
-            logger.error("test failed", e);
-            fail(e.getMessage());
-        }
-
-        c.close();
-    }
-
-    @Test(timeOut = 20000, enabled = true)
-    public void testSuspendWithCommentsTimeout() {
-        logger.info("{}: running test: testSuspendWithCommentsTimeout", getClass().getSimpleName());
-
-        AsyncHttpClient c = new AsyncHttpClient();
-        try {
-            Response r = c.prepareGet(urlTarget + "/withComments").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute().get(10, TimeUnit.SECONDS);
-            assertNotNull(r);
-            assertEquals(r.getStatusCode(), 200);
-            String resume = r.getResponseBody();
-            String[] ct = r.getContentType().toLowerCase().split(";");
-            assertEquals(ct[0].trim(), "text/plain");
-            assertEquals(resume.trim(),"");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -417,64 +395,6 @@ public class NettyJerseyTest extends BaseTest {
                     "==================================================\n" +
                     "==================================================\n" +
                     "==================================================\n");
-        } catch (Exception e) {
-            logger.error("test failed", e);
-            fail(e.getMessage());
-        }
-
-        c.close();
-    }
-
-    @Test(timeOut = 60000, enabled = true)
-    public void testHeaderBroadcasterCache() throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException {
-        logger.info("{}: running test: testHeaderBroadcasterCache", getClass().getSimpleName());
-
-        server.stop();
-        port = findFreePort();
-        urlTarget = getUrlTarget(port);
-        Config config = new Config.Builder()
-                .port(port)
-                .host("127.0.0.1")
-                .resource(Resource.class)
-                .broadcasterCache(HeaderBroadcasterCache.class)
-                .build();
-        server = new Nettosphere.Builder().config(config).build();
-        server.start();
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        long t1 = System.currentTimeMillis();
-        AsyncHttpClient c = new AsyncHttpClient();
-        try {
-            // Suspend
-            c.preparePost(urlTarget).addParameter("message", "cacheme").execute().get();
-
-            // Broadcast
-            c.preparePost(urlTarget).addParameter("message", "cachememe").execute().get();
-
-            //Suspend
-            Response r = c.prepareGet(urlTarget + "/subscribeAndResume")
-                    .addHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, HeaderConfig.LONG_POLLING_TRANSPORT)
-                    .addHeader(HeaderConfig.X_CACHE_DATE, String.valueOf(t1)).execute(new AsyncCompletionHandler<Response>() {
-
-                @Override
-                public Response onCompleted(Response r) throws Exception {
-                    try {
-                        return r;
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            }).get();
-
-            try {
-                latch.await(60, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                fail(e.getMessage());
-            }
-
-            assertNotNull(r);
-            assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "cacheme\ncachememe\n");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());

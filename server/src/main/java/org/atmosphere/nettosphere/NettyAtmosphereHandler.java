@@ -95,10 +95,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
     private final AtmosphereFramework framework;
     private final Config config;
-    private WebSocketServerHandshaker handshaker;
     private final ScheduledExecutorService suspendTimer;
     private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
     private final AtomicBoolean isShutdown = new AtomicBoolean();
+    private final WebSocketProcessor webSocketProcessor;
 
     public NettyAtmosphereHandler(Config config) {
         super(config.path());
@@ -113,10 +113,12 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
             public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
                 Action a = super.suspended(request, response);
-                AtmosphereResource r = request.resource();
-                HttpSession s = request.getSession(true);
-                if (s != null) {
-                    sessions.put(r.uuid(), request.getSession(true));
+                if (framework.getAtmosphereConfig().isSupportSession()) {
+                    AtmosphereResource r = request.resource();
+                    HttpSession s = request.getSession(true);
+                    if (s != null) {
+                        sessions.put(r.uuid(), request.getSession(true));
+                    }
                 }
                 return a;
             }
@@ -162,6 +164,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             throw new RuntimeException(e);
         }
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+        webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
     }
 
     @Override
@@ -189,7 +192,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 }
             }
 
-            logger.debug("Handling request {}", r);
+            logger.trace("Handling request {}", r);
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
@@ -210,7 +213,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
-        handshaker = wsFactory.newHandshaker(request);
+        WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
 
         if (handshaker == null) {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
@@ -218,23 +221,11 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             handshaker.handshake(ctx.getChannel(), request);
         }
 
-        WebSocketProcessor processor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
         WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
 
-        ctx.setAttachment(new Attachment(processor, webSocket));
-        processor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
-    }
-
-    private final static class Attachment {
-
-        public final WebSocketProcessor p;
-        public final WebSocket w;
-
-        private Attachment(WebSocketProcessor p, WebSocket w) {
-            this.p = p;
-            this.w = w;
-        }
+        ctx.setAttachment(webSocket);
+        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
     }
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
@@ -242,18 +233,15 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
+            ChannelFuture future = ctx.getChannel().write(frame);
+            future.addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
         } else if (frame instanceof BinaryWebSocketFrame) {
-            Attachment a = (Attachment) ctx.getAttachment();
-            WebSocketProcessor processor = a.p;
             ChannelBuffer binaryData = frame.getBinaryData();
-            processor.invokeWebSocketProtocol(a.w, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket)ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
-            Attachment a = (Attachment) ctx.getAttachment();
-            WebSocketProcessor processor = a.p;
-            processor.invokeWebSocketProtocol(a.w, ((TextWebSocketFrame) frame).getText());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket)ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
         } else {
             throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
                     .getName()));
@@ -289,18 +277,20 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         HttpSession session = null;
-        String[] transport = qs.get(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
-        if (transport != null && transport.length > 0) {
-            String[] uuid = qs.get(HeaderConfig.X_ATMOSPHERE_TRACKING_ID);
-            if (uuid != null && uuid.length > 0) {
-                // TODO: Session is only supported until an unsubscribe is received.
-                if (transport[0].equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
-                    sessions.remove(uuid[0]);
-                } else {
-                    session = sessions.get(uuid[0]);
+        if (framework.getAtmosphereConfig().isSupportSession()) {
+            String[] transport = qs.get(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
+            if (transport != null && transport.length > 0) {
+                String[] uuid = qs.get(HeaderConfig.X_ATMOSPHERE_TRACKING_ID);
+                if (uuid != null && uuid.length > 0) {
+                    // TODO: Session is only supported until an unsubscribe is received.
+                    if (transport[0].equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
+                        sessions.remove(uuid[0]);
+                    } else {
+                        session = sessions.get(uuid[0]);
 
-                    if (session == null) {
-                        session = new FakeHttpSession("-1", null, System.currentTimeMillis(), -1);
+                        if (session == null) {
+                            session = new FakeHttpSession("-1", null, System.currentTimeMillis(), -1);
+                        }
                     }
                 }
             }
@@ -449,11 +439,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
-        Attachment o = (Attachment) ctx.getAttachment();
-        if (o == null) return;
+        WebSocket webSocket = (WebSocket) ctx.getAttachment();
+        if (webSocket == null) return;
 
-        WebSocket w = o.w;
-        o.p.close(w, 1000);
+        webSocketProcessor.close(webSocket, 1000);
     }
 
     @Override
