@@ -24,11 +24,6 @@
             <groupId>org.atmosphere</groupId>
             <artifactId>nettosphere</artifactId>
         </dependency>
-        <dependency>
-            <groupId>eu.infomas</groupId>
-            <artifactId>annotation-detector</artifactId>
-            <version>3.0.1</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>

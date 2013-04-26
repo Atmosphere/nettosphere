@@ -63,6 +63,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -100,7 +103,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebSocketProcessor webSocketProcessor;
 
-    public NettyAtmosphereHandler(Config config) {
+    public NettyAtmosphereHandler(final Config config) {
         super(config.path());
         this.config = config;
         framework = new AtmosphereFramework();
@@ -158,8 +161,23 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             }
         }
 
+        final Context context = new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build();
+        ServletContext ctx = (ServletContext) Proxy.newProxyInstance(NettyAtmosphereHandler.class.getClassLoader(), new Class[]{ServletContext.class},
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        Method stub = Context.class.getMethod(method.getName(), method.getParameterTypes());
+                        if (stub != null) {
+                            return stub.invoke(context, args);
+                        } else {
+                            logger.trace("Method {} not supported", method.getName());
+                            return null;
+                        }
+                    }
+                });
+
         try {
-            framework.init(new NettyServletConfig(config.initParams(), new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build()));
+            framework.init(new NettyServletConfig(config.initParams(), ctx));
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
@@ -239,9 +257,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
         } else if (frame instanceof BinaryWebSocketFrame) {
             ChannelBuffer binaryData = frame.getBinaryData();
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket)ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket)ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
         } else {
             throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass()
                     .getName()));
