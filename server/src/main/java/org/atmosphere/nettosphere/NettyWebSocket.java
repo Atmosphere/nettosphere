@@ -90,6 +90,7 @@ public class NettyWebSocket extends WebSocket {
                 c.writeBytes(data);
                 channel.write(new BinaryWebSocketFrame(c));
             } else {
+                channel.write(new String(data, offset, length, "UTF-8"));
             }
         }
         return this;
