@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
+import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -106,6 +107,8 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public void close() {
-        channel.close().addListener(ChannelFutureListener.CLOSE);
+        AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
+        if (impl != null && impl.isInScope())
+            channel.close().addListener(ChannelFutureListener.CLOSE);
     }
 }
