@@ -190,7 +190,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         Object msg = messageEvent.getMessage();
 
         if (isShutdown.get()) {
-            sendError(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE, messageEvent);
+            ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
             return;
         }
 
