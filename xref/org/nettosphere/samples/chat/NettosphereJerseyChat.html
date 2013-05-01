@@ -45,10 +45,10 @@
 <a class="jxr_linenumber" name="35" href="#35">35</a>  
 <a class="jxr_linenumber" name="36" href="#36">36</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> main(String[] args) <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="37" href="#37">37</a>          Config.Builder b = <strong class="jxr_keyword">new</strong> Config.Builder();
-<a class="jxr_linenumber" name="38" href="#38">38</a>          <em class="jxr_comment">//b.resource("./samples/jersey-chat/src/main/resources")</em>
-<a class="jxr_linenumber" name="39" href="#39">39</a>          b.resource(<strong class="jxr_keyword">new</strong> File(<span class="jxr_string">"."</span>).getAbsolutePath() + <span class="jxr_string">"/webapps"</span>)
-<a class="jxr_linenumber" name="40" href="#40">40</a>                  .resource(ResourceChat.<strong class="jxr_keyword">class</strong>)
-<a class="jxr_linenumber" name="41" href="#41">41</a>                  .configFile(<span class="jxr_string">"../conf/atmosphere.xml"</span>)
+<a class="jxr_linenumber" name="38" href="#38">38</a>          b.resource(ResourceChat.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="39" href="#39">39</a>                  .resource(<span class="jxr_string">"./webapps"</span>)
+<a class="jxr_linenumber" name="40" href="#40">40</a>                  <em class="jxr_comment">// for debugging inside IntelJ</em>
+<a class="jxr_linenumber" name="41" href="#41">41</a>                  .resource(<span class="jxr_string">"./samples/jersey-chat/src/main/resources"</span>)
 <a class="jxr_linenumber" name="42" href="#42">42</a>                  .port(8080)
 <a class="jxr_linenumber" name="43" href="#43">43</a>                  .host(<span class="jxr_string">"127.0.0.1"</span>)
 <a class="jxr_linenumber" name="44" href="#44">44</a>                  .initParam(<span class="jxr_string">"org.atmosphere.websocket.messageContentType"</span>,<span class="jxr_string">"application/json"</span>)

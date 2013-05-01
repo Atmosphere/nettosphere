@@ -25,28 +25,28 @@
 <a class="jxr_linenumber" name="15" href="#15">15</a>  <em class="jxr_comment"> */</em>
 <a class="jxr_linenumber" name="16" href="#16">16</a>  <strong class="jxr_keyword">package</strong> org.nettosphere.samples.chat;
 <a class="jxr_linenumber" name="17" href="#17">17</a>  
-<a class="jxr_linenumber" name="18" href="#18">18</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.ApplicationConfig;
-<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.Config;
-<a class="jxr_linenumber" name="20" href="#20">20</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.Nettosphere;
-<a class="jxr_linenumber" name="21" href="#21">21</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.socketio.cpr.SocketIOAtmosphereInterceptor;
-<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
-<a class="jxr_linenumber" name="23" href="#23">23</a>  <strong class="jxr_keyword">import</strong> org.slf4j.LoggerFactory;
-<a class="jxr_linenumber" name="24" href="#24">24</a>  
-<a class="jxr_linenumber" name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> java.io.BufferedReader;
-<a class="jxr_linenumber" name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
-<a class="jxr_linenumber" name="27" href="#27">27</a>  <strong class="jxr_keyword">import</strong> java.io.InputStreamReader;
-<a class="jxr_linenumber" name="28" href="#28">28</a>  
-<a class="jxr_linenumber" name="29" href="#29">29</a>  <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="30" href="#30">30</a>  <em class="jxr_javadoccomment"> * A bootstrap class that start Nettosphere and the Atmosphere Chat samples.</em>
-<a class="jxr_linenumber" name="31" href="#31">31</a>  <em class="jxr_javadoccomment"> */</em>
-<a class="jxr_linenumber" name="32" href="#32">32</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../org/nettosphere/samples/chat/NettosphereChat.html">NettosphereChat</a> {
-<a class="jxr_linenumber" name="33" href="#33">33</a>  
-<a class="jxr_linenumber" name="34" href="#34">34</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger logger = LoggerFactory.getLogger(Nettosphere.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="35" href="#35">35</a>  
-<a class="jxr_linenumber" name="36" href="#36">36</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> main(String[] args) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="37" href="#37">37</a>          Config.Builder b = <strong class="jxr_keyword">new</strong> Config.Builder();
-<a class="jxr_linenumber" name="38" href="#38">38</a>          <em class="jxr_comment">//b.resource("./samples/socketio-chat/src/main/resources").handlerPath("./samples/socketio-chat/target/classes/")</em>
-<a class="jxr_linenumber" name="39" href="#39">39</a>          b.resource(<span class="jxr_string">"./webapps"</span>)
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.Config;
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.Nettosphere;
+<a class="jxr_linenumber" name="20" href="#20">20</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.socketio.cpr.SocketIOAtmosphereInterceptor;
+<a class="jxr_linenumber" name="21" href="#21">21</a>  <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> org.slf4j.LoggerFactory;
+<a class="jxr_linenumber" name="23" href="#23">23</a>  
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <strong class="jxr_keyword">import</strong> java.io.BufferedReader;
+<a class="jxr_linenumber" name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> java.io.InputStreamReader;
+<a class="jxr_linenumber" name="27" href="#27">27</a>  
+<a class="jxr_linenumber" name="28" href="#28">28</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="29" href="#29">29</a>  <em class="jxr_javadoccomment"> * A bootstrap class that start Nettosphere and the Atmosphere Chat samples.</em>
+<a class="jxr_linenumber" name="30" href="#30">30</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="31" href="#31">31</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../org/nettosphere/samples/chat/NettosphereChat.html">NettosphereChat</a> {
+<a class="jxr_linenumber" name="32" href="#32">32</a>  
+<a class="jxr_linenumber" name="33" href="#33">33</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger logger = LoggerFactory.getLogger(Nettosphere.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="34" href="#34">34</a>  
+<a class="jxr_linenumber" name="35" href="#35">35</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> main(String[] args) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="36" href="#36">36</a>          Config.Builder b = <strong class="jxr_keyword">new</strong> Config.Builder();
+<a class="jxr_linenumber" name="37" href="#37">37</a>          b.resource(SocketIOChatAtmosphereHandler.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="38" href="#38">38</a>                  .resource(<span class="jxr_string">"./webapps"</span>)
+<a class="jxr_linenumber" name="39" href="#39">39</a>                  .resource(<span class="jxr_string">"./samples/socketio-chat/src/main/resources"</span>)
 <a class="jxr_linenumber" name="40" href="#40">40</a>                  .initParam(SocketIOAtmosphereInterceptor.SOCKETIO_TRANSPORT, <span class="jxr_string">"websocket,xhr-polling,jsonp-polling"</span>)
 <a class="jxr_linenumber" name="41" href="#41">41</a>                  .mappingPath(<span class="jxr_string">"/chat"</span>)
 <a class="jxr_linenumber" name="42" href="#42">42</a>                  .interceptor(<strong class="jxr_keyword">new</strong> SocketIOAtmosphereInterceptor())
