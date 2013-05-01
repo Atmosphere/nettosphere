@@ -251,8 +251,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
-            ChannelFuture future = ctx.getChannel().write(frame);
-            future.addListener(ChannelFutureListener.CLOSE);
+            ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
         } else if (frame instanceof BinaryWebSocketFrame) {

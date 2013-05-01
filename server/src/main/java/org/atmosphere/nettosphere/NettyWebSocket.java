@@ -40,10 +40,17 @@ public class NettyWebSocket extends WebSocket {
     private final Channel channel;
     private final ChannelBufferFactory factory = new HeapChannelBufferFactory();
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
+    private long bufferSize = 8192;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
         super(config);
         this.channel = channel;
+
+        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BUFFER_SIZE);
+        if (s != null) {
+            bufferSize = Long.valueOf(s);
+            //setOutboundCharBufferSize(getOutboundByteBufferSize());
+        }
     }
 
     /**
@@ -68,11 +75,7 @@ public class NettyWebSocket extends WebSocket {
         if (!channel.isOpen()) throw new IOException("Connection remotely closed");
 
         logger.trace("WebSocket.write()");
-        if (binaryWrite) {
-            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data)));
-        } else {
-            channel.write(new TextWebSocketFrame(new String(data, "UTF-8")));
-        }
+        channel.write(new TextWebSocketFrame(ChannelBuffers.wrappedBuffer(data)));
         lastWrite = System.currentTimeMillis();
         return this;
     }
@@ -85,14 +88,9 @@ public class NettyWebSocket extends WebSocket {
         firstWrite.set(true);
 
         if (channel.isOpen()) {
-            String s = config().getInitParameter(ApplicationConfig.WEBSOCKET_BINARY_WRITE);
-            if (s != null && Boolean.parseBoolean(s)) {
-                ChannelBuffer c = factory.getBuffer(length - offset);
-                c.writeBytes(data);
-                channel.write(new BinaryWebSocketFrame(c));
-            } else {
-                channel.write(new String(data, offset, length, "UTF-8"));
-            }
+            ChannelBuffer c = factory.getBuffer(length - offset);
+            c.writeBytes(data);
+            channel.write(new BinaryWebSocketFrame(c));
         }
         return this;
     }
