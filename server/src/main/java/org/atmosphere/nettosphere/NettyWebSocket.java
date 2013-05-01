@@ -20,7 +20,6 @@ import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.websocket.WebSocket;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferFactory;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
@@ -40,16 +39,23 @@ public class NettyWebSocket extends WebSocket {
     private final Channel channel;
     private final ChannelBufferFactory factory = new HeapChannelBufferFactory();
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
-    private long bufferSize = 8192;
+    private int bufferBinarySize = Integer.MAX_VALUE;
+    private int bufferStringSize = Integer.MAX_VALUE;
+    ;
+    private boolean binaryWrite = false;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
         super(config);
         this.channel = channel;
 
-        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_BUFFER_SIZE);
+        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXBINARYSIZE);
         if (s != null) {
-            bufferSize = Long.valueOf(s);
-            //setOutboundCharBufferSize(getOutboundByteBufferSize());
+            bufferBinarySize = Integer.valueOf(s);
+        }
+
+        s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXTEXTSIZE);
+        if (s != null) {
+            bufferStringSize = Integer.valueOf(s);
         }
     }
 
@@ -71,12 +77,7 @@ public class NettyWebSocket extends WebSocket {
     }
 
     public WebSocket write(AtmosphereResponse r, byte[] data) throws IOException {
-        firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
-
-        logger.trace("WebSocket.write()");
-        channel.write(new TextWebSocketFrame(ChannelBuffers.wrappedBuffer(data)));
-        lastWrite = System.currentTimeMillis();
+        _write(data, 0, data.length);
         return this;
     }
 
@@ -85,14 +86,20 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public WebSocket write(byte[] data, int offset, int length) throws IOException {
-        firstWrite.set(true);
-
-        if (channel.isOpen()) {
-            ChannelBuffer c = factory.getBuffer(length - offset);
-            c.writeBytes(data);
-            channel.write(new BinaryWebSocketFrame(c));
-        }
+        _write(data, offset, length);
         return this;
+    }
+
+    void _write(byte[] data, int offset, int length) throws IOException {
+        firstWrite.set(true);
+        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
+
+        if (binaryWrite) {
+            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
+        } else {
+            channel.write(ChannelBuffers.wrappedBuffer(data, offset, length));
+        }
+        lastWrite = System.currentTimeMillis();
     }
 
     @Override
