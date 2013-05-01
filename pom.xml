@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>1.7.14</version>
+                <version>1.7.15-SNAPSHOT</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
