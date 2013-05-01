@@ -48,6 +48,8 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -115,9 +117,9 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * </pre>
  */
 public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
+    private final static Logger logger = LoggerFactory.getLogger(HttpStaticFileServerHandler.class);
     public final static String STATIC_MAPPING = SimpleChannelUpstreamHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelUpstreamHandler.class.getName() + ".serviced";
-
     private final List<String> paths;
 
     public HttpStaticFileServerHandler(List<String> paths) {
@@ -214,6 +216,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             throws Exception {
         Channel ch = e.getChannel();
         Throwable cause = e.getCause();
+        logger.debug("", e);
         if (cause instanceof TooLongFrameException) {
             sendError(ctx, BAD_REQUEST, null);
             return;
