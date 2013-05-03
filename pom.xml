@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>1.7.15-SNAPSHOT</version>
+                <version>1.7.15</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -304,7 +304,7 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>1.1.0-SNAPSHOT</atmosphere.version>
+        <atmosphere.version>1.1.0.RC2</atmosphere.version>
     </properties>
 </project>
 
