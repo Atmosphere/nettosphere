@@ -70,6 +70,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.ClosedChannelException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -465,7 +466,11 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
-        logger.debug("Exception", e.getCause());
+        if (e.getCause() != null && e.getCause().getClass().getName().equals(ClosedChannelException.class.getName())) {
+            logger.trace("Exception", e.getCause());
+        } else {
+            logger.debug("Exception", e.getCause());
+        }
         super.exceptionCaught(ctx, e);
     }
 

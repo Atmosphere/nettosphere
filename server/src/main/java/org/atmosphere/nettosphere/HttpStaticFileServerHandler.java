@@ -216,7 +216,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             throws Exception {
         Channel ch = e.getChannel();
         Throwable cause = e.getCause();
-        logger.debug("", e);
         if (cause instanceof TooLongFrameException) {
             sendError(ctx, BAD_REQUEST, null);
             return;
