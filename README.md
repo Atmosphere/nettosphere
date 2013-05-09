@@ -138,3 +138,5 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
     mvn exec:java -Dexec.arguments='path to your exploded war file'
 
 We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/19d5c6b3b9b0ea430efb2fb14370dfab "githalytics.com")](http://githalytics.com/Atmosphere/nettosphere)
