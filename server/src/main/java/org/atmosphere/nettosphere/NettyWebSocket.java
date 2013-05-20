@@ -97,7 +97,7 @@ public class NettyWebSocket extends WebSocket {
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
         } else {
-            channel.write(ChannelBuffers.wrappedBuffer(data, offset, length));
+            channel.write(new TextWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
         }
         lastWrite = System.currentTimeMillis();
     }
