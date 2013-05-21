@@ -18,7 +18,6 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
-import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBufferFactory;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -76,7 +75,7 @@ public class NettyWebSocket extends WebSocket {
         return this;
     }
 
-    public WebSocket write(AtmosphereResponse r, byte[] data) throws IOException {
+    public WebSocket write(byte[] data) throws IOException {
         _write(data, 0, data.length);
         return this;
     }
