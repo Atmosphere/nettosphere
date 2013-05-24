@@ -40,6 +40,9 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.channel.group.ChannelGroupFutureListener;
+import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -103,6 +106,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebSocketProcessor webSocketProcessor;
+    private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
+    private final ChannelGroup websoketChannels = new DefaultChannelGroup("ws");
+
 
     public NettyAtmosphereHandler(final Config config) {
         super(config.path());
@@ -239,6 +245,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         } else {
             handshaker.handshake(ctx.getChannel(), request);
         }
+        websoketChannels.add(ctx.getChannel());
 
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
         WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
@@ -431,6 +438,8 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 }
                 if (!skipClose) {
                     w.close((AtmosphereResponse) null);
+                } else {
+                    httpChannels.add(ctx.getChannel());
                 }
             }
         }
@@ -450,6 +459,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     public void destroy() {
         isShutdown.set(true);
+        httpChannels.close();
+        websoketChannels.write(new CloseWebSocketFrame());
+
         if (framework != null) framework.destroy();
         suspendTimer.shutdown();
     }
@@ -460,7 +472,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         WebSocket webSocket = (WebSocket) ctx.getAttachment();
         if (webSocket == null) return;
 
-        webSocketProcessor.close(webSocket, 1000);
+        webSocketProcessor.close(webSocket, 1005);
     }
 
     @Override
