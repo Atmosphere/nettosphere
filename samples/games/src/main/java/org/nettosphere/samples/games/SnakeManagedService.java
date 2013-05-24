@@ -15,15 +15,17 @@
  */
 package org.nettosphere.samples.games;
 
-import org.atmosphere.config.service.Get;
+import org.atmosphere.config.service.Disconnect;
 import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.Post;
+import org.atmosphere.config.service.Ready;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.AtmosphereResourceFactory;
 import org.atmosphere.cpr.HeaderConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -31,41 +33,37 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @ManagedService(path = "/snake")
 public class SnakeManagedService extends SnakeGame {
 
+    private Logger logger = LoggerFactory.getLogger(SnakeManagedService.class);
     private final ConcurrentLinkedQueue<String> uuids = new ConcurrentLinkedQueue<String>();
 
-    @Get
-    public void onOpen(final AtmosphereResource resource) {
-        resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
-            @Override
-            public void onSuspend(AtmosphereResourceEvent event) {
-                try {
-                    if (!uuids.contains(resource.uuid())) {
-                        SnakeManagedService.super.onOpen(resource);
-                        uuids.add(resource.uuid());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+    @Ready
+    public void onReady(final AtmosphereResource r) {
+        if (!uuids.contains(r.uuid())) {
+            try {
+                super.onOpen(r);
+            } catch (IOException e) {
+                logger.error("", e);
             }
-
-            @Override
-            public void onDisconnect(AtmosphereResourceEvent event) {
-                AtmosphereRequest request = event.getResource().getRequest();
-                String s = request.getHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
-                if (s != null && s.equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
-                    SnakeManagedService.super.onClose(resource);
-                    uuids.remove(resource.uuid());
-                }
-            }
-        });
+            uuids.add(r.uuid());
+        }
     }
+
+    @Disconnect
+    public void onDisconnect(AtmosphereResourceEvent event) {
+        AtmosphereRequest request = event.getResource().getRequest();
+        String s = request.getHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT);
+        if (s != null && s.equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
+            SnakeManagedService.super.onClose(event.getResource());
+            uuids.remove(event.getResource().uuid());
+        }
+    }
+
 
     @Post
     public void onMessage(AtmosphereResource resource) {
         try {
             // Here we need to find the suspended AtmosphereResource
-            SnakeManagedService.super.onMessage(AtmosphereResourceFactory.getDefault().find(resource.uuid()), resource.getRequest().getReader().readLine());
+            super.onMessage(AtmosphereResourceFactory.getDefault().find(resource.uuid()), resource.getRequest().getReader().readLine());
         } catch (IOException e) {
             e.printStackTrace();
         }
