@@ -304,7 +304,7 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>1.1.0-SNAPSHOT</atmosphere.version>
+        <atmosphere.version>1.1.0.RC3</atmosphere.version>
     </properties>
 </project>
 
