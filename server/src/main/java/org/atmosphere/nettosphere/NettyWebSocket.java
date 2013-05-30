@@ -25,6 +25,7 @@ import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,6 +114,6 @@ public class NettyWebSocket extends WebSocket {
     public void close() {
         AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
         if (impl != null && impl.isInScope())
-            channel.close().addListener(ChannelFutureListener.CLOSE);
+            channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
     }
 }
