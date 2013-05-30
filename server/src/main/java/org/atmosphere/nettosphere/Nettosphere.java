@@ -30,9 +30,26 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.
+ * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.  As simple as
+ * <blockquote><pre>
+
+ Config config = new Config.Builder()
+         .port(port)
+         .host("127.0.0.1")
+         .initParam("foo", "bar")
+         .resource("/", new AtmosphereHandlerAdapter() {
+
+             public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+             }
+
+         }).build();
+
+ server = new Nettosphere.Builder().config(config).build();
+ * </pre></blockquote>
+ * @author Jeanfrancois Arcand
  */
 public final class Nettosphere {
 
@@ -42,6 +59,7 @@ public final class Nettosphere {
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
     private final NettyAtmosphereHandler handler;
+    private final AtomicBoolean started = new AtomicBoolean();
 
     private Nettosphere(Config config) {
         handler = new NettyAtmosphereHandler(config);
@@ -56,17 +74,30 @@ public final class Nettosphere {
     public void start() {
         final Channel serverChannel = bootstrap.bind(localSocket);
         ALL_CHANNELS.add(serverChannel);
+        started.set(true);
     }
 
     /**
      * Stop the Server
      */
     public void stop() {
-        handler.destroy();
-        final ChannelGroupFuture future = ALL_CHANNELS.close();
-        future.awaitUninterruptibly();
-        bootstrap.getFactory().releaseExternalResources();
-        ALL_CHANNELS.clear();
+        try {
+            handler.destroy();
+            final ChannelGroupFuture future = ALL_CHANNELS.close();
+            future.awaitUninterruptibly();
+            bootstrap.getFactory().releaseExternalResources();
+            ALL_CHANNELS.clear();
+        } finally {
+            started.set(false);
+        }
+    }
+
+    /**
+     * Return true is the server was successfully started.
+     * @return true is the server was successfully started.
+     */
+    public boolean isStarted(){
+        return started.get();
     }
 
     private ServerBootstrap buildBootstrap() {
