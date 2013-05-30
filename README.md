@@ -1,6 +1,6 @@
 ## Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
 
-The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download the [Chat](http://search.maven.org/remotecontent?filepath=org/atmosphere/nettosphere/samples/nettosphere-chat/1.4.2/nettosphere-chat-1.4.2-distribution.zip) or [Jersey](http://search.maven.org/remotecontent?filepath=org/atmosphere/nettosphere/samples/nettosphere-jersey-chat/1.4.2/nettosphere-jersey-chat-1.4.2-distribution.zip) distribution.
+The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download one of our [sample](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.atmosphere.nettosphere.samples%22) distribution.
 
 ```bash
    % unzip nettosphere-<name>-distribution.jar
@@ -8,7 +8,7 @@ The easiest way to get started with NettoSphere is to download a sample and star
    % ./bin/nettosphere.sh
 ```
 
-Samples are the same as then one available in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/nettosphere/blob/master/samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/nettosphere/blob/master/samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
+Samples are the same as then one availables in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/nettosphere/blob/master/samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/nettosphere/blob/master/samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
 
 Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphere) or use Maven
 
