@@ -41,8 +41,9 @@ import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.ChannelGroupFutureListener;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
+import org.jboss.netty.handler.codec.http.Cookie;
+import org.jboss.netty.handler.codec.http.CookieDecoder;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -77,8 +78,10 @@ import java.nio.channels.ClosedChannelException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -334,6 +337,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
                 .session(session)
+                .cookies(getCookies(request))
                 .queryStrings(qs)
                 .remotePort(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getPort())
                 .remoteAddr(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress())
@@ -511,6 +515,37 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 qs.put(q[0], z);
             }
         }
+    }
+
+   private Set<javax.servlet.http.Cookie> getCookies(final HttpRequest request) {
+        Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
+        String cookieHeader = request.getHeader("Cookie");
+        if (cookieHeader != null) {
+            Set<Cookie> cookies = new CookieDecoder().decode(cookieHeader);
+            for (Cookie cookie : cookies) {
+                javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.getName(), cookie.getValue());
+                if (cookie.getComment() != null) {
+                    c.setComment(cookie.getComment());
+                }
+
+                if (cookie.getDomain() != null) {
+                    c.setDomain(cookie.getDomain());
+                }
+
+                c.setHttpOnly(cookie.isHttpOnly());
+                c.setMaxAge(cookie.getMaxAge());
+
+                if (cookie.getPath() != null) {
+                    c.setPath(cookie.getPath());
+                }
+
+                c.setSecure(cookie.isSecure());
+                c.setVersion(cookie.getVersion());
+                result.add(c);
+
+            }
+        }
+        return result;
     }
 
     Config config(){
