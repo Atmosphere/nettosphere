@@ -215,13 +215,22 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
         Channel ch = e.getChannel();
+
+        // Prevent recursion when the client close the connection during a write operation. In that
+        // scenario the sendError will be invoked, but will fail since the channel has already been closed
+        // For an unknown reason,
+        if (ch.getAttachment() != null && Error.class.isAssignableFrom(ch.getAttachment().getClass())) {
+            return;
+        }
+
         Throwable cause = e.getCause();
         if (cause instanceof TooLongFrameException) {
             sendError(ctx, BAD_REQUEST, null);
             return;
         }
 
-        if (ch.isConnected()) {
+        ch.setAttachment(new Error());
+        if (ch.isOpen()) {
             sendError(ctx, INTERNAL_SERVER_ERROR, null);
         }
     }
