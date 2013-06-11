@@ -112,7 +112,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
     private final ChannelGroup websoketChannels = new DefaultChannelGroup("ws");
 
-
     public NettyAtmosphereHandler(final Config config) {
         super(config.path());
         this.config = config;
@@ -451,13 +450,19 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     @Override
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
-        if (e != null) {
-            final HttpRequest request = (HttpRequest) e.getMessage();
-            if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false")) {
+        logger.debug("{}", e);
+        // For websocket, we can't send an error
+        if (websoketChannels.contains(ctx.getChannel())) {
+            ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
+        }  else {
+            if (e != null) {
+                final HttpRequest request = (HttpRequest) e.getMessage();
+                if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false")) {
+                    super.sendError(ctx, status, e);
+                }
+            } else {
                 super.sendError(ctx, status, e);
             }
-        } else {
-            super.sendError(ctx, status, e);
         }
     }
 
