@@ -21,6 +21,7 @@ import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
 import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 
 import javax.net.ssl.SSLEngine;
 
@@ -54,7 +55,9 @@ class AtmosphereChannelPipelineFactory implements
         pipeline.addLast("decoder", new HttpRequestDecoder());
         pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());
+        pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         pipeline.addLast("nettyAtmosphereHandler", nettyAtmosphereHandler);
+
         return pipeline;
     }
 
