@@ -46,7 +46,6 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private final AtomicInteger pendingWrite = new AtomicInteger();
     private final AtomicBoolean asyncClose = new AtomicBoolean(false);
     private final ML listener = new ML();
-    private boolean resumeOnBroadcast = false;
     private boolean byteWritten = false;
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
     private boolean headerWritten = false;
@@ -56,15 +55,12 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private long lastWrite = 0;
     private final ByteArrayAsyncWriter buffer = new ByteArrayAsyncWriter();
     private final boolean writeHeader;
+    private final boolean keepAlive;
 
-    public ChannelAsyncIOWriter(Channel channel) {
-        this.channel = channel;
-        this.writeHeader = false;
-    }
-
-    public ChannelAsyncIOWriter(Channel channel, boolean writeHeader) {
+    public ChannelAsyncIOWriter(Channel channel, boolean writeHeader, boolean keepAlive) {
         this.channel = channel;
         this.writeHeader = writeHeader;
+        this.keepAlive = keepAlive;
     }
 
     public boolean isClosed() {
@@ -73,10 +69,6 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
     public boolean byteWritten() {
         return byteWritten;
-    }
-
-    public void resumeOnBroadcast(boolean resumeOnBroadcast) {
-        this.resumeOnBroadcast = resumeOnBroadcast;
     }
 
     @Override
@@ -193,7 +185,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private final class ML implements ChannelFutureListener {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
-            if (channel.isOpen() && (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && (resumeOnBroadcast || asyncClose.get())))) {
+            if (channel.isOpen() && (!future.isSuccess() || (pendingWrite.decrementAndGet() == 0 && asyncClose.get()))) {
                 _close();
             }
         }
@@ -206,7 +198,10 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
             try {
                 c.write(ENDCHUNK);
-                channel.write(buffer).addListener(ChannelFutureListener.CLOSE);
+                channel.write(buffer);
+                if (!keepAlive) {
+                    channel.close().awaitUninterruptibly();
+                }
             } catch (IOException e) {
                 logger.trace("Close error", e);
             }

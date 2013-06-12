@@ -351,10 +351,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel(), true);
+        final HttpRequest request = (HttpRequest) messageEvent.getMessage();
+        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(request));
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
-        final HttpRequest request = (HttpRequest) messageEvent.getMessage();
         String method = request.getMethod().getName();
 
         // First let's try to see if it's a static resources
@@ -419,7 +419,6 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             } else if (action != null && action.type() == Action.TYPE.RESUME) {
                 resumeOnBroadcast = false;
             }
-            w.resumeOnBroadcast(resumeOnBroadcast);
         } catch (AtmosphereMappingException ex) {
             if (method.equalsIgnoreCase("GET")) {
                 logger.trace("Unable to map the request {}, trying static file", messageEvent.getMessage());
@@ -437,10 +436,10 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         } finally {
             if (w != null && !resumeOnBroadcast && !keptOpen) {
                 if (!w.byteWritten()) {
-                    w.writeError((AtmosphereResponse) null, 200, "OK");
+                    w.writeError(null, 200, "OK");
                 }
                 if (!skipClose) {
-                    w.close((AtmosphereResponse) null);
+                    w.close(null);
                 } else {
                     httpChannels.add(ctx.getChannel());
                 }
