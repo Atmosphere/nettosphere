@@ -405,17 +405,21 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) r.getAttribute(NettyCometSupport.SUSPEND);
-            if (action != null && action.type() == Action.TYPE.SUSPEND && action.timeout() != -1) {
-                final AtomicReference<Future<?>> f = new AtomicReference();
-                f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout()) {
-                            hook.timedOut();
-                            f.get().cancel(true);
+            if (action != null && action.type() == Action.TYPE.SUSPEND) {
+                ctx.setAttachment(hook);
+
+                if (action.timeout() != -1) {
+                    final AtomicReference<Future<?>> f = new AtomicReference();
+                    f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout()) {
+                                hook.timedOut();
+                                f.get().cancel(true);
+                            }
                         }
-                    }
-                }, action.timeout(), action.timeout(), TimeUnit.MILLISECONDS));
+                    }, action.timeout(), action.timeout(), TimeUnit.MILLISECONDS));
+                }
             } else if (action != null && action.type() == Action.TYPE.RESUME) {
                 resumeOnBroadcast = false;
             }
@@ -453,7 +457,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         // For websocket, we can't send an error
         if (websoketChannels.contains(ctx.getChannel())) {
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
-        }  else {
+        } else {
             if (e != null) {
                 final HttpRequest request = (HttpRequest) e.getMessage();
                 if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false")) {
@@ -477,10 +481,18 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
-        WebSocket webSocket = (WebSocket) ctx.getAttachment();
-        if (webSocket == null) return;
+        Object o = ctx.getAttachment();
 
-        webSocketProcessor.close(webSocket, 1005);
+        if (o == null) return;
+
+        if (WebSocket.class.isAssignableFrom(o.getClass())) {
+            WebSocket webSocket = WebSocket.class.cast(o);
+            if (webSocket == null) return;
+
+            webSocketProcessor.close(webSocket, 1005);
+        } else if (AsynchronousProcessor.AsynchronousProcessorHook.class.isAssignableFrom(o.getClass())) {
+            AsynchronousProcessor.AsynchronousProcessorHook.class.cast(o).closed();
+        }
     }
 
     @Override
@@ -521,7 +533,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
     }
 
-   private Set<javax.servlet.http.Cookie> getCookies(final HttpRequest request) {
+    private Set<javax.servlet.http.Cookie> getCookies(final HttpRequest request) {
         Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
         String cookieHeader = request.getHeader("Cookie");
         if (cookieHeader != null) {
@@ -552,7 +564,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         return result;
     }
 
-    Config config(){
+    Config config() {
         return config;
     }
 
