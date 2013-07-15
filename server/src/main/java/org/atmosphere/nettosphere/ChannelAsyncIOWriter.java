@@ -15,10 +15,8 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
-import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -98,7 +96,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
     @Override
     public AsyncIOWriter write(AtmosphereResponse r, byte[] data) throws IOException {
-        write(r,data, 0, data.length);
+        write(r, data, 0, data.length);
         return this;
     }
 
@@ -180,7 +178,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
         asyncClose.set(true);
 
-        if (r != null && AtmosphereResourceImpl.class.cast(r.resource()).action().equals(Action.CANCELLED)) {
+        if (r != null && (!r.resource().isSuspended() && !r.resource().isResumed())) {
             keepAlive = false;
         }
 
@@ -205,10 +203,15 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
             ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
             try {
                 c.write(ENDCHUNK);
-                channel.write(buffer);
-                if (!keepAlive) {
-                    channel.close().awaitUninterruptibly();
-                }
+                channel.write(buffer).addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if (!keepAlive) {
+                            channel.close().awaitUninterruptibly();
+                        }
+                    }
+                });
+
             } catch (IOException e) {
                 logger.trace("Close error", e);
             }
@@ -224,7 +227,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
                 .append(response.getStatusMessage())
                 .append("\n");
 
-        Map<String,String> headers = response.headers();
+        Map<String, String> headers = response.headers();
         String contentType = response.getContentType();
         int contentLength = -1; //FIX ME
 
