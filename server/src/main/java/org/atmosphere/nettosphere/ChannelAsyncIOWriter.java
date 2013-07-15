@@ -15,8 +15,10 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
+import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -55,7 +57,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private long lastWrite = 0;
     private final ByteArrayAsyncWriter buffer = new ByteArrayAsyncWriter();
     private final boolean writeHeader;
-    private final boolean keepAlive;
+    private boolean keepAlive;
 
     public ChannelAsyncIOWriter(Channel channel, boolean writeHeader, boolean keepAlive) {
         this.channel = channel;
@@ -177,6 +179,11 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
         }
 
         asyncClose.set(true);
+
+        if (r != null && AtmosphereResourceImpl.class.cast(r.resource()).action().equals(Action.CANCELLED)) {
+            keepAlive = false;
+        }
+
         if (pendingWrite.get() == 0 && channel.isOpen()) {
             _close();
         }
