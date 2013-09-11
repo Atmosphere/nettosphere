@@ -123,7 +123,7 @@ public class Config {
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
         private Class<? extends WebSocketProtocol> webSocketProtocol = SimpleHttpProtocol.class;
 
-        private Class<Broadcaster> broadcasterClass;
+        private Class<? extends Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
@@ -325,7 +325,7 @@ public class Config {
          * @param broadcasterClass a Broadcaster
          * @return this
          */
-        public Builder broadcaster(Class<Broadcaster> broadcasterClass) {
+        public Builder broadcaster(Class<? extends Broadcaster> broadcasterClass) {
             this.broadcasterClass = broadcasterClass;
             return this;
         }
