@@ -30,12 +30,12 @@ import static org.jboss.netty.channel.Channels.pipeline;
 class AtmosphereChannelPipelineFactory implements
         ChannelPipelineFactory {
 
-    private final transient NettyAtmosphereHandler nettyAtmosphereHandler;
+    private final transient BridgeRuntime bridgeRuntime;
     private final transient Config config;
 
-    public AtmosphereChannelPipelineFactory(final NettyAtmosphereHandler nettyAtmosphereHandler) {
-        this.nettyAtmosphereHandler = nettyAtmosphereHandler;
-        config = nettyAtmosphereHandler.config();
+    public AtmosphereChannelPipelineFactory(final BridgeRuntime bridgeRuntime) {
+        this.bridgeRuntime = bridgeRuntime;
+        config = bridgeRuntime.config();
     }
 
     /**
@@ -56,7 +56,7 @@ class AtmosphereChannelPipelineFactory implements
         pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());
         pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
-        pipeline.addLast("nettyAtmosphereHandler", nettyAtmosphereHandler);
+        pipeline.addLast("nettyAtmosphereHandler", bridgeRuntime);
 
         return pipeline;
     }

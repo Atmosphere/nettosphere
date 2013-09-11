@@ -58,11 +58,11 @@ public final class Nettosphere {
     private final ChannelPipelineFactory pipelineFactory;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
-    private final NettyAtmosphereHandler handler;
+    private final BridgeRuntime handler;
     private final AtomicBoolean started = new AtomicBoolean();
 
     private Nettosphere(Config config) {
-        handler = new NettyAtmosphereHandler(config);
+        handler = new BridgeRuntime(config);
         this.pipelineFactory = new AtmosphereChannelPipelineFactory(handler);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();

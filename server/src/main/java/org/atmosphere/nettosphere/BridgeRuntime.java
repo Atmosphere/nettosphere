@@ -101,9 +101,11 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * Bridge the Atmosphere Framework with Netty.
+ *
+ * @author Jeanfrancois Arcand
  */
-public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
-    private static final Logger logger = LoggerFactory.getLogger(NettyAtmosphereHandler.class);
+public class BridgeRuntime extends HttpStaticFileServerHandler {
+    private static final Logger logger = LoggerFactory.getLogger(BridgeRuntime.class);
     private final AtmosphereFramework framework;
     private final Config config;
     private final ScheduledExecutorService suspendTimer;
@@ -113,7 +115,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
     private final ChannelGroup websoketChannels = new DefaultChannelGroup("ws");
 
-    public NettyAtmosphereHandler(final Config config) {
+    public BridgeRuntime(final Config config) {
         super(config.path());
         this.config = config;
         framework = new AtmosphereFramework();
@@ -172,7 +174,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
         }
 
         final Context context = new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build();
-        ServletContext ctx = (ServletContext) Proxy.newProxyInstance(NettyAtmosphereHandler.class.getClassLoader(), new Class[]{ServletContext.class},
+        ServletContext ctx = (ServletContext) Proxy.newProxyInstance(BridgeRuntime.class.getClassLoader(), new Class[]{ServletContext.class},
                 new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -360,7 +362,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
-        final ChannelAsyncIOWriter w = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(request));
+        final ChannelAsyncIOWriter asyncWriter = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(request));
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
         String method = request.getMethod().getName();
@@ -385,14 +387,14 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
 
             AtmosphereResponse response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
-                    .asyncIOWriter(w)
+                    .asyncIOWriter(asyncWriter)
                     .writeHeader(false)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
                     .header("Server", "Nettosphere/2.0")
                     .request(r).build();
 
-            r.setAttribute(NettyCometSupport.CHANNEL, w);
+            r.setAttribute(NettyCometSupport.CHANNEL, asyncWriter);
 
             Action a = framework.doCometSupport(r, response);
 
@@ -407,7 +409,9 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 if (transport != null && (transport.equalsIgnoreCase(HeaderConfig.STREAMING_TRANSPORT)
                         || transport.equalsIgnoreCase(SSE_TRANSPORT))) {
                     keptOpen = true;
-                } else if (transport != null && transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT)) {
+                } else if (transport != null && (
+                        transport.equalsIgnoreCase(HeaderConfig.LONG_POLLING_TRANSPORT) ||
+                                transport.equalsIgnoreCase(HeaderConfig.JSONP_TRANSPORT))) {
                     resumeOnBroadcast = true;
                 }
             }
@@ -421,7 +425,7 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                     f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
                         @Override
                         public void run() {
-                            if (!w.isClosed() && (System.currentTimeMillis() - w.lastTick()) > action.timeout()) {
+                            if (!asyncWriter.isClosed() && (System.currentTimeMillis() - asyncWriter.lastTick()) > action.timeout()) {
                                 hook.timedOut();
                                 f.get().cancel(true);
                             }
@@ -446,12 +450,12 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
             logger.error("Unable to process request", e);
             throw new IOException(e);
         } finally {
-            if (w != null && !resumeOnBroadcast && !keptOpen) {
-                if (!w.byteWritten()) {
-                    w.writeError(null, 200, "OK");
+            if (asyncWriter != null && !resumeOnBroadcast && !keptOpen) {
+                if (!asyncWriter.byteWritten()) {
+                    asyncWriter.writeError(null, 200, "OK");
                 }
                 if (!skipClose) {
-                    w.close(null);
+                    asyncWriter.close(null);
                 } else {
                     httpChannels.add(ctx.getChannel());
                 }
