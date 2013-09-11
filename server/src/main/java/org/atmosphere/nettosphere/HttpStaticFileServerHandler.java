@@ -14,7 +14,7 @@
  * under the License.
  */
 /*
- * Copyright 2012 Jeanfrancois Arcand
+ * Copyright 2013 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -110,7 +110,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * HTTP/1.1 200 OK
  * Date:               Tue, 01 Mar 2011 22:44:26 GMT
  * Last-Modified:      Wed, 30 Jun 2010 21:36:48 GMT
- * Expires:            Tue, 01 Mar 2012 22:44:26 GMT
+ * Expires:            Tue, 01 Mar 2013 22:44:26 GMT
  * Cache-Control:      private, max-age=31536000
  *
  * Request #2 Headers
