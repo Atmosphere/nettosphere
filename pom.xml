@@ -122,10 +122,6 @@
     <modules>
         <module>server</module>
         <module>assembly</module>
-        <module>samples/chat</module>
-        <module>samples/jersey-chat</module>
-        <module>samples/socketio-chat</module>
-        <module>samples/games</module>
     </modules>
 
     <build>
