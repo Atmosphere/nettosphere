@@ -82,6 +82,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -338,12 +339,19 @@ public class NettyAtmosphereHandler extends HttpStaticFileServerHandler {
                 .session(session)
                 .cookies(getCookies(request))
                 .queryStrings(qs)
-                .remotePort(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getPort())
-                .remoteAddr(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress())
-                .remoteHost(((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getHostName())
-                .localPort(((InetSocketAddress) ctx.getChannel().getLocalAddress()).getPort())
-                .localAddr(((InetSocketAddress) ctx.getChannel().getLocalAddress()).getAddress().getHostAddress())
-                .localName(((InetSocketAddress) ctx.getChannel().getLocalAddress()).getHostName())
+                .remoteInetSocketAddress(new Callable<InetSocketAddress>() {
+                    @Override
+                    public InetSocketAddress call() throws Exception {
+                        return (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+                    }
+                })
+                .localInetSocketAddress(new Callable<InetSocketAddress>() {
+
+                    @Override
+                    public InetSocketAddress call() throws Exception {
+                        return (InetSocketAddress) ctx.getChannel().getLocalAddress();
+                    }
+                })
                 .inputStream(new ChannelBufferInputStream(request.getContent()))
                 .build();
 
