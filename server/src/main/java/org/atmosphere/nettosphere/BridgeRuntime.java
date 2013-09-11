@@ -335,6 +335,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .method(method)
                 .contentType(ct)
                 .contentLength(cl)
+                // We need to read attribute after doComet
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
@@ -361,48 +362,54 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        final HttpRequest request = (HttpRequest) messageEvent.getMessage();
-        final ChannelAsyncIOWriter asyncWriter = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(request));
+        final HttpRequest hrequest = (HttpRequest) messageEvent.getMessage();
+        final ChannelAsyncIOWriter asyncWriter = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest));
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
-        String method = request.getMethod().getName();
+        String method = hrequest.getMethod().getName();
 
         // First let's try to see if it's a static resources
-        try {
-            request.addHeader(STATIC_MAPPING, "true");
-            super.messageReceived(ctx, messageEvent);
+        if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
+            try {
+                hrequest.addHeader(STATIC_MAPPING, "true");
+                super.messageReceived(ctx, messageEvent);
 
-            if (request.getHeader(SERVICED) != null) {
-                return;
+                if (hrequest.getHeader(SERVICED) != null) {
+                    return;
+                }
+            } catch (Exception e) {
+                logger.debug("", e);
+            } finally {
+                hrequest.addHeader(STATIC_MAPPING, "false");
             }
-        } catch (Exception e) {
-            logger.debug("", e);
-        } finally {
-            request.addHeader(STATIC_MAPPING, "false");
         }
 
         boolean skipClose = false;
+        AtmosphereResponse response = null;
+        AtmosphereRequest request = null;
+        Action a = null;
         try {
-            AtmosphereRequest r = createAtmosphereRequest(ctx, request);
+            request = createAtmosphereRequest(ctx, hrequest);
 
-            AtmosphereResponse response = new AtmosphereResponse.Builder()
+            response = new AtmosphereResponse.Builder()
                     .writeHeader(true)
                     .asyncIOWriter(asyncWriter)
                     .writeHeader(false)
+                    .destroyable(false)
                     .header("Connection", "Keep-Alive")
                     .header("Transfer-Encoding", "chunked")
                     .header("Server", "Nettosphere/2.0")
-                    .request(r).build();
+                    .request(request).build();
 
-            r.setAttribute(NettyCometSupport.CHANNEL, asyncWriter);
+            request.setAttribute(NettyCometSupport.CHANNEL, asyncWriter);
 
-            Action a = framework.doCometSupport(r, response);
+            a = framework.doCometSupport(request, response);
 
-            final AsynchronousProcessor.AsynchronousProcessorHook hook = (AsynchronousProcessor.AsynchronousProcessorHook) r.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
+            final AsynchronousProcessor.AsynchronousProcessorHook hook = (AsynchronousProcessor.AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
 
-            String transport = (String) r.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
+            String transport = (String) request.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport == null) {
-                transport = r.getHeader(X_ATMOSPHERE_TRANSPORT);
+                transport = request.getHeader(X_ATMOSPHERE_TRANSPORT);
             }
 
             if (a.type() == Action.TYPE.SUSPEND) {
@@ -416,7 +423,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
             }
 
-            final Action action = (Action) r.getAttribute(NettyCometSupport.SUSPEND);
+            final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
                 ctx.setAttachment(hook);
 
@@ -450,14 +457,19 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             logger.error("Unable to process request", e);
             throw new IOException(e);
         } finally {
-            if (asyncWriter != null && !resumeOnBroadcast && !keptOpen) {
-                if (!asyncWriter.byteWritten()) {
-                    asyncWriter.writeError(null, 200, "OK");
+            try {
+                if (asyncWriter != null && !resumeOnBroadcast && !keptOpen) {
+                    if (!skipClose && response != null) {
+                        asyncWriter.close(response);
+                    } else {
+                        httpChannels.add(ctx.getChannel());
+                    }
                 }
-                if (!skipClose) {
-                    asyncWriter.close(null);
-                } else {
-                    httpChannels.add(ctx.getChannel());
+            } finally {
+                if (request != null && a != null && a.type() != Action.TYPE.SUSPEND) {
+                    request.destroy();
+                    response.destroy();
+                    framework.notify(Action.TYPE.DESTROYED, request, response);
                 }
             }
         }
@@ -510,12 +522,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
-        if (e.getCause() != null && e.getCause().getClass().getName().equals(ClosedChannelException.class.getName())) {
+        // Ignore Disconnect exception.
+        if (e.getCause() != null
+                && (e.getCause().getClass().equals(ClosedChannelException.class)
+                || e.getCause().getClass().equals(IOException.class))) {
             logger.trace("Exception", e.getCause());
         } else {
             logger.debug("Exception", e.getCause());
+            super.exceptionCaught(ctx, e);
         }
-        super.exceptionCaught(ctx, e);
     }
 
     private Map<String, String> getHeaders(final HttpRequest request) {

@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -159,26 +160,28 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     }
 
     @Override
-    public void close(AtmosphereResponse r) throws IOException {
+    public void close(AtmosphereResponse response) throws IOException {
 
         if (!channel.isOpen()) return;
 
-        if (writeHeader && !headerWritten && r != null) {
+        if (writeHeader && !headerWritten && response != null) {
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 
-            buffer.writeBytes(constructStatusAndHeaders(r).getBytes("UTF-8"));
+            buffer.writeBytes(constructStatusAndHeaders(response).getBytes("UTF-8"));
             channel.write(buffer);
             headerWritten = true;
         }
 
         // Make sure we don't have bufferred bytes
-        if (!byteWritten && r != null && r.getOutputStream() != null) {
-            r.getOutputStream().flush();
+        if (!byteWritten && response != null && response.getOutputStream() != null) {
+            response.getOutputStream().flush();
         }
 
         asyncClose.set(true);
 
-        if (r != null && (!r.resource().isSuspended() && !r.resource().isResumed())) {
+        AtmosphereResource r =  response != null ? response.resource() : null;
+
+        if (r == null || r.isSuspended() && !r.isResumed()) {
             keepAlive = false;
         }
 
