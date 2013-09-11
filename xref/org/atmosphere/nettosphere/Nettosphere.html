@@ -9,7 +9,7 @@
 <div id="overview"><a href="../../../../apidocs/org/atmosphere/nettosphere/Nettosphere.html">View Javadoc</a></div><pre>
 
 <a class="jxr_linenumber" name="1" href="#1">1</a>   <em class="jxr_comment">/*</em>
-<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_comment"> * Copyright 2012 Jeanfrancois Arcand</em>
+<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_comment"> * Copyright 2013 Jeanfrancois Arcand</em>
 <a class="jxr_linenumber" name="3" href="#3">3</a>   <em class="jxr_comment"> *</em>
 <a class="jxr_linenumber" name="4" href="#4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not</em>
 <a class="jxr_linenumber" name="5" href="#5">5</a>   <em class="jxr_comment"> * use this file except in compliance with the License. You may obtain a copy of</em>
@@ -68,11 +68,11 @@
 <a class="jxr_linenumber" name="58" href="#58">58</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ChannelPipelineFactory pipelineFactory;
 <a class="jxr_linenumber" name="59" href="#59">59</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> ServerBootstrap bootstrap;
 <a class="jxr_linenumber" name="60" href="#60">60</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> SocketAddress localSocket;
-<a class="jxr_linenumber" name="61" href="#61">61</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../org/atmosphere/nettosphere/NettyAtmosphereHandler.html">NettyAtmosphereHandler</a> handler;
+<a class="jxr_linenumber" name="61" href="#61">61</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../org/atmosphere/nettosphere/BridgeRuntime.html">BridgeRuntime</a> handler;
 <a class="jxr_linenumber" name="62" href="#62">62</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> AtomicBoolean started = <strong class="jxr_keyword">new</strong> AtomicBoolean();
 <a class="jxr_linenumber" name="63" href="#63">63</a>  
 <a class="jxr_linenumber" name="64" href="#64">64</a>      <strong class="jxr_keyword">private</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Nettosphere</a>(<a href="../../../org/atmosphere/nettosphere/Config.html">Config</a> config) {
-<a class="jxr_linenumber" name="65" href="#65">65</a>          handler = <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/NettyAtmosphereHandler.html">NettyAtmosphereHandler</a>(config);
+<a class="jxr_linenumber" name="65" href="#65">65</a>          handler = <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/BridgeRuntime.html">BridgeRuntime</a>(config);
 <a class="jxr_linenumber" name="66" href="#66">66</a>          <strong class="jxr_keyword">this</strong>.pipelineFactory = <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/AtmosphereChannelPipelineFactory.html">AtmosphereChannelPipelineFactory</a>(handler);
 <a class="jxr_linenumber" name="67" href="#67">67</a>          <strong class="jxr_keyword">this</strong>.localSocket = <strong class="jxr_keyword">new</strong> InetSocketAddress(config.host(), config.port());
 <a class="jxr_linenumber" name="68" href="#68">68</a>          <strong class="jxr_keyword">this</strong>.bootstrap = buildBootstrap();
