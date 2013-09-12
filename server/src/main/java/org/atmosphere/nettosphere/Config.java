@@ -70,7 +70,7 @@ public class Config {
         return b.atmosphereDotXmlPath;
     }
 
-    public Class<Broadcaster> broadcaster() {
+    public Class<? extends Broadcaster> broadcaster() {
         return b.broadcasterClass;
     }
 
