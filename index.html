@@ -1,88 +1,205 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset='utf-8'>
 
-  <title>Atmosphere/netty-atmosphere @ GitHub</title>
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Nettosphere : A Java WebSocket/HTTP server based on the Atmosphere and Netty Framework" />
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #83904f;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #7c6fb0; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #7c6fb0; }
-    h3 { text-align: center; color: #7c6fb0; }
-    a { color: #7c6fb0; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-</head>
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-<body>
-  <a href="https://github.com/Atmosphere/netty-atmosphere"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+    <title>Nettosphere</title>
+  </head>
 
-  <div id="container">
+  <body>
 
-    <div class="download">
-      <a href="https://github.com/Atmosphere/netty-atmosphere/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/Atmosphere/netty-atmosphere/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Atmosphere/nettosphere">View on GitHub</a>
+
+          <h1 id="project_title">Nettosphere</h1>
+          <h2 id="project_tagline">A Java WebSocket/HTTP server based on the Atmosphere and Netty Framework</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Atmosphere/nettosphere/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Atmosphere/nettosphere/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
     </div>
 
-    <h1><a href="https://github.com/Atmosphere/netty-atmosphere">netty-atmosphere</a>
-      <span class="small">by <a href="https://github.com/Atmosphere">Atmosphere</a></span></h1>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a name="nettosphere-a-java-websocket-and-http-server-powered-by-the-atmosphere-framework-and-the-netty-framework" class="anchor" href="#nettosphere-a-java-websocket-and-http-server-powered-by-the-atmosphere-framework-and-the-netty-framework"><span class="octicon octicon-link"></span></a>Nettosphere: A Java WebSocket and HTTP server powered by the <a href="http://github.com/Atmosphere/atmosphere">Atmosphere Framework</a> and the <a href="http://netty.io/">Netty Framework</a>
+</h2>
 
-    <div class="description">
-      Atmosphere running on top of Netty
+<p>The easiest way to get started with NettoSphere is to download a sample and start it. <a href="http://atmosphere.github.com/nettosphere/apidocs/">Or look at the Javadoc</a>. You can download one of our <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.atmosphere.nettosphere.samples%22">sample</a> distribution.</p>
+
+<div class="highlight highlight-bash"><pre>   % unzip nettosphere-&lt;name&gt;-distribution.jar
+   % chmod a+x ./bin/nettosphere.sh
+   % ./bin/nettosphere.sh
+</pre></div>
+
+<p><a href="https://github.com/Atmosphere/atmosphere-samples/tree/master/nettosphere-samples">Samples</a> are the same as then one available in Atmosphere. Bootstrap classes looks like <a href="https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27">AtmosphereHandler</a> or <a href="https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31">Jersey</a></p>
+
+<p>Download Nettosphere <a href="http://search.maven.org/#search%7Cga%7C1%7Cnettosphere">here</a> or use Maven</p>
+
+<div class="highlight highlight-xml"><pre>     <span class="nt">&lt;dependency&gt;</span>
+         <span class="nt">&lt;groupId&gt;</span>org.atmosphere<span class="nt">&lt;/groupId&gt;</span>
+         <span class="nt">&lt;artifactId&gt;</span>nettosphere<span class="nt">&lt;/artifactId&gt;</span>
+         <span class="nt">&lt;version&gt;</span>2.0.0.RC5<span class="nt">&lt;/version&gt;</span>
+     <span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
+
+<h3>
+<a name="super-simple-web-application" class="anchor" href="#super-simple-web-application"><span class="octicon octicon-link"></span></a>Super Simple Web Application</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="n">MyClass</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<p>or</p>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="k">new</span> <span class="n">Handler</span><span class="o">()</span> <span class="o">{</span>
+                        <span class="kt">void</span> <span class="nf">handle</span><span class="o">(</span><span class="n">AtmosphereResource</span> <span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">r</span><span class="o">.</span><span class="na">getResponse</span><span class="o">().</span><span class="na">write</span><span class="o">(</span><span class="s">"Hello World"</span><span class="o">).</span><span class="na">write</span><span class="o">(</span><span class="s">"from Nettosphere"</span><span class="o">).</span><span class="na">flush</span><span class="o">();</span>
+                        <span class="o">}</span>
+                    <span class="o">})</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<p>All <a href="http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/">Atmosphere</a> API supported. As simple as:</p>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="server-static-and-dynamic-resources-use-atmospherexml-to-configure-nettosphere" class="anchor" href="#server-static-and-dynamic-resources-use-atmospherexml-to-configure-nettosphere"><span class="octicon octicon-link"></span></a>Server static and dynamic resources, use atmosphere.xml to configure NettoSphere</h3>
+
+<div class="highlight highlight-java"><pre>        <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">();</span>
+        <span class="n">b</span><span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="s">"./webapps"</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">configFile</span><span class="o">(</span><span class="s">"../conf/atmosphere.xml"</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+        <span class="n">Nettosphere</span> <span class="n">s</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span><span class="n">b</span><span class="o">.</span><span class="na">build</span><span class="o">()).</span><span class="na">build</span><span class="o">();</span>
+</pre></div>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="deploy-a-resource-annotated-using-jersey-access-it-using-http-or-websocket" class="anchor" href="#deploy-a-resource-annotated-using-jersey-access-it-using-http-or-websocket"><span class="octicon octicon-link"></span></a>Deploy a Resource (annotated using Jersey), access it using HTTP or WebSocket</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="n">MyResource</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="deploy-an-atmospherehandler-access-it-using-http-or-websocket" class="anchor" href="#deploy-an-atmospherehandler-access-it-using-http-or-websocket"><span class="octicon octicon-link"></span></a>Deploy an AtmosphereHandler, access it using HTTP or WebSocket</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="s">"/*"</span><span class="o">,</span> <span class="n">MyAtmosphereHandler</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<h3>
+<a name="deploy-an-atmospherehandler-define-a-websocket-protocol" class="anchor" href="#deploy-an-atmospherehandler-define-a-websocket-protocol"><span class="octicon octicon-link"></span></a>Deploy an AtmosphereHandler, define a WebSocket protocol</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">webSocketProtocol</span><span class="o">(</span><span class="n">JMSOverWebSocketProtocol</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="s">"/*"</span><span class="o">,</span> <span class="n">MyAtmosphereHandler</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="deploy-a-servlet-which-use-meteor" class="anchor" href="#deploy-a-servlet-which-use-meteor"><span class="octicon octicon-link"></span></a>Deploy a Servlet which use Meteor</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">Nettosphere</span> <span class="n">server</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Nettosphere</span><span class="o">.</span><span class="na">Builder</span><span class="o">().</span><span class="na">config</span><span class="o">(</span>
+                 <span class="k">new</span> <span class="n">Config</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+                    <span class="o">.</span><span class="na">host</span><span class="o">(</span><span class="s">"127.0.0.1"</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">port</span><span class="o">(</span><span class="mi">8080</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">resource</span><span class="o">(</span><span class="s">"/*"</span><span class="o">,</span> <span class="n">MyServlet</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+                    <span class="o">.</span><span class="na">build</span><span class="o">())</span>
+                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+    <span class="n">server</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+</pre></div>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="the-server-can-also-be-started-using-java" class="anchor" href="#the-server-can-also-be-started-using-java"><span class="octicon octicon-link"></span></a>The Server can also be started using java</h3>
+
+<div class="highlight highlight-java"><pre>    <span class="n">java</span> <span class="o">-</span><span class="n">cp</span> <span class="n">nettosphere</span><span class="o">-</span><span class="n">all</span><span class="o">.</span><span class="na">jar</span>
+          <span class="n">org</span><span class="o">.</span><span class="na">atmosphere</span><span class="o">.</span><span class="na">nettosphere</span><span class="o">.</span><span class="na">Nettosphere</span>
+                <span class="o">[/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">an</span><span class="o">/</span><span class="n">exploded</span><span class="o">/</span><span class="n">war</span><span class="o">/</span><span class="n">file</span><span class="o">]</span> <span class="o">[</span><span class="n">host</span><span class="o">]</span> <span class="o">[</span><span class="n">port</span><span class="o">]</span>
+</pre></div>
+
+<p><a href="#Top">Top</a></p>
+
+<h3>
+<a name="using-maven-and-the-git-repo" class="anchor" href="#using-maven-and-the-git-repo"><span class="octicon octicon-link"></span></a>Using Maven and the Git repo</h3>
+
+<pre><code>mvn exec:java -Dexec.arguments='path to your exploded war file'
+</code></pre>
+
+<p>We are on irc.freenode.net under #atmosphere-comet and <a href="http://twitter.com/jfarcand">Twitter</a></p>
+
+<p><a href="http://githalytics.com/Atmosphere/nettosphere"><img src="https://cruel-carlota.pagodabox.com/19d5c6b3b9b0ea430efb2fb14370dfab" alt="githalytics.com alpha" title="githalytics.com"></a></p>
+      </section>
     </div>
 
-    
-
-    
-
-    
-
-    
-
-    
-      <h2>Authors</h2>
-      <p>jfarcand (jfarcand@apache.org)<br/>      </p>
-    
-
-    
-      <h2>Contact</h2>
-      <p>Atmosphere Framework (jfarcand.oss@gmail.com)<br/>      </p>
-    
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="https://github.com/Atmosphere/netty-atmosphere/zipball/master">zip</a> or
-      <a href="https://github.com/Atmosphere/netty-atmosphere/tarball/master">tar formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/Atmosphere/netty-atmosphere</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/Atmosphere/netty-atmosphere">Atmosphere/netty-atmosphere</a>
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Nettosphere maintained by <a href="https://github.com/Atmosphere">Atmosphere</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
     </div>
 
-  </div>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-31990725-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
 
-</body>
+
+  </body>
 </html>
