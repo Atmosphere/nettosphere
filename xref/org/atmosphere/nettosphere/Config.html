@@ -80,7 +80,7 @@
 <a class="jxr_linenumber" name="70" href="#70">70</a>          <strong class="jxr_keyword">return</strong> b.atmosphereDotXmlPath;
 <a class="jxr_linenumber" name="71" href="#71">71</a>      }
 <a class="jxr_linenumber" name="72" href="#72">72</a>  
-<a class="jxr_linenumber" name="73" href="#73">73</a>      <strong class="jxr_keyword">public</strong> Class&lt;Broadcaster&gt; broadcaster() {
+<a class="jxr_linenumber" name="73" href="#73">73</a>      <strong class="jxr_keyword">public</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcaster() {
 <a class="jxr_linenumber" name="74" href="#74">74</a>          <strong class="jxr_keyword">return</strong> b.broadcasterClass;
 <a class="jxr_linenumber" name="75" href="#75">75</a>      }
 <a class="jxr_linenumber" name="76" href="#76">76</a>  
@@ -133,7 +133,7 @@
 <a class="jxr_linenumber" name="123" href="#123">123</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, AtmosphereHandler&gt; handlers = <strong class="jxr_keyword">new</strong> HashMap&lt;String, AtmosphereHandler&gt;();
 <a class="jxr_linenumber" name="124" href="#124">124</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> WebSocketProtocol&gt; webSocketProtocol = SimpleHttpProtocol.<strong class="jxr_keyword">class</strong>;
 <a class="jxr_linenumber" name="125" href="#125">125</a> 
-<a class="jxr_linenumber" name="126" href="#126">126</a>         <strong class="jxr_keyword">private</strong> Class&lt;Broadcaster&gt; broadcasterClass;
+<a class="jxr_linenumber" name="126" href="#126">126</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass;
 <a class="jxr_linenumber" name="127" href="#127">127</a>         <strong class="jxr_keyword">private</strong> BroadcasterFactory broadcasterFactory;
 <a class="jxr_linenumber" name="128" href="#128">128</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> BroadcasterCache&gt; broadcasterCache;
 <a class="jxr_linenumber" name="129" href="#129">129</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;AtmosphereInterceptor&gt; interceptors = <strong class="jxr_keyword">new</strong> ArrayList&lt;AtmosphereInterceptor&gt;();
@@ -335,7 +335,7 @@
 <a class="jxr_linenumber" name="325" href="#325">325</a> <em class="jxr_javadoccomment">         * @param broadcasterClass a Broadcaster</em>
 <a class="jxr_linenumber" name="326" href="#326">326</a> <em class="jxr_javadoccomment">         * @return this</em>
 <a class="jxr_linenumber" name="327" href="#327">327</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="328" href="#328">328</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcaster(Class&lt;Broadcaster&gt; broadcasterClass) {
+<a class="jxr_linenumber" name="328" href="#328">328</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcaster(Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass) {
 <a class="jxr_linenumber" name="329" href="#329">329</a>             <strong class="jxr_keyword">this</strong>.broadcasterClass = broadcasterClass;
 <a class="jxr_linenumber" name="330" href="#330">330</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
 <a class="jxr_linenumber" name="331" href="#331">331</a>         }
