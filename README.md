@@ -16,7 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.0.0</version>
+         <version>2.0.1</version>
      </dependency>
 ```
 
@@ -136,6 +136,10 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 ### Using Maven and the Git repo
 
     mvn exec:java -Dexec.arguments='path to your exploded war file'
+
+#### Changelogs
+
+2.0 release: [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
 
 We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
 
