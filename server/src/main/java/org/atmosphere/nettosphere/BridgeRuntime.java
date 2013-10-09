@@ -126,6 +126,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         framework.setAtmosphereDotXmlPath(config.configFile());
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
+            @Override
             public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
                 Action a = super.suspended(request, response);
                 if (framework.getAtmosphereConfig().isSupportSession()) {
@@ -136,6 +137,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     }
                 }
                 return a;
+            }
+
+            @Override
+            public String toString() {
+                return "NettoSphereAsyncSupport";
             }
         });
         try {
@@ -189,7 +195,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 });
 
         try {
-            framework.init(new NettyServletConfig(config.initParams(), ctx));
+            framework.externalizeDestroy(true).init(new NettyServletConfig(config.initParams(), ctx));
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
@@ -514,6 +520,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (WebSocket.class.isAssignableFrom(o.getClass())) {
             WebSocket webSocket = WebSocket.class.cast(o);
             if (webSocket == null) return;
+
+            logger.trace("Closing {}", webSocket.resource().uuid());
 
             webSocketProcessor.close(webSocket, 1005);
         } else if (AsynchronousProcessor.AsynchronousProcessorHook.class.isAssignableFrom(o.getClass())) {
