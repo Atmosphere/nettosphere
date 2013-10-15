@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
 import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
@@ -56,6 +57,11 @@ class AtmosphereChannelPipelineFactory implements
         pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());
         pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
+
+        for (ChannelUpstreamHandler h: config.channelUpstreamHandlers()) {
+            pipeline.addLast(h.getClass().getName(), h);
+        }
+
         pipeline.addLast("nettyAtmosphereHandler", bridgeRuntime);
 
         return pipeline;
