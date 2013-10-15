@@ -56,6 +56,7 @@ class AtmosphereChannelPipelineFactory implements
         pipeline.addLast("decoder", new HttpRequestDecoder());
         pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
         pipeline.addLast("encoder", new HttpResponseEncoder());
+
         if (config.supportChunking()) {
             pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         }
@@ -64,7 +65,7 @@ class AtmosphereChannelPipelineFactory implements
             pipeline.addLast(h.getClass().getName(), h);
         }
 
-        pipeline.addLast("nettyAtmosphereHandler", bridgeRuntime);
+        pipeline.addLast(BridgeRuntime.class.getName(), bridgeRuntime);
 
         return pipeline;
     }
