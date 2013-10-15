@@ -399,6 +399,8 @@ public class Config {
         /**
          * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
          * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
+         *
+         * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
          * @param supportChunking false to disable.
          * @return this
          */
