@@ -30,6 +30,7 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.nettosphere.util.MimeType;
 import org.atmosphere.util.Version;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -43,6 +44,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
@@ -133,6 +135,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     public final static String STATIC_MAPPING = SimpleChannelUpstreamHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelUpstreamHandler.class.getName() + ".serviced";
     private final List<String> paths;
+    private String defaultContentType = "text/html";
 
     public HttpStaticFileServerHandler(List<String> paths) {
         this.paths = paths;
@@ -199,6 +202,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         long fileLength = raf.length();
 
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+        contentType(request, response, file);
         setContentLength(response, fileLength);
 
         Channel ch = e.getChannel();
@@ -305,5 +309,26 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
 
         // Close the connection as soon as the error message is sent.
         ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    protected void contentType(HttpRequest request, HttpResponse response, File resource) {
+        String substr;
+        String uri = request.getUri();
+        int dot = uri.lastIndexOf(".");
+        if (dot < 0) {
+            substr = resource.toString();
+            dot = substr.lastIndexOf(".");
+        } else {
+            substr = uri;
+        }
+
+        if (dot > 0) {
+            String ext = substr.substring(dot + 1);
+            String contentType = MimeType.get(ext, defaultContentType);
+            response.addHeader(HttpHeaders.Names.CONTENT_TYPE, contentType);
+        } else {
+            response.addHeader(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
+        }
+
     }
 }
