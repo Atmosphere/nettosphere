@@ -27,6 +27,7 @@ import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -114,6 +116,10 @@ public class Config {
         return b.listener;
     }
 
+    public LinkedList<ChannelUpstreamHandler> channelUpstreamHandlers() {
+        return b.nettyHandlers;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -132,6 +138,7 @@ public class Config {
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
         private SSLContext context;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
+        private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
 
         /**
          * Set an SSLContext in order enable SSL
@@ -371,6 +378,16 @@ public class Config {
          */
         public Builder interceptor(AtmosphereInterceptor interceptor) {
             interceptors.add(interceptor);
+            return this;
+        }
+
+        /**
+         * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}
+         * @param h  {@link ChannelUpstreamHandler}
+         * @return this;
+         */
+        public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
+            nettyHandlers.addLast(h);
             return this;
         }
 
