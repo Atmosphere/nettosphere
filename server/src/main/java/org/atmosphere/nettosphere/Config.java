@@ -120,6 +120,10 @@ public class Config {
         return b.nettyHandlers;
     }
 
+    public boolean supportChunking() {
+        return b.supportChunking;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -139,6 +143,7 @@ public class Config {
         private SSLContext context;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
+        public boolean supportChunking = true;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -388,6 +393,17 @@ public class Config {
          */
         public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
             nettyHandlers.addLast(h);
+            return this;
+        }
+
+        /**
+         * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
+         * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
+         * @param supportChunking false to disable.
+         * @return this
+         */
+        public Builder supportChunking(boolean supportChunking) {
+            this.supportChunking = supportChunking;
             return this;
         }
 
