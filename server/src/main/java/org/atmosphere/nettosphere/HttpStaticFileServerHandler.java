@@ -282,6 +282,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             return null;
         }
 
+        int pos = uri.indexOf("?");
+        if (pos != -1) {
+            uri = uri.substring(0, pos);
+        }
         return uri;
     }
 
