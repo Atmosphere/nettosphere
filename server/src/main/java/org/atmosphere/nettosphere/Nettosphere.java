@@ -35,24 +35,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.  As simple as
  * <blockquote><pre>
-
- Config config = new Config.Builder()
-         .port(port)
-         .host("127.0.0.1")
-         .initParam("foo", "bar")
-         .resource("/", new AtmosphereHandlerAdapter() {
-
-             public void onStateChange(AtmosphereResourceEvent r) throws IOException {
-             }
-
-         }).build();
-
- server = new Nettosphere.Builder().config(config).build();
+ * <p/>
+ * Config config = new Config.Builder()
+ *  .port(port)
+ *  .host("127.0.0.1")
+ *  .initParam("foo", "bar")
+ *  .resource("/", new AtmosphereHandlerAdapter() {
+ *   <p/>
+ *    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+ *    }
+ *   <p/>
+ * }).build();
+ * <p/>
+ * server = new Nettosphere.Builder().config(config).build();
  * </pre></blockquote>
+ *
  * @author Jeanfrancois Arcand
  */
 public final class Nettosphere {
 
+    public final static String FLASH_SUPPORT = Nettosphere.class.getName() + ".enableFlash";
     private static final Logger logger = LoggerFactory.getLogger(Nettosphere.class);
     private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
     private final ChannelPipelineFactory pipelineFactory;
@@ -60,12 +62,21 @@ public final class Nettosphere {
     private final SocketAddress localSocket;
     private final BridgeRuntime handler;
     private final AtomicBoolean started = new AtomicBoolean();
+    private final ServerBootstrap bootstrapFlashPolicy;
+    private final SocketAddress localPolicySocket;
 
     private Nettosphere(Config config) {
         handler = new BridgeRuntime(config);
         this.pipelineFactory = new AtmosphereChannelPipelineFactory(handler);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();
+        if (config.initParams().containsKey(FLASH_SUPPORT)) {
+            this.bootstrapFlashPolicy = buildBootstrapFlashPolicy();
+            localPolicySocket = new InetSocketAddress(843);
+        } else {
+            this.bootstrapFlashPolicy = null;
+            localPolicySocket = null;
+        }
     }
 
     /**
@@ -75,6 +86,9 @@ public final class Nettosphere {
         final Channel serverChannel = bootstrap.bind(localSocket);
         ALL_CHANNELS.add(serverChannel);
         started.set(true);
+        if (bootstrapFlashPolicy != null) {
+            bootstrapFlashPolicy.bind(localPolicySocket);
+        }
     }
 
     /**
@@ -94,9 +108,10 @@ public final class Nettosphere {
 
     /**
      * Return true is the server was successfully started.
+     *
      * @return true is the server was successfully started.
      */
-    public boolean isStarted(){
+    public boolean isStarted() {
         return started.get();
     }
 
@@ -107,6 +122,22 @@ public final class Nettosphere {
                         Executors.newCachedThreadPool()));
 
         bootstrap.setPipelineFactory(pipelineFactory);
+        return bootstrap;
+    }
+
+    private ServerBootstrap buildBootstrapFlashPolicy() {
+        // Configure the server.
+        final ServerBootstrap bootstrap = new ServerBootstrap(
+                new NioServerSocketChannelFactory(
+                        Executors.newCachedThreadPool(),
+                        Executors.newCachedThreadPool()));
+
+        // Set up the event pipeline factory.
+        bootstrap.setPipelineFactory(new FlashPolicyServerPipelineFactory());
+
+        bootstrap.setOption("child.tcpNoDelay", true);
+        bootstrap.setOption("child.keepAlive", true);
+
         return bootstrap;
     }
 
@@ -143,5 +174,6 @@ public final class Nettosphere {
         }
         System.exit(-1);
     }
+
 
 }
