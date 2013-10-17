@@ -66,6 +66,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.DATE;
@@ -204,6 +207,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
         contentType(request, response, file);
         setContentLength(response, fileLength);
+        setDateAndCacheHeaders(response,file);
 
         Channel ch = e.getChannel();
 
@@ -334,5 +338,21 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
         }
 
+    }
+
+    private static void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+        dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
+
+        // Date header
+        Calendar time = new GregorianCalendar();
+        response.setHeader(DATE, dateFormatter.format(time.getTime()));
+
+        // Add cache headers
+        time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
+        response.setHeader(EXPIRES, dateFormatter.format(time.getTime()));
+        response.setHeader(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+        response.setHeader(
+                LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
 }
