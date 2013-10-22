@@ -203,6 +203,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
     }
 
+    public AtmosphereFramework framework() {
+        return framework;
+    }
+
     @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent.getMessage();

@@ -15,6 +15,7 @@
  */
 package org.atmosphere.nettosphere;
 
+import org.atmosphere.cpr.AtmosphereFramework;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -77,6 +78,14 @@ public final class Nettosphere {
             this.bootstrapFlashPolicy = null;
             localPolicySocket = null;
         }
+    }
+
+    /**
+     * Return the {@link org.atmosphere.cpr.AtmosphereFramework} instance
+     * @return the {@link AtmosphereFramework} instance
+     */
+    public AtmosphereFramework framework() {
+        return handler.framework();
     }
 
     /**
