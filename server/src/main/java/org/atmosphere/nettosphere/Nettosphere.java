@@ -16,6 +16,7 @@
 package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.nettosphere.extra.FlashPolicyServerPipelineFactory;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;

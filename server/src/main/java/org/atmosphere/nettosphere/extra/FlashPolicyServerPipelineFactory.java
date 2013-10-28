@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package org.atmosphere.nettosphere;
+package org.atmosphere.nettosphere.extra;
 
 import static org.jboss.netty.channel.Channels.*;
 
