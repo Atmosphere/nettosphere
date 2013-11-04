@@ -113,7 +113,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebSocketProcessor webSocketProcessor;
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
-    private final ChannelGroup websoketChannels = new DefaultChannelGroup("ws");
+    private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws");
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -260,7 +260,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else {
             handshaker.handshake(ctx.getChannel(), request);
         }
-        websoketChannels.add(ctx.getChannel());
+        websocketChannels.add(ctx.getChannel());
 
         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
         WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
@@ -491,7 +491,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
         logger.debug("{}", e);
         // For websocket, we can't send an error
-        if (websoketChannels.contains(ctx.getChannel())) {
+        if (websocketChannels.contains(ctx.getChannel())) {
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
         } else {
             if (e != null) {
@@ -508,7 +508,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     public void destroy() {
         isShutdown.set(true);
         httpChannels.close();
-        websoketChannels.write(new CloseWebSocketFrame());
+        websocketChannels.write(new CloseWebSocketFrame());
 
         if (framework != null) framework.destroy();
         suspendTimer.shutdown();
