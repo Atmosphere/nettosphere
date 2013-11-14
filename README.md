@@ -42,8 +42,12 @@ or
                     .host("127.0.0.1")
                     .port(8080)
                     .resource(new Handler() {
-                        void handle(AtmosphereResource r) {
-                            r.getResponse().write("Hello World").write("from Nettosphere").flush();
+                        public void handle(AtmosphereResource r) {
+                            try {
+                                r.getResponse().write("Hello World").write(" from Nettosphere").flushBuffer();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     })
                     .build())
