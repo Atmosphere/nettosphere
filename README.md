@@ -46,8 +46,8 @@ or
                             try {
                                 r.getResponse().write("Hello World").write(" from Nettosphere").flushBuffer();
                             } catch (IOException e) {
-   								e.printStackTrace();
-   							}
+                                e.printStackTrace();
+                            }
                         }
                     })
                     .build())
