@@ -184,10 +184,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        Method stub = Context.class.getMethod(method.getName(), method.getParameterTypes());
-                        if (stub != null) {
-                            return stub.invoke(context, args);
-                        } else {
+                        try {
+                            Method stub = Context.class.getMethod(method.getName(), method.getParameterTypes());
+                            if (stub != null) {
+                                return stub.invoke(context, args);
+                            } else {
+                                logger.trace("Method {} not supported", method.getName());
+                                return null;
+                            }
+                        } catch (NoSuchMethodException ex) {
                             logger.trace("Method {} not supported", method.getName());
                             return null;
                         }
