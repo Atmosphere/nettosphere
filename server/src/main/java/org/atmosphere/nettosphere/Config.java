@@ -124,6 +124,10 @@ public class Config {
         return b.supportChunking;
     }
 
+    public boolean supportChunkAggregator() {
+        return b.supportChunkAggregator;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -143,7 +147,8 @@ public class Config {
         private SSLContext context;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
-        public boolean supportChunking = true;
+        private boolean supportChunking = true;
+        private boolean supportChunkAggregator = true;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -406,6 +411,16 @@ public class Config {
          */
         public Builder supportChunking(boolean supportChunking) {
             this.supportChunking = supportChunking;
+            return this;
+        }
+
+        /** Set to false to override the default behavior when reading HTTP request's body. When set to false, the
+         * {@link org.jboss.netty.handler.codec.http.HttpChunkAggregator} won't be installed.
+         * @param supportChunkAggregator false to disable.
+         * @return this
+         */
+        public Builder supportChunkAggregator(boolean supportChunkAggregator) {
+            this.supportChunkAggregator = supportChunkAggregator;
             return this;
         }
 
