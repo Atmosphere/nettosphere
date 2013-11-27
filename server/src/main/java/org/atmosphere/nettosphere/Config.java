@@ -128,6 +128,14 @@ public class Config {
         return b.supportChunkAggregator;
     }
 
+    public boolean socketKeepAlive(){
+        return b.socketKeepAlive;
+    }
+
+    public boolean socketTcpDelay() {
+        return b.socketTcpDelay;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -149,6 +157,8 @@ public class Config {
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
         private boolean supportChunking = true;
         private boolean supportChunkAggregator = true;
+        private boolean socketTcpDelay = true;
+        private boolean socketKeepAlive = true;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -421,6 +431,26 @@ public class Config {
          */
         public Builder supportChunkAggregator(boolean supportChunkAggregator) {
             this.supportChunkAggregator = supportChunkAggregator;
+            return this;
+        }
+
+        /**
+         * Set Netty's Bootstrap 'child.tcpDelay'
+         * @param socketTcpDelay
+         * @return this
+         */
+        public Builder socketTcpDelay(boolean socketTcpDelay) {
+            this.socketTcpDelay = socketTcpDelay;
+            return this;
+        }
+
+        /**
+         * Set Netty's Bootstrap 'child.keepAlive'
+         * @param socketKeepAlive
+         * @return this
+         */
+        public Builder socketKeepAlive(boolean socketKeepAlive) {
+            this.socketKeepAlive = socketKeepAlive;
             return this;
         }
 

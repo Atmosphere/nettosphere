@@ -72,6 +72,9 @@ public final class Nettosphere {
         this.pipelineFactory = new AtmosphereChannelPipelineFactory(handler);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();
+
+        configureBootstrap(bootstrap, config);
+
         if (config.initParams().containsKey(FLASH_SUPPORT)) {
             this.bootstrapFlashPolicy = buildBootstrapFlashPolicy();
             localPolicySocket = new InetSocketAddress(843);
@@ -79,6 +82,11 @@ public final class Nettosphere {
             this.bootstrapFlashPolicy = null;
             localPolicySocket = null;
         }
+    }
+
+    private void configureBootstrap(ServerBootstrap bootstrap, Config config) {
+        bootstrap.setOption("child.tcpNoDelay", config.socketTcpDelay());
+        bootstrap.setOption("child.keepAlive", config.socketKeepAlive());
     }
 
     /**
@@ -144,10 +152,6 @@ public final class Nettosphere {
 
         // Set up the event pipeline factory.
         bootstrap.setPipelineFactory(new FlashPolicyServerPipelineFactory());
-
-        bootstrap.setOption("child.tcpNoDelay", true);
-        bootstrap.setOption("child.keepAlive", true);
-
         return bootstrap;
     }
 
