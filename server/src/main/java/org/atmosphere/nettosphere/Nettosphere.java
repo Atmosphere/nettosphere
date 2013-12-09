@@ -85,7 +85,7 @@ public final class Nettosphere {
     }
 
     private void configureBootstrap(ServerBootstrap bootstrap, Config config) {
-        bootstrap.setOption("child.tcpNoDelay", config.socketTcpDelay());
+        bootstrap.setOption("child.tcpNoDelay", config.socketNoTcpDelay());
         bootstrap.setOption("child.keepAlive", config.socketKeepAlive());
     }
 

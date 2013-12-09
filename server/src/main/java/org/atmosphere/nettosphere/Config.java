@@ -132,8 +132,8 @@ public class Config {
         return b.socketKeepAlive;
     }
 
-    public boolean socketTcpDelay() {
-        return b.socketTcpDelay;
+    public boolean socketNoTcpDelay() {
+        return b.socketNoTcpDelay;
     }
 
     public final static class Builder {
@@ -157,7 +157,7 @@ public class Config {
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
         private boolean supportChunking = true;
         private boolean supportChunkAggregator = true;
-        private boolean socketTcpDelay = true;
+        private boolean socketNoTcpDelay = true;
         private boolean socketKeepAlive = true;
 
         /**
@@ -436,11 +436,11 @@ public class Config {
 
         /**
          * Set Netty's Bootstrap 'child.tcpDelay'
-         * @param socketTcpDelay
+         * @param socketNoTcpDelay
          * @return this
          */
-        public Builder socketTcpDelay(boolean socketTcpDelay) {
-            this.socketTcpDelay = socketTcpDelay;
+        public Builder socketNoTcpDelay(boolean socketNoTcpDelay) {
+            this.socketNoTcpDelay = socketNoTcpDelay;
             return this;
         }
 
