@@ -112,7 +112,7 @@ public class Config {
         return b.context;
     }
 
-    public SSLContextListener sslContextListener(){
+    public SSLContextListener sslContextListener() {
         return b.listener;
     }
 
@@ -128,12 +128,16 @@ public class Config {
         return b.supportChunkAggregator;
     }
 
-    public boolean socketKeepAlive(){
+    public boolean socketKeepAlive() {
         return b.socketKeepAlive;
     }
 
     public boolean socketNoTcpDelay() {
         return b.socketNoTcpDelay;
+    }
+
+    public int maxChunkContentLength() {
+        return b.maxContentLength;
     }
 
     public final static class Builder {
@@ -159,9 +163,11 @@ public class Config {
         private boolean supportChunkAggregator = true;
         private boolean socketNoTcpDelay = true;
         private boolean socketKeepAlive = true;
+        private int maxContentLength = 65536;
 
         /**
          * Set an SSLContext in order enable SSL
+         *
          * @param context
          * @return this
          */
@@ -172,6 +178,7 @@ public class Config {
 
         /**
          * Add a {@link SSLContextListener}
+         *
          * @param listener
          * @return this
          */
@@ -188,6 +195,18 @@ public class Config {
          */
         public Builder mappingPath(String mappingPath) {
             this.mappingPath = mappingPath;
+            return this;
+        }
+
+        /**
+         * When {@link #supportChunkAggregator} is true,the maximum length of the aggregated content.
+         * If the length of the aggregated content exceeds this value,
+         * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.
+         *
+         * @return this
+         */
+        public Builder maxChunkContentLength(int maxChunkContentLength) {
+            this.maxContentLength = maxChunkContentLength;
             return this;
         }
 
@@ -403,7 +422,8 @@ public class Config {
 
         /**
          * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}
-         * @param h  {@link ChannelUpstreamHandler}
+         *
+         * @param h {@link ChannelUpstreamHandler}
          * @return this;
          */
         public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
@@ -414,8 +434,9 @@ public class Config {
         /**
          * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
          * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
-         *
+         * <p/>
          * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
+         *
          * @param supportChunking false to disable.
          * @return this
          */
@@ -424,8 +445,10 @@ public class Config {
             return this;
         }
 
-        /** Set to false to override the default behavior when reading HTTP request's body. When set to false, the
+        /**
+         * Set to false to override the default behavior when reading HTTP request's body. When set to false, the
          * {@link org.jboss.netty.handler.codec.http.HttpChunkAggregator} won't be installed.
+         *
          * @param supportChunkAggregator false to disable.
          * @return this
          */
@@ -436,6 +459,7 @@ public class Config {
 
         /**
          * Set Netty's Bootstrap 'child.tcpDelay'
+         *
          * @param socketNoTcpDelay
          * @return this
          */
@@ -446,6 +470,7 @@ public class Config {
 
         /**
          * Set Netty's Bootstrap 'child.keepAlive'
+         *
          * @param socketKeepAlive
          * @return this
          */

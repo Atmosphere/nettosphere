@@ -56,7 +56,7 @@ class AtmosphereChannelPipelineFactory implements
         pipeline.addLast("decoder", new HttpRequestDecoder());
 
         if (config.supportChunkAggregator()) {
-            pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
+            pipeline.addLast("aggregator", new HttpChunkAggregator(config.maxChunkContentLength()));
         }
 
         pipeline.addLast("encoder", new HttpResponseEncoder());
