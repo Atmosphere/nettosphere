@@ -299,7 +299,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
-        long cl = HttpHeaders.getContentLength(request);
+        long cl = HttpHeaders.getContentLength(request, 0L);
         String method = request.getMethod().getName();
 
         String queryString = requestUri.getQuery();
