@@ -19,7 +19,14 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
          <version>2.0.2</version>
      </dependency>
 ```
-
+or our work in progress
+```xml
+     <dependency>
+         <groupId>org.atmosphere</groupId>
+         <artifactId>nettosphere</artifactId>
+         <version>2.1-RC2</version>
+     </dependency>
+```
 
 ### Super Simple Web Application
 
