@@ -148,6 +148,9 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
     mvn exec:java -Dexec.arguments='path to your exploded war file'
 
+#### Build Status
+[![Build Status](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/badge/icon)](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/)
+
 #### Changelogs
 
 2.0 release: [2.0.2](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.2&page=1&sort=updated&state=closed) [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
