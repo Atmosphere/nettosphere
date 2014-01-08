@@ -21,7 +21,6 @@ import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -132,19 +131,17 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
                 headerWritten = true;
             }
 
-            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
-
             if (headerWritten) {
-                c.write(Integer.toHexString(length - offset).getBytes("UTF-8"));
-                c.write(CHUNK_DELIMITER);
+                buffer.writeBytes(Integer.toHexString(length - offset).getBytes("UTF-8"));
+                buffer.writeBytes(CHUNK_DELIMITER);
             }
 
-            c.write(data, offset, length);
+            buffer.writeBytes(data, offset, length);
             if (headerWritten) {
-                c.write(CHUNK_DELIMITER);
+                buffer.writeBytes(CHUNK_DELIMITER);
             }
 
-            channel.write(c.buffer()).addListener(listener);
+            channel.write(buffer).addListener(listener);
             byteWritten = true;
             lastWrite = System.currentTimeMillis();
         } else {
@@ -179,7 +176,7 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
         asyncClose.set(true);
 
-        AtmosphereResource r =  response != null ? response.resource() : null;
+        AtmosphereResource r = response != null ? response.resource() : null;
 
         if (r == null || r.isSuspended() && !r.isResumed()) {
             keepAlive = false;
@@ -203,21 +200,15 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
         if (!isClosed.getAndSet(true)) {
             headerWritten = false;
             final ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
-            ChannelBufferOutputStream c = new ChannelBufferOutputStream(buffer);
-            try {
-                c.write(ENDCHUNK);
-                channel.write(buffer).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (!keepAlive) {
-                            channel.close().awaitUninterruptibly();
-                        }
+            buffer.writeBytes(ENDCHUNK);
+            channel.write(buffer).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (!keepAlive) {
+                        channel.close().awaitUninterruptibly();
                     }
-                });
-
-            } catch (IOException e) {
-                logger.trace("Close error", e);
-            }
+                }
+            });
         }
     }
 
