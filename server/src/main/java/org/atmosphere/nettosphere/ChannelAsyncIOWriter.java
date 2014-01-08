@@ -221,7 +221,8 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
         Map<String, String> headers = response.headers();
         String contentType = response.getContentType();
-        int contentLength = -1; //FIX ME
+        // TODO: Fix Me
+        int contentLength = -1;
 
         b.append("Content-Type").append(":").append(headers.get("Content-Type") == null ? contentType : headers.get("Content-Type")).append("\n");
         if (contentLength != -1) {
