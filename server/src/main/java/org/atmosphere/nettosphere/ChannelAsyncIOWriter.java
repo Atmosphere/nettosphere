@@ -46,15 +46,17 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
     private final AtomicInteger pendingWrite = new AtomicInteger();
     private final AtomicBoolean asyncClose = new AtomicBoolean(false);
     private final ML listener = new ML();
-    private boolean byteWritten = false;
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
-    private boolean headerWritten = false;
+    private final ByteArrayAsyncWriter buffer = new ByteArrayAsyncWriter();
+    private final boolean writeHeader;
+
     private final static String END = Integer.toHexString(0);
     private final static byte[] CHUNK_DELIMITER = "\r\n".getBytes();
     private final static byte[] ENDCHUNK = (END + "\r\n\r\n").getBytes();
+
+    private boolean headerWritten = false;
+    private boolean byteWritten = false;
     private long lastWrite = 0;
-    private final ByteArrayAsyncWriter buffer = new ByteArrayAsyncWriter();
-    private final boolean writeHeader;
     private boolean keepAlive;
 
     public ChannelAsyncIOWriter(Channel channel, boolean writeHeader, boolean keepAlive) {
@@ -65,10 +67,6 @@ public class ChannelAsyncIOWriter extends AtmosphereInterceptorWriter {
 
     public boolean isClosed() {
         return isClosed.get();
-    }
-
-    public boolean byteWritten() {
-        return byteWritten;
     }
 
     @Override
