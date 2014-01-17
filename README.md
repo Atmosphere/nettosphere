@@ -24,7 +24,7 @@ or our work in progress
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.1-RC2</version>
+         <version>2.1.0-RC2</version>
      </dependency>
 ```
 
