@@ -37,6 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ChunkedWriter extends ChannelWriter {
     private static final Logger logger = LoggerFactory.getLogger(ChunkedWriter.class);
     private final ChannelBufferPool channelBufferPool;
+    private final ChannelBuffer END = ChannelBuffers.wrappedBuffer(ENDCHUNK);
+    private final ChannelBuffer DELIMITER = ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER);
 
     public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive, ChannelBufferPool channelBufferPool) {
         super(channel, writeHeader, keepAlive);
@@ -83,7 +85,7 @@ public class ChunkedWriter extends ChannelWriter {
     void _close() {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
             logger.trace("About to close to {}", channel);
-            channel.write(ChannelBuffers.wrappedBuffer(ChannelBuffers.wrappedBuffer(ENDCHUNK))).addListener(new ChannelFutureListener() {
+            channel.write(ChannelBuffers.wrappedBuffer(END)).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     logger.trace("Async Closing Done {}", channel);
@@ -100,12 +102,12 @@ public class ChunkedWriter extends ChannelWriter {
         ChannelBuffer writeBuffer = writeHeaders(response);
         if (headerWritten) {
             writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")));
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER));
+            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
         }
 
         writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
         if (headerWritten) {
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER));
+            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
         }
 
         final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
