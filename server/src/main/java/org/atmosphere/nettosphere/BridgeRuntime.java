@@ -314,7 +314,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
-        String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
+        String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
         long cl = HttpHeaders.getContentLength(request, 0);
         String method = request.getMethod().getName();
 
@@ -407,10 +407,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         // First let's try to see if it's a static resources
         if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
             try {
-                hrequest.addHeader(STATIC_MAPPING, "true");
+                hrequest.headers().add(STATIC_MAPPING, "true");
                 super.messageReceived(ctx, messageEvent);
 
-                if (hrequest.getHeader(SERVICED) != null) {
+                if (HttpHeaders.getHeader(hrequest, SERVICED) != null) {
                     return;
                 }
             } catch (Exception e) {
@@ -523,7 +523,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else {
             if (e != null) {
                 final HttpRequest request = (HttpRequest) e.getMessage();
-                if (request.getHeader(STATIC_MAPPING) == null || request.getHeader(STATIC_MAPPING).equalsIgnoreCase("false")) {
+                if (request.getHeader(STATIC_MAPPING) == null || HttpHeaders.getHeader(request, STATIC_MAPPING).equalsIgnoreCase("false")) {
                     super.sendError(ctx, status, e);
                 }
             } else {
@@ -582,14 +582,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         for (String name : request.getHeaderNames()) {
             // TODO: Add support for multi header
-            headers.put(name, request.getHeaders(name).get(0));
+            headers.put(name, HttpHeaders.getHeader(request, name));
         }
 
         return headers;
     }
 
     private String getBaseUri(final HttpRequest request) {
-        return "http://" + request.getHeader(HttpHeaders.Names.HOST) + "/";
+        return "http://" + HttpHeaders.getHeader(request, HttpHeaders.Names.HOST, "127.0.0.1") + "/";
 
     }
 
