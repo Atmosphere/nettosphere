@@ -17,7 +17,6 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
-import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -47,6 +46,7 @@ import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.codec.http.Cookie;
 import org.jboss.netty.handler.codec.http.CookieDecoder;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
+import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -93,6 +93,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.AsynchronousProcessor.AsynchronousProcessorHook;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
@@ -107,6 +108,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * @author Jeanfrancois Arcand
  */
 public class BridgeRuntime extends HttpStaticFileServerHandler {
+    private final static String KEEP_ALIVE = BridgeRuntime.class.getName() + "_keep-alive";
     private static final Logger logger = LoggerFactory.getLogger(BridgeRuntime.class);
     private final AtmosphereFramework framework;
     private final Config config;
@@ -261,6 +263,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
         } else if (msg instanceof WebSocketFrame) {
             handleWebSocketFrame(ctx, messageEvent);
+        } else if (msg instanceof HttpChunk) {
+            handleHttp(ctx, messageEvent);
         }
     }
 
@@ -311,11 +315,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
-    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
-        String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
-        long cl = HttpHeaders.getContentLength(request, 0);
+        final String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
+        final long cl = HttpHeaders.getContentLength(request, 0);
         String method = request.getMethod().getName();
 
         String queryString = requestUri.getQuery();
@@ -361,7 +365,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         final Map<String, Object> attributes = new HashMap<String, Object>();
         AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
-        AtmosphereRequest r = requestBuilder.requestURI(url.substring(l))
+        requestBuilder.requestURI(url.substring(l))
                 .requestURL(url)
                 .pathInfo(url.substring(l))
                 .headers(getHeaders(request))
@@ -387,50 +391,64 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     public InetSocketAddress call() throws Exception {
                         return (InetSocketAddress) ctx.getChannel().getLocalAddress();
                     }
-                })
-                .inputStream(new ChannelBufferInputStream(request.getContent()))
-                .build();
-
-        return r;
+                });
+        return requestBuilder.inputStream(new ChannelBufferInputStream(request.getContent())).build();
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        final HttpRequest hrequest = (HttpRequest) messageEvent.getMessage();
-        final ChannelWriter asyncWriter = config.supportChunking() ?
-                new ChunkedWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest), channelBufferPool) :
-                new StreamWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest));
-
-        boolean resumeOnBroadcast = false;
-        boolean keptOpen = false;
-        String method = hrequest.getMethod().getName();
-
-        // First let's try to see if it's a static resources
-        if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
-            try {
-                hrequest.headers().add(STATIC_MAPPING, "true");
-                super.messageReceived(ctx, messageEvent);
-
-                if (HttpHeaders.getHeader(hrequest, SERVICED) != null) {
-                    return;
-                }
-            } catch (Exception e) {
-                logger.debug("Unexpected State", e);
-            } finally {
-                hrequest.addHeader(STATIC_MAPPING, "false");
-            }
-        }
 
         boolean skipClose = false;
         AtmosphereResponse response = null;
         AtmosphereRequest request = null;
         Action a = null;
+        boolean resumeOnBroadcast = false;
+        boolean keptOpen = false;
+        ChannelWriter asyncWriter = null;
+        String method = "GET";
+        boolean writeHeader = false;
+
         try {
-            request = createAtmosphereRequest(ctx, hrequest);
+            if (messageEvent.getMessage() instanceof HttpRequest) {
+                final HttpRequest hrequest = (HttpRequest) messageEvent.getMessage();
+                boolean ka = HttpHeaders.isKeepAlive(hrequest);
+                asyncWriter = config.supportChunking() ?
+                        new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
+                        new StreamWriter(ctx.getChannel(), true, ka);
+
+                method = hrequest.getMethod().getName();
+
+                // First let's try to see if it's a static resources
+                if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
+                    try {
+                        hrequest.headers().add(STATIC_MAPPING, "true");
+                        super.messageReceived(ctx, messageEvent);
+
+                        if (HttpHeaders.getHeader(hrequest, SERVICED) != null) {
+                            return;
+                        }
+                    } catch (Exception e) {
+                        logger.debug("Unexpected State", e);
+                    } finally {
+                        hrequest.addHeader(STATIC_MAPPING, "false");
+                    }
+                }
+
+                request = createAtmosphereRequest(ctx, hrequest);
+                request.setAttribute(KEEP_ALIVE, new Boolean(ka));
+
+            } else {
+                request = State.class.cast(ctx.getAttachment()).request;
+                Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
+                asyncWriter = config.supportChunking() ?
+                        new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
+                        new StreamWriter(ctx.getChannel(), true, ka);
+                method = request.getMethod();
+                request.body(new ChannelBufferInputStream(HttpChunk.class.cast(messageEvent.getMessage()).getContent()));
+            }
 
             response = new AtmosphereResponse.Builder()
-                    .writeHeader(true)
                     .asyncIOWriter(asyncWriter)
-                    .writeHeader(false)
+                    .writeHeader(writeHeader)
                     .destroyable(false)
                     .header("Connection", "Keep-Alive")
                     .header("Server", "Nettosphere/2.0")
@@ -444,7 +462,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             a = framework.doCometSupport(request, response);
 
-            final AsynchronousProcessor.AsynchronousProcessorHook hook = (AsynchronousProcessor.AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
+            final AsynchronousProcessorHook hook = (AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
 
             String transport = (String) request.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport == null) {
@@ -463,15 +481,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
+            ctx.setAttachment(new State(hook, request));
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
-                ctx.setAttachment(hook);
-
                 if (action.timeout() != -1) {
-                    final AtomicReference<Future<?>> f = new AtomicReference();
+                    final AtomicReference<ChannelWriter> w = new AtomicReference<ChannelWriter>(asyncWriter);
+                    final AtomicReference<Future<?>> f = new AtomicReference<Future<?>>();
                     f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
                         @Override
                         public void run() {
-                            if (!asyncWriter.isClosed() && (System.currentTimeMillis() - asyncWriter.lastTick()) > action.timeout()) {
+                            if (!w.get().isClosed() && (System.currentTimeMillis() - w.get().lastTick()) > action.timeout()) {
                                 hook.timedOut();
                                 f.get().cancel(true);
                             }
@@ -555,8 +573,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             logger.trace("Closing {}", webSocket.resource().uuid());
 
             webSocketProcessor.close(webSocket, 1005);
-        } else if (AsynchronousProcessor.AsynchronousProcessorHook.class.isAssignableFrom(o.getClass())) {
-            AsynchronousProcessor.AsynchronousProcessorHook.class.cast(o).closed();
+        } else if (State.class.isAssignableFrom(o.getClass())) {
+            State.class.cast(o).hook.closed();
         }
     }
 
@@ -650,6 +668,16 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         ChannelFuture f = ctx.getChannel().write(res);
         if (!isKeepAlive(req) || res.getStatus().getCode() != 200) {
             f.addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    public final static class State {
+        AsynchronousProcessorHook hook;
+        final AtmosphereRequest request;
+
+        public State(AsynchronousProcessorHook hook, AtmosphereRequest request) {
+            this.hook = hook;
+            this.request = request;
         }
     }
 

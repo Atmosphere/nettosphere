@@ -124,8 +124,8 @@ public class Config {
         return b.supportChunking;
     }
 
-    public boolean supportChunkAggregator() {
-        return b.supportChunkAggregator;
+    public boolean aggregateRequestBodyInMemory() {
+        return b.aggregateRequestBodyInMemory;
     }
 
     public boolean socketKeepAlive() {
@@ -173,7 +173,7 @@ public class Config {
         private SSLContextListener listener = SSLContextListener.DEFAULT;
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
         private boolean supportChunking = true;
-        private boolean supportChunkAggregator = true;
+        private boolean aggregateRequestBodyInMemory = true;
         private boolean socketNoTcpDelay = true;
         private boolean socketKeepAlive = true;
         private int maxContentLength = 65536;
@@ -214,7 +214,7 @@ public class Config {
         }
 
         /**
-         * When {@link #supportChunkAggregator} is true,the maximum length of the aggregated content.
+         * When {@link #aggregateRequestBodyInMemory} is true,the maximum length of the aggregated content.
          * If the length of the aggregated content exceeds this value,
          * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.
          *
@@ -473,14 +473,19 @@ public class Config {
         }
 
         /**
-         * Set to false to override the default behavior when reading HTTP request's body. When set to false, the
-         * {@link org.jboss.netty.handler.codec.http.HttpChunkAggregator} won't be installed.
+         * By default, Nettosphere aggregate the HTTP request's body in memory an invoke an Atmosphere's components with
+         * a single {@link AtmosphereResource}. Setting supportChunkAggregator to false will instead invoke Atmosphere's component
+         * with a new {@link AtmosphereResource} each time the request's body is read in memory. Setting to false
+         * may significantly increase the performance and reduce memory footprint. Note that setting this value to false
+         * may deliver to your Atmosphere's component partial body, so your application must make sure to aggregate the
+         * body before parsing the data if needed. For example, if you are using JSON as format, make sure you parse the
+         * data incrementally.
          *
-         * @param supportChunkAggregator false to disable.
+         * @param aggregateRequestBodyInMemory false to disable.
          * @return this
          */
-        public Builder supportChunkAggregator(boolean supportChunkAggregator) {
-            this.supportChunkAggregator = supportChunkAggregator;
+        public Builder aggregateRequestBodyInMemory(boolean aggregateRequestBodyInMemory) {
+            this.aggregateRequestBodyInMemory = aggregateRequestBodyInMemory;
             return this;
         }
 

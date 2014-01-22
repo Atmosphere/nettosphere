@@ -55,7 +55,7 @@ class NettyPipelineFactory implements
 
         pipeline.addLast("decoder", new HttpRequestDecoder());
 
-        if (config.supportChunkAggregator()) {
+        if (config.aggregateRequestBodyInMemory()) {
             pipeline.addLast("aggregator", new HttpChunkAggregator(config.maxChunkContentLength()));
         }
 
