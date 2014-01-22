@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jeanfrancois Arcand
+ * Copyright 2013 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -28,13 +28,13 @@ import javax.net.ssl.SSLEngine;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
-class AtmosphereChannelPipelineFactory implements
+class NettyPipelineFactory implements
         ChannelPipelineFactory {
 
     private final transient BridgeRuntime bridgeRuntime;
     private final transient Config config;
 
-    public AtmosphereChannelPipelineFactory(final BridgeRuntime bridgeRuntime) {
+    public NettyPipelineFactory(final BridgeRuntime bridgeRuntime) {
         this.bridgeRuntime = bridgeRuntime;
         config = bridgeRuntime.config();
     }

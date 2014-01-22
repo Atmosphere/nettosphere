@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jeanfrancois Arcand
+ * Copyright 2013 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -28,6 +28,7 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
+import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
@@ -42,6 +43,7 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
+import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.codec.http.Cookie;
 import org.jboss.netty.handler.codec.http.CookieDecoder;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
@@ -114,6 +116,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final WebSocketProcessor webSocketProcessor;
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
     private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws");
+    private final ChannelBufferPool channelBufferPool;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -144,6 +147,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 return "NettoSphereAsyncSupport";
             }
         });
+
         try {
             if (config.broadcasterFactory() != null) {
                 framework.setBroadcasterFactory(config.broadcasterFactory());
@@ -206,6 +210,18 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
+
+        if (config.supportChunking()) {
+            channelBufferPool = new ChannelBufferPool(0, config.writeBufferPoolSize(),
+                    config.writeBufferPoolCleanupFrequency(), framework.getAtmosphereConfig());
+        } else {
+            // Dangerous
+            channelBufferPool = null;
+        }
+
+        for (String s : config.excludedInterceptors()) {
+            framework.excludeInterceptor(s);
+        }
     }
 
     public AtmosphereFramework framework() {
@@ -299,7 +315,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         String ct = request.getHeaders("Content-Type").size() > 0 ? request.getHeaders("Content-Type").get(0) : "text/plain";
-        long cl = HttpHeaders.getContentLength(request, 0L);
+        long cl = HttpHeaders.getContentLength(request);
         String method = request.getMethod().getName();
 
         String queryString = requestUri.getQuery();
@@ -352,7 +368,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .method(method)
                 .contentType(ct)
                 .contentLength(cl)
-                // We need to read attribute after doComet
+                        // We need to read attribute after doComet
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
@@ -380,7 +396,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         final HttpRequest hrequest = (HttpRequest) messageEvent.getMessage();
-        final ChannelAsyncIOWriter asyncWriter = new ChannelAsyncIOWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest));
+        final ChannelWriter asyncWriter = config.supportChunking() ?
+                new ChunkedWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest), channelBufferPool) :
+                new StreamWriter(ctx.getChannel(), true, HttpHeaders.isKeepAlive(hrequest));
+
         boolean resumeOnBroadcast = false;
         boolean keptOpen = false;
         String method = hrequest.getMethod().getName();
@@ -395,7 +414,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     return;
                 }
             } catch (Exception e) {
-                logger.debug("", e);
+                logger.debug("Unexpected State", e);
             } finally {
                 hrequest.addHeader(STATIC_MAPPING, "false");
             }
@@ -414,9 +433,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     .writeHeader(false)
                     .destroyable(false)
                     .header("Connection", "Keep-Alive")
-                    .header("Transfer-Encoding", "chunked")
                     .header("Server", "Nettosphere/2.0")
                     .request(request).build();
+
+            if (config.supportChunking()) {
+                response.setHeader("Transfer-Encoding", "chunked");
+            }
 
             request.setAttribute(NettyCometSupport.CHANNEL, asyncWriter);
 
@@ -494,7 +516,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
-        logger.debug("{}", e);
+        logger.debug("Error {} for {}", status, e);
         // For websocket, we can't send an error
         if (websocketChannels.contains(ctx.getChannel())) {
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
@@ -546,6 +568,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 && (e.getCause().getClass().equals(ClosedChannelException.class)
                 || e.getCause().getClass().equals(IOException.class))) {
             logger.trace("Exception", e.getCause());
+        } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
+            logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
+            super.exceptionCaught(ctx, e);
         } else {
             logger.debug("Exception", e.getCause());
             super.exceptionCaught(ctx, e);

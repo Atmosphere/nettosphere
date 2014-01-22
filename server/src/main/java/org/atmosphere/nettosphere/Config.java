@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jeanfrancois Arcand
+ * Copyright 2013 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -140,6 +140,18 @@ public class Config {
         return b.maxContentLength;
     }
 
+    public int writeBufferPoolSize(){
+        return b.writeBufferPoolSize;
+    }
+
+    public long writeBufferPoolCleanupFrequency(){
+        return b.writeBufferPoolCleanupFrequency;
+    }
+
+    public List<String> excludedInterceptors(){
+        return b.excludedInterceptors;
+    }
+
     public final static class Builder {
         private List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -153,6 +165,7 @@ public class Config {
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
+        private final List<String> excludedInterceptors = new ArrayList<String>();
         private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
@@ -164,6 +177,8 @@ public class Config {
         private boolean socketNoTcpDelay = true;
         private boolean socketKeepAlive = true;
         private int maxContentLength = 65536;
+        private int writeBufferPoolSize = 50;
+        private long writeBufferPoolCleanupFrequency = 30000;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -413,10 +428,22 @@ public class Config {
          * Add an {@link AtmosphereInterceptor}
          *
          * @param interceptor an {@link AtmosphereInterceptor}
-         * @return
+         * @return this
          */
         public Builder interceptor(AtmosphereInterceptor interceptor) {
             interceptors.add(interceptor);
+            return this;
+        }
+
+        /**
+         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}  
+         * are candidates for being excluded
+         *
+         * @param interceptor an {@link AtmosphereInterceptor}
+         * @return this
+         */
+        public Builder excludeInterceptor(String interceptor) {
+            excludedInterceptors.add(interceptor);
             return this;
         }
 
@@ -476,6 +503,29 @@ public class Config {
          */
         public Builder socketKeepAlive(boolean socketKeepAlive) {
             this.socketKeepAlive = socketKeepAlive;
+            return this;
+        }
+
+        /**
+         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for
+         * I/O operation. Default is 50.
+         *
+         * @param writeBufferPoolSize the size
+         * @return this;
+         */
+        public Builder writeBufferPoolSize(int writeBufferPoolSize){
+            this.writeBufferPoolSize = writeBufferPoolSize;
+            return this;
+        }
+
+        /**
+         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default
+         * is 30000.
+         * @param writeBufferPoolCleanupFrequency  the frequency
+         * @return this
+         */
+        public Builder writeBufferPoolCleanupFrequency(long writeBufferPoolCleanupFrequency) {
+            this.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
             return this;
         }
 

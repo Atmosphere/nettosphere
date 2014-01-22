@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
-                <version>3.8.0.Final</version>
+                <version>3.7.0.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>1.7.22</version>
+                <version>1.7.23</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -300,7 +300,7 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>2.1.0-RC2</atmosphere.version>
+        <atmosphere.version>2.1.0-SNAPSHOT</atmosphere.version>
     </properties>
 </project>
 
