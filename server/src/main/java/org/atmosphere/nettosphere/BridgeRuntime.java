@@ -32,7 +32,6 @@ import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -392,7 +391,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         return (InetSocketAddress) ctx.getChannel().getLocalAddress();
                     }
                 });
-        return requestBuilder.inputStream(new ChannelBufferInputStream(request.getContent())).build();
+        return requestBuilder.body(request.getContent().array()).build();
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
@@ -443,7 +442,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
                         new StreamWriter(ctx.getChannel(), true, ka);
                 method = request.getMethod();
-                request.body(new ChannelBufferInputStream(HttpChunk.class.cast(messageEvent.getMessage()).getContent()));
+                request.body(HttpChunk.class.cast(messageEvent.getMessage()).getContent().array());
             }
 
             response = new AtmosphereResponse.Builder()
