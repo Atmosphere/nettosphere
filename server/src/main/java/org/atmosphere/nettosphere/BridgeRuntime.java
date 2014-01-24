@@ -32,6 +32,7 @@ import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -391,7 +392,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         return (InetSocketAddress) ctx.getChannel().getLocalAddress();
                     }
                 });
-        return requestBuilder.body(request.getContent().array()).build();
+
+        ChannelBuffer internalBuffer = request.getContent();
+        if (internalBuffer.hasArray()) {
+            return requestBuilder.body(internalBuffer.array()).build();
+        } else {
+            logger.debug("Unable to read in memory the request's bytes. Using stream");
+            return requestBuilder.inputStream(new ChannelBufferInputStream(internalBuffer)).build();
+        }
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
@@ -442,7 +450,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
                         new StreamWriter(ctx.getChannel(), true, ka);
                 method = request.getMethod();
-                request.body(HttpChunk.class.cast(messageEvent.getMessage()).getContent().array());
+                ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
+                if (internalBuffer.hasArray()) {
+                    request.body(internalBuffer.array());
+                } else {
+                    logger.debug("Unable to read in memory the request's bytes. Using stream");
+                    request.body(new ChannelBufferInputStream(internalBuffer));
+                }
             }
 
             response = new AtmosphereResponse.Builder()
