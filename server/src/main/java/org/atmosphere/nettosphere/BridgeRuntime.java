@@ -457,8 +457,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 response.setHeader("Transfer-Encoding", "chunked");
             }
 
-            request.setAttribute(NettyCometSupport.CHANNEL, asyncWriter);
-
             a = framework.doCometSupport(request, response);
 
             final AsynchronousProcessorHook hook = (AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
