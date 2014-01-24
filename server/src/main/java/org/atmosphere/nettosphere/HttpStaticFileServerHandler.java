@@ -309,7 +309,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         response.setHeader(DATE, dateFormatter.format(time.getTime()));
     }
 
-    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
+    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent event) {
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
         response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
         response.setHeader(CONTENT_LENGTH, "0");

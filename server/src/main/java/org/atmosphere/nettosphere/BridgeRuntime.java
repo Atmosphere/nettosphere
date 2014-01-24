@@ -436,7 +436,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     } catch (Exception e) {
                         logger.debug("Unexpected State", e);
                     } finally {
-                        hrequest.addHeader(STATIC_MAPPING, "false");
+                        hrequest.headers().set(STATIC_MAPPING, "false");
                     }
                 }
 
@@ -550,12 +550,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (websocketChannels.contains(ctx.getChannel())) {
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
         } else {
-            if (e != null) {
-                final HttpRequest request = (HttpRequest) e.getMessage();
-                if (request.getHeader(STATIC_MAPPING) == null || HttpHeaders.getHeader(request, STATIC_MAPPING).equalsIgnoreCase("false")) {
-                    super.sendError(ctx, status, e);
-                }
-            } else {
+            final HttpRequest request = (HttpRequest) e.getMessage();
+            if (HttpHeaders.getHeader(request, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
                 super.sendError(ctx, status, e);
             }
         }
