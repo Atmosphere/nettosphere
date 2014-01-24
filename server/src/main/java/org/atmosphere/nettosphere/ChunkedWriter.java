@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -39,6 +41,8 @@ public class ChunkedWriter extends ChannelWriter {
     private final ChannelBufferPool channelBufferPool;
     private final ChannelBuffer END = ChannelBuffers.wrappedBuffer(ENDCHUNK);
     private final ChannelBuffer DELIMITER = ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER);
+    private final Semaphore semaphore = new Semaphore(1, true);
+    private final AtomicBoolean headerWritten = new AtomicBoolean();
 
     public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive, ChannelBufferPool channelBufferPool) {
         super(channel, writeHeader, keepAlive);
@@ -46,20 +50,19 @@ public class ChunkedWriter extends ChannelWriter {
     }
 
     private ChannelBuffer writeHeaders(AtmosphereResponse response) throws UnsupportedEncodingException {
-        ChannelBuffer writeBuffer = channelBufferPool.poll();
-        if (writeHeader && !headerWritten && response != null) {
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
-            headerWritten = true;
+        if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
+            ChannelBuffer writeBuffer = channelBufferPool.poll();
+            return ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
         }
-        return writeBuffer;
+        return ChannelBuffers.EMPTY_BUFFER;
     }
 
     @Override
     public void close(final AtmosphereResponse response) throws IOException {
         if (!channel.isOpen()) return;
 
-        if (writeHeader && !headerWritten && response != null) {
-            ChannelBuffer writeBuffer = writeHeaders(response);
+        ChannelBuffer writeBuffer = writeHeaders(response);
+        if (writeBuffer.readableBytes() > 0 && response != null) {
             final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
             channel.write(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
@@ -99,28 +102,39 @@ public class ChunkedWriter extends ChannelWriter {
 
     @Override
     public AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
-        ChannelBuffer writeBuffer = writeHeaders(response);
-        if (headerWritten) {
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")));
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
-        }
-
-        writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
-        if (headerWritten) {
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
-        }
-
-        final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
-        channel.write(writeBuffer).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                channelBufferPool.offer(recycle.get());
-                if (channel.isOpen() && !future.isSuccess()) {
-                    _close();
-                }
+        try {
+            // Make sure there the headers has been fully written before allowing other threads to write.
+            if (!headerWritten.get()) {
+                semaphore.acquireUninterruptibly();
             }
-        });
-        lastWrite = System.currentTimeMillis();
-        return this;
+
+            ChannelBuffer writeBuffer = writeHeaders(response);
+            if (headerWritten.get()) {
+                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")));
+                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
+            }
+
+            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
+            if (headerWritten.get()) {
+                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
+            }
+
+            final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
+            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    semaphore.release();
+                    channelBufferPool.offer(recycle.get());
+                    if (channel.isOpen() && !future.isSuccess()) {
+                        _close();
+                    }
+                }
+            });
+            lastWrite = System.currentTimeMillis();
+            return this;
+        } catch (IOException ex) {
+            semaphore.release();
+            throw ex;
+        }
     }
 }

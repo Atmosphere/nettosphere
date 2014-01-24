@@ -19,7 +19,6 @@ import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.util.ByteArrayAsyncWriter;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
@@ -42,9 +41,7 @@ public abstract class ChannelWriter extends AtmosphereInterceptorWriter {
     protected final AtomicBoolean doneProcessing = new AtomicBoolean(false);
     protected final ByteArrayAsyncWriter transformCacheBuffer = new ByteArrayAsyncWriter();
     protected final boolean writeHeader;
-    protected ChannelBuffer chainedBodyBuffer;
 
-    protected boolean headerWritten = false;
     protected long lastWrite = 0;
     protected boolean keepAlive;
 
@@ -117,10 +114,9 @@ public abstract class ChannelWriter extends AtmosphereInterceptorWriter {
         if (channel.isOpen()) {
             asyncWrite(response, data, offset, length);
         } else {
-            logger.debug("Trying to write on a closed channel {}", channel);
+            logger.trace("Trying to write on a closed channel {}", channel);
             throw new IOException("Channel closed");
         }
-        headerWritten = true;
         return this;
     }
 
