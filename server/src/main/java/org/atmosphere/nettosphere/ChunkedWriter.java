@@ -103,6 +103,9 @@ public class ChunkedWriter extends ChannelWriter {
     @Override
     public AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
         try {
+
+            if (doneProcessing.get()) return this;
+
             // Make sure there the headers has been fully written before allowing other threads to write.
             if (!headerWritten.get()) {
                 semaphore.acquireUninterruptibly();
