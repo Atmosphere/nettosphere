@@ -394,10 +394,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 });
 
         ChannelBuffer internalBuffer = request.getContent();
-        if (internalBuffer.hasArray()) {
+        if (!config.aggregateRequestBodyInMemory() && internalBuffer.hasArray()) {
             return requestBuilder.body(internalBuffer.array()).build();
         } else {
-            logger.debug("Unable to read in memory the request's bytes. Using stream");
+            logger.trace("Unable to read in memory the request's bytes. Using stream");
             return requestBuilder.inputStream(new ChannelBufferInputStream(internalBuffer)).build();
         }
     }
@@ -451,10 +451,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         new StreamWriter(ctx.getChannel(), true, ka);
                 method = request.getMethod();
                 ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
-                if (internalBuffer.hasArray()) {
+                if (!config.aggregateRequestBodyInMemory() && internalBuffer.hasArray()) {
                     request.body(internalBuffer.array());
                 } else {
-                    logger.debug("Unable to read in memory the request's bytes. Using stream");
+                    logger.trace("Unable to read in memory the request's bytes. Using stream");
                     request.body(new ChannelBufferInputStream(internalBuffer));
                 }
             }
