@@ -414,6 +414,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         String method = "GET";
         boolean writeHeader = false;
         boolean forceSuspend = false;
+        boolean aggregateBodyInMemory = config.aggregateRequestBodyInMemory();
 
         try {
             if (messageEvent.getMessage() instanceof HttpRequest) {
@@ -444,23 +445,33 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 request = createAtmosphereRequest(ctx, hrequest);
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
 
+                // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
+                AtmosphereRequest.Body b = request.body();
+                if (!aggregateBodyInMemory
+                        && !hrequest.getMethod().equals(GET)
+                        && !b.isEmpty()
+                        && (b.hasString() && b.asString().isEmpty())
+                        || (b.hasBytes() && b.asBytes().length == 0)) {
+                    forceSuspend = true;
+                }
             } else {
                 request = State.class.cast(ctx.getAttachment()).request;
+                boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
                 Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
+
                 asyncWriter = config.supportChunking() ?
-                        new ChunkedWriter(ctx.getChannel(), false, ka, channelBufferPool) :
-                        new StreamWriter(ctx.getChannel(), false, ka);
+                        new ChunkedWriter(ctx.getChannel(), isLast, ka, channelBufferPool) :
+                        new StreamWriter(ctx.getChannel(), isLast, ka);
                 method = request.getMethod();
                 ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
 
-                if (!config.aggregateRequestBodyInMemory() && internalBuffer.hasArray()) {
+                if (!aggregateBodyInMemory && internalBuffer.hasArray()) {
                     request.body(internalBuffer.array());
                 } else {
                     logger.trace("Unable to read in memory the request's bytes. Using stream");
                     request.body(new ChannelBufferInputStream(internalBuffer));
                 }
 
-                boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
                 if (!isLast) {
                     forceSuspend = true;
                 }
@@ -481,6 +492,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             a = framework.doCometSupport(request, response);
             if (forceSuspend) {
                 a.type(Action.TYPE.SUSPEND);
+                // leave the stream open
+                keptOpen = true;
             }
 
             final AsynchronousProcessorHook hook = (AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);

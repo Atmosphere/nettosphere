@@ -76,19 +76,22 @@ public class ChunkedWriter extends ChannelWriter {
         }
     }
 
-    void prepareForClose(final AtmosphereResponse response) {
+    void prepareForClose(final AtmosphereResponse response) throws UnsupportedEncodingException {
         AtmosphereResource r = response != null ? response.resource() : null;
         if (r == null || r.isSuspended() && !r.isResumed()) {
             keepAlive = false;
         }
 
-        _close();
+        _close(response);
     }
 
-    void _close() {
+    void _close(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
+            ChannelBuffer writeBuffer = writeHeaders(response);
+
+            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, END);
             logger.trace("About to close to {}", channel);
-            channel.write(ChannelBuffers.wrappedBuffer(END)).addListener(new ChannelFutureListener() {
+            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     logger.trace("Async Closing Done {}", channel);
@@ -101,7 +104,7 @@ public class ChunkedWriter extends ChannelWriter {
     }
 
     @Override
-    public AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
+    public AsyncIOWriter asyncWrite(final AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
         try {
 
             // Client will close the connection if we don't reject empty bytes.
@@ -136,7 +139,7 @@ public class ChunkedWriter extends ChannelWriter {
                     semaphore.release();
                     channelBufferPool.offer(recycle.get());
                     if (channel.isOpen() && !future.isSuccess()) {
-                        _close();
+                        _close(response);
                     }
                 }
             });
