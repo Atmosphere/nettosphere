@@ -555,9 +555,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
-        logger.debug("Error {} for {}", status, e);
         // For websocket, we can't send an error
         if (websocketChannels.contains(ctx.getChannel())) {
+            logger.debug("Error {} for {}", status, e);
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
         } else if (e != null) {
             final HttpRequest request = (HttpRequest) e.getMessage();

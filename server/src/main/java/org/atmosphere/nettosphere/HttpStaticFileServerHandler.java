@@ -310,6 +310,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent event) {
+        logger.trace("Error {} for {}", status, event);
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
         response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
         response.setHeader(CONTENT_LENGTH, "0");
