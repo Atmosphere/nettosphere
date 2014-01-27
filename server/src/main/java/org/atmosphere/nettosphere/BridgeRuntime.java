@@ -413,6 +413,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         ChannelWriter asyncWriter = null;
         String method = "GET";
         boolean writeHeader = false;
+        boolean forceSuspend = false;
 
         try {
             if (messageEvent.getMessage() instanceof HttpRequest) {
@@ -451,12 +452,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         new StreamWriter(ctx.getChannel(), true, ka);
                 method = request.getMethod();
                 ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
+
                 if (!config.aggregateRequestBodyInMemory() && internalBuffer.hasArray()) {
                     request.body(internalBuffer.array());
                 } else {
                     logger.trace("Unable to read in memory the request's bytes. Using stream");
                     request.body(new ChannelBufferInputStream(internalBuffer));
                 }
+
+                forceSuspend = true;
             }
 
             response = new AtmosphereResponse.Builder()
@@ -472,6 +476,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             a = framework.doCometSupport(request, response);
+            if (forceSuspend) {
+                a.type(Action.TYPE.SUSPEND);
+            }
 
             final AsynchronousProcessorHook hook = (AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
 
