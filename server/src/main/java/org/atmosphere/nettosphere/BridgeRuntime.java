@@ -394,7 +394,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 });
 
         ChannelBuffer internalBuffer = request.getContent();
-        if (!config.aggregateRequestBodyInMemory() && internalBuffer.hasArray()) {
+        if (!config.aggregateRequestBodyInMemory() && !method.equalsIgnoreCase("GET")) {
             return requestBuilder.body(internalBuffer.array()).build();
         } else {
             logger.trace("Unable to read in memory the request's bytes. Using stream");
@@ -448,8 +448,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 request = State.class.cast(ctx.getAttachment()).request;
                 Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
                 asyncWriter = config.supportChunking() ?
-                        new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
-                        new StreamWriter(ctx.getChannel(), true, ka);
+                        new ChunkedWriter(ctx.getChannel(), false, ka, channelBufferPool) :
+                        new StreamWriter(ctx.getChannel(), false, ka);
                 method = request.getMethod();
                 ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
 
@@ -460,7 +460,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     request.body(new ChannelBufferInputStream(internalBuffer));
                 }
 
-                if (!HttpChunk.class.cast(messageEvent.getMessage()).isLast()) {
+                boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
+                if (!isLast) {
                     forceSuspend = true;
                 }
             }
@@ -558,11 +559,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         // For websocket, we can't send an error
         if (websocketChannels.contains(ctx.getChannel())) {
             ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
-        } else {
+        } else if (e != null) {
             final HttpRequest request = (HttpRequest) e.getMessage();
             if (HttpHeaders.getHeader(request, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
                 super.sendError(ctx, status, e);
             }
+        } else {
+            super.sendError(ctx, status, e);
         }
     }
 

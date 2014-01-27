@@ -58,7 +58,8 @@ public class StreamWriter extends ChannelWriter {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
             logger.trace("About to flush to {} for {}", channel, response.uuid());
 
-            ChannelBuffer statusAndHeadersBuffer = ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes("UTF-8"));
+            ChannelBuffer statusAndHeadersBuffer = writeHeader ?
+                    ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes("UTF-8")) : ChannelBuffers.EMPTY_BUFFER;
             ChannelBuffer drain = ChannelBuffers.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
             channel.write(drain).addListener(new ChannelFutureListener() {
                 @Override
