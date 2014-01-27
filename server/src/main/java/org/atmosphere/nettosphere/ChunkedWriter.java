@@ -59,7 +59,7 @@ public class ChunkedWriter extends ChannelWriter {
 
     @Override
     public void close(final AtmosphereResponse response) throws IOException {
-        if (!channel.isOpen()) return;
+        if (!channel.isOpen() || doneProcessing.get()) return;
 
         ChannelBuffer writeBuffer = writeHeaders(response);
         if (writeBuffer.readableBytes() > 0 && response != null) {
@@ -104,7 +104,11 @@ public class ChunkedWriter extends ChannelWriter {
     public AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
         try {
 
-            if (doneProcessing.get()) return this;
+            // Client will close the connection if we don't reject empty bytes.
+                if (length == 0) {
+                logger.trace("Data is empty {} => {}", data, length);
+                return this;
+            }
 
             // Make sure there the headers has been fully written before allowing other threads to write.
             if (!headerWritten.get()) {
@@ -123,6 +127,9 @@ public class ChunkedWriter extends ChannelWriter {
             }
 
             final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
+
+            if (doneProcessing.get()) return this;
+
             channel.write(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
