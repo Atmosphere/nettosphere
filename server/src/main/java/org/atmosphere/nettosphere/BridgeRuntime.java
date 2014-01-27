@@ -460,7 +460,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     request.body(new ChannelBufferInputStream(internalBuffer));
                 }
 
-                forceSuspend = true;
+                if (!HttpChunk.class.cast(messageEvent.getMessage()).isLast()) {
+                    forceSuspend = true;
+                }
             }
 
             response = new AtmosphereResponse.Builder()
