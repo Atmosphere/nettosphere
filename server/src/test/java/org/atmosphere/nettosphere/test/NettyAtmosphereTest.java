@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jeanfrancois Arcand
+ * Copyright 2013 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -621,5 +621,94 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(response.get());
     }
 
+    @Test
+    public void suspendNoChunkStreamingTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final CountDownLatch suspendCD = new CountDownLatch(1);
 
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .supportChunking(false)
+                .resource("/suspend", new AtmosphereHandler() {
+
+                    private final AtomicBoolean suspended = new AtomicBoolean(false);
+
+                    @Override
+                    public void onRequest(AtmosphereResource r) throws IOException {
+                        if (!suspended.getAndSet(true)) {
+                            r.suspend(-1);
+                            suspendCD.countDown();
+                        } else {
+                            r.getBroadcaster().broadcast(RESUME);
+                        }
+                    }
+
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                        if (suspended.get()) {
+                            r.getResource().getResponse().getWriter().print(r.getMessage());
+                            r.getResource().resume();
+                        }
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<Response> response = new AtomicReference<Response>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
+
+            final Response.ResponseBuilder b = new Response.ResponseBuilder();
+
+            @Override
+            public void onThrowable(Throwable t) {
+                l.countDown();
+            }
+
+            @Override
+            public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                b.accumulate(bodyPart);
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                b.accumulate(responseStatus);
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                b.accumulate(headers);
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public Response onCompleted() throws Exception {
+                response.set(b.build());
+
+                l.countDown();
+                return null;
+            }
+        });
+
+        suspendCD.await(5, TimeUnit.SECONDS);
+
+        Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
+        assertEquals(r.getStatusCode(), 200);
+
+        l.await(5, TimeUnit.SECONDS);
+
+        assertEquals(response.get().getStatusCode(), 200);
+        assertEquals(response.get().getResponseBody().trim(), RESUME);
+    }
 }
