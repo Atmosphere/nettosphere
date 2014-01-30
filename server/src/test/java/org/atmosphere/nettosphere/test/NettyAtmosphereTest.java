@@ -499,6 +499,71 @@ public class NettyAtmosphereTest extends BaseTest {
 
     }
 
+    @Test
+    public void wssHandlerTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final SSLContext sslContext = createSSLContext();
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .sslContext(sslContext)
+                .resource(new Handler() {
+
+                    @Override
+                    public void handle(AtmosphereResource r) {
+                        r.getResponse().write("Hello World from Nettosphere").closeStreamOrWriter();
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setSSLEngineFactory(new SSLEngineFactory() {
+
+            @Override
+            public SSLEngine newSSLEngine() throws GeneralSecurityException {
+                    SSLEngine sslEngine = sslContext.createSSLEngine();
+                    sslEngine.setUseClientMode(true);
+                    sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+                    return sslEngine;
+            }
+        }).build());
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
+        assertNotNull(webSocket);
+        webSocket.addWebSocketListener(new WebSocketTextListener() {
+            @Override
+            public void onMessage(String message) {
+                response.set(message);
+                l.countDown();
+            }
+
+            @Override
+            public void onFragment(String fragment, boolean last) {
+            }
+
+            @Override
+            public void onOpen(WebSocket websocket) {
+            }
+
+            @Override
+            public void onClose(WebSocket websocket) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+        });
+
+        l.await(5, TimeUnit.SECONDS);
+
+        webSocket.close();
+        assertEquals(response.get(), "Hello World from Nettosphere");
+
+    }
+
     private static SSLContext createSSLContext() {
         try {
             InputStream keyStoreStream = BaseTest.class.getResourceAsStream("ssltest-cacerts.jks");
