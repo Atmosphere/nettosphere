@@ -32,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * An chunk based {@link ChannelWriter}
@@ -41,8 +42,8 @@ public class ChunkedWriter extends ChannelWriter {
     private final ChannelBufferPool channelBufferPool;
     private final ChannelBuffer END = ChannelBuffers.wrappedBuffer(ENDCHUNK);
     private final ChannelBuffer DELIMITER = ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER);
-    private final Semaphore semaphore = new Semaphore(1, true);
     private final AtomicBoolean headerWritten = new AtomicBoolean();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive, ChannelBufferPool channelBufferPool) {
         super(channel, writeHeader, keepAlive);
@@ -64,15 +65,25 @@ public class ChunkedWriter extends ChannelWriter {
         ChannelBuffer writeBuffer = writeHeaders(response);
         if (writeBuffer.readableBytes() > 0 && response != null) {
             final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
-            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    channelBufferPool.offer(recycle.get());
-                    prepareForClose(response);
-                }
-            });
+            try {
+                lock.writeLock().lock();
+                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        channelBufferPool.offer(recycle.get());
+                        prepareForClose(response);
+                    }
+                });
+            } finally {
+                lock.writeLock().unlock();
+            }
         } else {
-            prepareForClose(response);
+            try {
+                lock.writeLock().lock();
+                prepareForClose(response);
+            } finally {
+                lock.writeLock().unlock();
+            }
         }
     }
 
@@ -108,15 +119,11 @@ public class ChunkedWriter extends ChannelWriter {
         try {
 
             // Client will close the connection if we don't reject empty bytes.
-                if (length == 0) {
+            if (length == 0) {
                 logger.trace("Data is empty {} => {}", data, length);
                 return this;
             }
 
-            // Make sure there the headers has been fully written before allowing other threads to write.
-            if (!headerWritten.get()) {
-                semaphore.acquireUninterruptibly();
-            }
 
             ChannelBuffer writeBuffer = writeHeaders(response);
             if (headerWritten.get()) {
@@ -133,20 +140,24 @@ public class ChunkedWriter extends ChannelWriter {
 
             if (doneProcessing.get()) return this;
 
-            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    semaphore.release();
-                    channelBufferPool.offer(recycle.get());
-                    if (channel.isOpen() && !future.isSuccess()) {
-                        _close(response);
+
+            try {
+                lock.writeLock().lock();
+                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        channelBufferPool.offer(recycle.get());
+                        if (channel.isOpen() && !future.isSuccess()) {
+                            _close(response);
+                        }
                     }
-                }
-            });
+                });
+            } finally {
+                lock.writeLock().unlock();
+            }
             lastWrite = System.currentTimeMillis();
             return this;
         } catch (IOException ex) {
-            semaphore.release();
             throw ex;
         }
     }
