@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -43,6 +42,7 @@ public class ChunkedWriter extends ChannelWriter {
     private final ChannelBuffer END = ChannelBuffers.wrappedBuffer(ENDCHUNK);
     private final ChannelBuffer DELIMITER = ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER);
     private final AtomicBoolean headerWritten = new AtomicBoolean();
+    // We need a lock here to prevent two threads from competing to execute the write and the close operation concurrently.
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive, ChannelBufferPool channelBufferPool) {
@@ -101,7 +101,6 @@ public class ChunkedWriter extends ChannelWriter {
             ChannelBuffer writeBuffer = writeHeaders(response);
 
             writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, END);
-            logger.trace("About to close to {}", channel);
             channel.write(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -116,14 +115,12 @@ public class ChunkedWriter extends ChannelWriter {
 
     @Override
     public AsyncIOWriter asyncWrite(final AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
-        try {
 
             // Client will close the connection if we don't reject empty bytes.
             if (length == 0) {
                 logger.trace("Data is empty {} => {}", data, length);
                 return this;
             }
-
 
             ChannelBuffer writeBuffer = writeHeaders(response);
             if (headerWritten.get()) {
@@ -138,11 +135,14 @@ public class ChunkedWriter extends ChannelWriter {
 
             final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
 
-            if (doneProcessing.get()) return this;
-
-
             try {
                 lock.writeLock().lock();
+
+                // We got closed, so we throw an IOException so the message get cached.
+                if (doneProcessing.get()){
+                    throw new IOException(channel + ": content already processed for " + response.uuid());
+                }
+
                 channel.write(writeBuffer).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
@@ -157,8 +157,5 @@ public class ChunkedWriter extends ChannelWriter {
             }
             lastWrite = System.currentTimeMillis();
             return this;
-        } catch (IOException ex) {
-            throw ex;
-        }
     }
 }
