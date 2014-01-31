@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.nettosphere.extra.FlashPolicyServerPipelineFactory;
+import org.atmosphere.nettosphere.util.Version;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -107,6 +108,7 @@ public final class Nettosphere {
         if (bootstrapFlashPolicy != null) {
             bootstrapFlashPolicy.bind(localPolicySocket);
         }
+        logger.info("NettoSphere {} Started.", Version.getRawVersion());
     }
 
     /**
