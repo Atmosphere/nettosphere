@@ -605,7 +605,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             webSocketProcessor.close(webSocket, 1005);
         } else if (State.class.isAssignableFrom(o.getClass())) {
-            State.class.cast(o).hook.closed();
+            logger.trace("State {}", o);
+            if (State.class.cast(o).hook != null) {
+                State.class.cast(o).hook.closed();
+            }
         }
     }
 
@@ -703,7 +706,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     public final static class State {
-        AsynchronousProcessorHook hook;
+        final AsynchronousProcessorHook hook;
         final AtmosphereRequest request;
 
         public State(AsynchronousProcessorHook hook, AtmosphereRequest request) {
