@@ -140,7 +140,7 @@ public class Config {
         return b.maxContentLength;
     }
 
-    public int writeBufferPoolSize(){
+    public int  writeBufferPoolSize(){
         return b.writeBufferPoolSize;
     }
 
@@ -513,9 +513,10 @@ public class Config {
 
         /**
          * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for
-         * I/O operation. Default is 50.
+         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be
+         * created and never pooled.
          *
-         * @param writeBufferPoolSize the size
+         * @param writeBufferPoolSize the max size of the pool.
          * @return this;
          */
         public Builder writeBufferPoolSize(int writeBufferPoolSize){

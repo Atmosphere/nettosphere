@@ -24,39 +24,44 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ChannelBufferPool {
-    private ConcurrentLinkedQueue<ChannelBuffer> pool;
+    private final ConcurrentLinkedQueue<ChannelBuffer> pool = new ConcurrentLinkedQueue<ChannelBuffer>();
+    private int writeBufferPoolSize = 50;
 
     public ChannelBufferPool(final int minIdle) {
         initialize(minIdle);
     }
 
-    public ChannelBufferPool(final int minIdle, final int maxIdle, final long validationInterval, AtmosphereConfig config) {
+    public ChannelBufferPool(final int minIdle, final int writeBufferPoolSize, final long validationInterval, AtmosphereConfig config) {
+        this.writeBufferPoolSize = writeBufferPoolSize;
+
         initialize(minIdle);
 
-        ExecutorsFactory.getScheduler(config).scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                int size = pool.size();
-                if (size < minIdle) {
-                    int sizeToBeAdded = minIdle - size;
-                    for (int i = 0; i < sizeToBeAdded; i++) {
-                        pool.add(createObject());
-                    }
-                } else if (size > maxIdle) {
-                    int sizeToBeRemoved = size - maxIdle;
-                    for (int i = 0; i < sizeToBeRemoved; i++) {
-                        pool.poll();
+        if (writeBufferPoolSize != -1) {
+            ExecutorsFactory.getScheduler(config).scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    int size = pool.size();
+                    if (size < minIdle) {
+                        int sizeToBeAdded = minIdle - size;
+                        for (int i = 0; i < sizeToBeAdded; i++) {
+                            pool.add(createObject());
+                        }
+                    } else if (size > writeBufferPoolSize) {
+                        int sizeToBeRemoved = size - writeBufferPoolSize;
+                        for (int i = 0; i < sizeToBeRemoved; i++) {
+                            pool.poll();
+                        }
                     }
                 }
-            }
-        }, validationInterval, validationInterval, TimeUnit.SECONDS);
+            }, validationInterval, validationInterval, TimeUnit.SECONDS);
 
-        config.shutdownHook(new AtmosphereConfig.ShutdownHook() {
-            @Override
-            public void shutdown() {
-                pool.clear();
-            }
-        });
+            config.shutdownHook(new AtmosphereConfig.ShutdownHook() {
+                @Override
+                public void shutdown() {
+                    pool.clear();
+                }
+            });
+        }
     }
 
     public ChannelBuffer poll() {
@@ -69,7 +74,7 @@ public class ChannelBufferPool {
     }
 
     public void offer(ChannelBuffer channelBuffer) {
-        if (channelBuffer == null) {
+        if (channelBuffer == null || writeBufferPoolSize == -1) {
             return;
         }
 
@@ -82,8 +87,6 @@ public class ChannelBufferPool {
     }
 
     private void initialize(final int minIdle) {
-        pool = new ConcurrentLinkedQueue<ChannelBuffer>();
-
         for (int i = 0; i < minIdle; i++) {
             pool.add(createObject());
         }
