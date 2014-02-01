@@ -268,7 +268,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
-    private void handleWebSocketHandshake(ChannelHandlerContext ctx, MessageEvent messageEvent) throws IOException, URISyntaxException {
+    private void handleWebSocketHandshake(final ChannelHandlerContext ctx, MessageEvent messageEvent) throws IOException, URISyntaxException {
         final HttpRequest request = (HttpRequest) messageEvent.getMessage();
 
         // Allow only GET methods.
@@ -283,15 +283,28 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (handshaker == null) {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
-            handshaker.handshake(ctx.getChannel(), request);
+            handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (!future.isSuccess()) {
+                        future.getChannel().close();
+                    } else {
+                        websocketChannels.add(ctx.getChannel());
+
+                        AtmosphereRequest r = createAtmosphereRequest(ctx, request);
+                        WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
+
+                        ctx.setAttachment(webSocket);
+                        /**
+                         * Netty 3.9.x has an issue and is unable to detect the websocket frame that will be produced if an AtmosphereInterceptor
+                         * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is that message is lost when Netty decode the Handshake
+                         * request. This can be easily reproduced when wAsync is used with NettoSphere as server.
+                         */
+                        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
+                    }
+                }
+            });
         }
-        websocketChannels.add(ctx.getChannel());
-
-        AtmosphereRequest r = createAtmosphereRequest(ctx, request);
-        WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
-
-        ctx.setAttachment(webSocket);
-        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
     }
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
