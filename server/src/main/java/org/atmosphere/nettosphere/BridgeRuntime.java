@@ -297,8 +297,22 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         ctx.setAttachment(webSocket);
                         /**
                          * Netty 3.9.x has an issue and is unable to detect the websocket frame that will be produced if an AtmosphereInterceptor
-                         * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is that message is lost when Netty decode the Handshake
-                         * request. This can be easily reproduced when wAsync is used with NettoSphere as server.
+                         * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is the message is lost when Netty decode the Handshake
+                         * request. This can be easily reproduced when wAsync is used with NettoSphere as server. For example, the following message
+                         *
+                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
+                             HTTP/1.1 101 Switching Protocols.
+                             Upgrade: websocket.
+                             Connection: Upgrade.
+                             Sec-WebSocket-Accept: mFFTAW8KVZebToQFZZcFVWmJh8Y=.
+                             .
+
+
+                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
+                             .21808c569-099b-4d8f-b657-c5965df40449|1391270901601
+
+                         can be lost because the Netty's Decoder fail to realize the handshake contained a response's body. The error doesn't occurs all the time but under
+                         load happens more easily.
                          */
                         webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
                     }
