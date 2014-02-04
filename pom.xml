@@ -9,7 +9,7 @@
     <groupId>org.atmosphere</groupId>
     <artifactId>nettosphere-project</artifactId>
     <name>Nettosphere Project</name>
-    <version>2.1.0</version>
+    <version>2.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>
         NettoSphere: A HTTP/WebSocket server powered by Atmosphere and Netty Framework
