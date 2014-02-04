@@ -150,7 +150,7 @@
 <a class="jxr_linenumber" name="140" href="#140">140</a>         <strong class="jxr_keyword">return</strong> b.maxContentLength;
 <a class="jxr_linenumber" name="141" href="#141">141</a>     }
 <a class="jxr_linenumber" name="142" href="#142">142</a> 
-<a class="jxr_linenumber" name="143" href="#143">143</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> writeBufferPoolSize(){
+<a class="jxr_linenumber" name="143" href="#143">143</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong>  writeBufferPoolSize(){
 <a class="jxr_linenumber" name="144" href="#144">144</a>         <strong class="jxr_keyword">return</strong> b.writeBufferPoolSize;
 <a class="jxr_linenumber" name="145" href="#145">145</a>     }
 <a class="jxr_linenumber" name="146" href="#146">146</a> 
@@ -523,40 +523,41 @@
 <a class="jxr_linenumber" name="513" href="#513">513</a> 
 <a class="jxr_linenumber" name="514" href="#514">514</a>         <em class="jxr_javadoccomment">/**</em>
 <a class="jxr_linenumber" name="515" href="#515">515</a> <em class="jxr_javadoccomment">         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for</em>
-<a class="jxr_linenumber" name="516" href="#516">516</a> <em class="jxr_javadoccomment">         * I/O operation. Default is 50.</em>
-<a class="jxr_linenumber" name="517" href="#517">517</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="518" href="#518">518</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolSize the size</em>
-<a class="jxr_linenumber" name="519" href="#519">519</a> <em class="jxr_javadoccomment">         * @return this;</em>
-<a class="jxr_linenumber" name="520" href="#520">520</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="521" href="#521">521</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolSize(<strong class="jxr_keyword">int</strong> writeBufferPoolSize){
-<a class="jxr_linenumber" name="522" href="#522">522</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolSize = writeBufferPoolSize;
-<a class="jxr_linenumber" name="523" href="#523">523</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="524" href="#524">524</a>         }
-<a class="jxr_linenumber" name="525" href="#525">525</a> 
-<a class="jxr_linenumber" name="526" href="#526">526</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="527" href="#527">527</a> <em class="jxr_javadoccomment">         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default</em>
-<a class="jxr_linenumber" name="528" href="#528">528</a> <em class="jxr_javadoccomment">         * is 30000.</em>
-<a class="jxr_linenumber" name="529" href="#529">529</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolCleanupFrequency  the frequency</em>
-<a class="jxr_linenumber" name="530" href="#530">530</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="531" href="#531">531</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="532" href="#532">532</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolCleanupFrequency(<strong class="jxr_keyword">long</strong> writeBufferPoolCleanupFrequency) {
-<a class="jxr_linenumber" name="533" href="#533">533</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
-<a class="jxr_linenumber" name="534" href="#534">534</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="535" href="#535">535</a>         }
-<a class="jxr_linenumber" name="536" href="#536">536</a> 
-<a class="jxr_linenumber" name="537" href="#537">537</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="538" href="#538">538</a> <em class="jxr_javadoccomment">         * Build an instance of this class.</em>
-<a class="jxr_linenumber" name="539" href="#539">539</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="540" href="#540">540</a> <em class="jxr_javadoccomment">         * @return</em>
-<a class="jxr_linenumber" name="541" href="#541">541</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="542" href="#542">542</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a> build() {
-<a class="jxr_linenumber" name="543" href="#543">543</a>             <strong class="jxr_keyword">if</strong> (paths.isEmpty()) {
-<a class="jxr_linenumber" name="544" href="#544">544</a>                 paths.add(<span class="jxr_string">"/"</span>);
-<a class="jxr_linenumber" name="545" href="#545">545</a>             }
-<a class="jxr_linenumber" name="546" href="#546">546</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a>(<strong class="jxr_keyword">this</strong>);
-<a class="jxr_linenumber" name="547" href="#547">547</a>         }
-<a class="jxr_linenumber" name="548" href="#548">548</a>     }
-<a class="jxr_linenumber" name="549" href="#549">549</a> }
+<a class="jxr_linenumber" name="516" href="#516">516</a> <em class="jxr_javadoccomment">         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be</em>
+<a class="jxr_linenumber" name="517" href="#517">517</a> <em class="jxr_javadoccomment">         * created and never pooled.</em>
+<a class="jxr_linenumber" name="518" href="#518">518</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="519" href="#519">519</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolSize the max size of the pool.</em>
+<a class="jxr_linenumber" name="520" href="#520">520</a> <em class="jxr_javadoccomment">         * @return this;</em>
+<a class="jxr_linenumber" name="521" href="#521">521</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="522" href="#522">522</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolSize(<strong class="jxr_keyword">int</strong> writeBufferPoolSize){
+<a class="jxr_linenumber" name="523" href="#523">523</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolSize = writeBufferPoolSize;
+<a class="jxr_linenumber" name="524" href="#524">524</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="525" href="#525">525</a>         }
+<a class="jxr_linenumber" name="526" href="#526">526</a> 
+<a class="jxr_linenumber" name="527" href="#527">527</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="528" href="#528">528</a> <em class="jxr_javadoccomment">         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default</em>
+<a class="jxr_linenumber" name="529" href="#529">529</a> <em class="jxr_javadoccomment">         * is 30000.</em>
+<a class="jxr_linenumber" name="530" href="#530">530</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolCleanupFrequency  the frequency</em>
+<a class="jxr_linenumber" name="531" href="#531">531</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="532" href="#532">532</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="533" href="#533">533</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolCleanupFrequency(<strong class="jxr_keyword">long</strong> writeBufferPoolCleanupFrequency) {
+<a class="jxr_linenumber" name="534" href="#534">534</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
+<a class="jxr_linenumber" name="535" href="#535">535</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="536" href="#536">536</a>         }
+<a class="jxr_linenumber" name="537" href="#537">537</a> 
+<a class="jxr_linenumber" name="538" href="#538">538</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="539" href="#539">539</a> <em class="jxr_javadoccomment">         * Build an instance of this class.</em>
+<a class="jxr_linenumber" name="540" href="#540">540</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="541" href="#541">541</a> <em class="jxr_javadoccomment">         * @return</em>
+<a class="jxr_linenumber" name="542" href="#542">542</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="543" href="#543">543</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a> build() {
+<a class="jxr_linenumber" name="544" href="#544">544</a>             <strong class="jxr_keyword">if</strong> (paths.isEmpty()) {
+<a class="jxr_linenumber" name="545" href="#545">545</a>                 paths.add(<span class="jxr_string">"/"</span>);
+<a class="jxr_linenumber" name="546" href="#546">546</a>             }
+<a class="jxr_linenumber" name="547" href="#547">547</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a>(<strong class="jxr_keyword">this</strong>);
+<a class="jxr_linenumber" name="548" href="#548">548</a>         }
+<a class="jxr_linenumber" name="549" href="#549">549</a>     }
+<a class="jxr_linenumber" name="550" href="#550">550</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>
