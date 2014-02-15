@@ -333,6 +333,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
 
         if (dot > 0) {
             String ext = substr.substring(dot + 1);
+            int queryString = ext.indexOf("?");
+            if (queryString>0){
+                ext.substring(0, queryString);
+            }
             String contentType = MimeType.get(ext, defaultContentType);
             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, contentType);
         } else {
