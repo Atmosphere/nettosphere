@@ -185,6 +185,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             sendError(ctx, NOT_FOUND, e);
             return;
         }
+        request.addHeader(SERVICED, "true");
 
         // Cache Validation
         String ifModifiedSince = request.getHeader(IF_MODIFIED_SINCE);
@@ -240,7 +241,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             // Close the connection when the whole content is written out.
             writeFuture.addListener(ChannelFutureListener.CLOSE);
         }
-        request.addHeader(SERVICED, "true");
     }
 
     @Override
