@@ -72,7 +72,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
-                <version>3.9.0.Final</version>
+                <version>4.0.17.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -304,7 +304,7 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>2.1.1-SNAPSHOT</atmosphere.version>
+        <atmosphere.version>2.1.1</atmosphere.version>
     </properties>
 </project>
 
