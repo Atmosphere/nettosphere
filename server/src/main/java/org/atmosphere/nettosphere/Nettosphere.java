@@ -108,6 +108,7 @@ public final class Nettosphere {
         if (bootstrapFlashPolicy != null) {
             try {
                 bootstrapFlashPolicy.bind(localPolicySocket);
+                logger.info("NettoSphere Flash Support Started on port {}.", localPolicySocket);
             } catch (Exception ex) {
                 logger.error("", ex);
             }
