@@ -106,7 +106,11 @@ public final class Nettosphere {
         ALL_CHANNELS.add(serverChannel);
         started.set(true);
         if (bootstrapFlashPolicy != null) {
-            bootstrapFlashPolicy.bind(localPolicySocket);
+            try {
+                bootstrapFlashPolicy.bind(localPolicySocket);
+            } catch (Exception ex) {
+                logger.error("", ex);
+            }
         }
         logger.info("NettoSphere {} Started.", Version.getRawVersion());
     }
