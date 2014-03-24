@@ -17,7 +17,9 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
+import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -54,6 +56,19 @@ public class NettyWebSocket extends WebSocket {
         if (s != null) {
             bufferStringSize = Integer.valueOf(s);
         }
+    }
+
+    public WebSocket resource(AtmosphereResource r) {
+        super.resource(r);
+        if (r != null) {
+            try {
+                binaryWrite = IOUtils.isBodyBinary(r.getRequest());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // Don't fail for any readon.
+            }
+        }
+        return this;
     }
 
     /**
