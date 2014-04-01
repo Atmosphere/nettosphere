@@ -29,7 +29,6 @@ import com.ning.http.client.websocket.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
@@ -56,6 +55,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -169,7 +170,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 
@@ -213,7 +214,7 @@ public class NettyAtmosphereTest extends BaseTest {
         l.await(5, TimeUnit.SECONDS);
 
         assertEquals(response.get().getStatusCode(), 200);
-        assertEquals(response.get().getResponseBody(), RESUME);
+        assertEquals(response.get().getResponseBody().trim(), RESUME);
     }
 
     @Test
@@ -259,7 +260,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 
@@ -730,7 +731,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 
@@ -824,7 +825,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 
@@ -924,7 +925,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
         AsyncHttpClient c = new AsyncHttpClient();
-        c.prepareGet(targetUrl + "/suspend").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
+        c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
             final Response.ResponseBuilder b = new Response.ResponseBuilder();
 

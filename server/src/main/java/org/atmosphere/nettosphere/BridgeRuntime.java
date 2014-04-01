@@ -550,8 +550,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
+            ctx.setAttachment(new State(hook, request, action == null ? Action.CONTINUE :    action));
+
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
-                ctx.setAttachment(new State(hook, request));
                 if (action.timeout() != -1) {
                     final AtomicReference<ChannelWriter> w = new AtomicReference<ChannelWriter>(asyncWriter);
                     final AtomicReference<Future<?>> f = new AtomicReference<Future<?>>();
@@ -641,7 +642,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             webSocketProcessor.close(webSocket, 1005);
         } else if (State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
-            if (State.class.cast(o).hook != null) {
+            State s = State.class.cast(o);
+            if (s.hook != null && s.action == Action.SUSPEND) {
                 State.class.cast(o).hook.closed();
             }
         }
@@ -743,10 +745,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     public final static class State {
         final AsynchronousProcessorHook hook;
         final AtmosphereRequest request;
+        final Action action;
 
-        public State(AsynchronousProcessorHook hook, AtmosphereRequest request) {
+        public State(AsynchronousProcessorHook hook, AtmosphereRequest request, Action action) {
             this.hook = hook;
             this.request = request;
+            this.action = action;
         }
     }
 

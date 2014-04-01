@@ -22,7 +22,6 @@ import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
-import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
 import org.slf4j.Logger;
@@ -36,6 +35,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.STREAMING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -75,11 +77,11 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             long t1 = System.currentTimeMillis();
-            Response r = c.prepareGet(urlTarget).execute().get(20, TimeUnit.SECONDS);
+            Response r = c.prepareGet(urlTarget).setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute().get(20, TimeUnit.SECONDS);
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             String resume = r.getResponseBody();
-            assertEquals(resume, "resume");
+            assertEquals(resume.trim(), "resume");
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 15000);
         } catch (Exception e) {
@@ -153,7 +155,7 @@ public class NettyJerseyTest extends BaseTest {
         long t1 = System.currentTimeMillis();
 
         try {
-            Response r = c.prepareGet(urlTarget + "/subscribeAndUsingExternalThread").execute().get();
+            Response r = c.prepareGet(urlTarget + "/subscribeAndUsingExternalThread").setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute().get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             long current = System.currentTimeMillis() - t1;
@@ -174,7 +176,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -221,7 +223,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -269,7 +271,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/foreverWithoutComments").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -295,7 +297,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "foo\n");
+            assertEquals(r.getResponseBody().trim(), "foo");
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 10000);
         } catch (Exception e) {
@@ -315,7 +317,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/foreverWithoutComments").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -341,7 +343,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "&lt;script&gt;foo&lt;/script&gt;<br />");
+            assertEquals(r.getResponseBody().trim(), "&lt;script&gt;foo&lt;/script&gt;<br />");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -411,7 +413,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
