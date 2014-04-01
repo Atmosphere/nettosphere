@@ -385,7 +385,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 String[] uuid = qs.get(HeaderConfig.X_ATMOSPHERE_TRACKING_ID);
                 if (uuid != null && uuid.length > 0) {
                     // TODO: Session is only supported until an unsubscribe is received.
-                    if (transport[0].equalsIgnoreCase(HeaderConfig.DISCONNECT)) {
+                    if (transport[0].equalsIgnoreCase(HeaderConfig.DISCONNECT_TRANSPORT_MESSAGE)) {
                         sessions.remove(uuid[0]);
                     } else {
                         session = sessions.get(uuid[0]);
@@ -550,8 +550,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
-            ctx.setAttachment(new State(hook, request));
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
+                ctx.setAttachment(new State(hook, request));
                 if (action.timeout() != -1) {
                     final AtomicReference<ChannelWriter> w = new AtomicReference<ChannelWriter>(asyncWriter);
                     final AtomicReference<Future<?>> f = new AtomicReference<Future<?>>();
