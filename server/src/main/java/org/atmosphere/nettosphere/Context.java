@@ -148,7 +148,13 @@ public class Context {
             if (!path.replace("\\\\", "/").replace("\\", "/").startsWith("/")) {
                 path = "/" + path;
             }
-            return new FileInputStream(new File(b.basePath + path));
+
+            File f = new File(path);
+            if (!f.exists()) {
+                f = new File(b.basePath + path);
+            }
+
+            return new FileInputStream(f);
         } catch (FileNotFoundException e) {
             logger.trace("", e);
         }
