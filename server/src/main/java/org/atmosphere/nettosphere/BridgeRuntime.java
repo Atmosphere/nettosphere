@@ -646,6 +646,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             if (s.hook != null && s.action == Action.SUSPEND) {
                 State.class.cast(o).hook.closed();
             }
+        } else {
+            logger.error("Invalid state {} and Channel {}", o, ctx.getChannel());
         }
     }
 
