@@ -125,7 +125,7 @@ public class NettyWebSocket extends WebSocket {
     @Override
     public void close() {
         AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
-        if (impl != null && impl.isInScope()) {
+        if (impl != null) {
             channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
         }
     }
