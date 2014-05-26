@@ -17,12 +17,14 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
@@ -93,7 +95,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.atmosphere.cpr.AsynchronousProcessor.AsynchronousProcessorHook;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
@@ -119,6 +120,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
     private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws");
     private final ChannelBufferPool channelBufferPool;
+    private final AsynchronousProcessor asynchronousProcessor;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -224,6 +226,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         for (String s : config.excludedInterceptors()) {
             framework.excludeInterceptor(s);
         }
+        asynchronousProcessor = AsynchronousProcessor.class.cast(framework.getAsyncSupport());
     }
 
     public AtmosphereFramework framework() {
@@ -531,8 +534,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 keptOpen = true;
             }
 
-            final AsynchronousProcessorHook hook = (AsynchronousProcessorHook) request.getAttribute(FrameworkConfig.ASYNCHRONOUS_HOOK);
-
             String transport = (String) request.getAttribute(FrameworkConfig.TRANSPORT_IN_USE);
             if (transport == null) {
                 transport = request.getHeader(X_ATMOSPHERE_TRANSPORT);
@@ -550,7 +551,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
-            ctx.setAttachment(new State(hook, request, action == null ? Action.CONTINUE :    action));
+            final State state = new State(request, action == null ? Action.CONTINUE :    action);
+            ctx.setAttachment(state);
 
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
                 if (action.timeout() != -1) {
@@ -560,8 +562,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         @Override
                         public void run() {
                             if (!w.get().isClosed() && (System.currentTimeMillis() - w.get().lastTick()) > action.timeout()) {
-                                hook.timedOut();
-                                f.get().cancel(true);
+                                AtmosphereResourceImpl impl = state.resource();
+                                if (impl != null) {
+                                    asynchronousProcessor.endRequest(impl, false);
+                                    f.get().cancel(true);
+                                }
                             }
                         }
                     }, action.timeout(), action.timeout(), TimeUnit.MILLISECONDS));
@@ -643,8 +648,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else if (State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
             State s = State.class.cast(o);
-            if (s.hook != null && s.action == Action.SUSPEND) {
-                State.class.cast(o).hook.closed();
+            if (s.action == Action.SUSPEND) {
+                asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
             logger.error("Invalid state {} and Channel {}", o, ctx.getChannel());
@@ -745,14 +750,16 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     public final static class State {
-        final AsynchronousProcessorHook hook;
         final AtmosphereRequest request;
         final Action action;
 
-        public State(AsynchronousProcessorHook hook, AtmosphereRequest request, Action action) {
-            this.hook = hook;
+        public State(AtmosphereRequest request, Action action) {
             this.request = request;
             this.action = action;
+        }
+
+        public AtmosphereResourceImpl resource() {
+            return AtmosphereResourceImpl.class.cast(request.resource());
         }
     }
 
