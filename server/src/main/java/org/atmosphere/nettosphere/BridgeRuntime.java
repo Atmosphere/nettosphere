@@ -306,23 +306,23 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                              * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is the message is lost when Netty decode the Handshake
                              * request. This can be easily reproduced when wAsync is used with NettoSphere as server. For example, the following message
                              *
-                                 T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                                 HTTP/1.1 101 Switching Protocols.
-                                 Upgrade: websocket.
-                                 Connection: Upgrade.
-                                 Sec-WebSocket-Accept: mFFTAW8KVZebToQFZZcFVWmJh8Y=.
-                                 .
+                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
+                             HTTP/1.1 101 Switching Protocols.
+                             Upgrade: websocket.
+                             Connection: Upgrade.
+                             Sec-WebSocket-Accept: mFFTAW8KVZebToQFZZcFVWmJh8Y=.
+                             .
 
 
-                                 T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                                 .21808c569-099b-4d8f-b657-c5965df40449|1391270901601
+                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
+                             .21808c569-099b-4d8f-b657-c5965df40449|1391270901601
 
                              can be lost because the Netty's Decoder fail to realize the handshake contained a response's body. The error doesn't occurs all the time but under
                              load happens more easily.
                              */
                             // Wake up the remote NIO Selector so Netty don't read the hanshake and the first message in a single read.
-                            for (int i=0; i < 512; i++) {
-                                 webSocket.write(" ");
+                            for (int i = 0; i < 512; i++) {
+                                webSocket.write(" ");
                             }
                         }
                         webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
@@ -551,7 +551,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
-            final State state = new State(request, action == null ? Action.CONTINUE :    action);
+            final State state = new State(request, action == null ? Action.CONTINUE : action);
             ctx.setAttachment(state);
 
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
@@ -641,10 +641,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         if (WebSocket.class.isAssignableFrom(o.getClass())) {
             WebSocket webSocket = WebSocket.class.cast(o);
+            AtmosphereResource r = webSocket.resource();
 
-            logger.trace("Closing {}", webSocket.resource().uuid());
+            logger.trace("Closing {}", r != null ? r.uuid() : "NULL");
 
-            webSocketProcessor.close(webSocket, 1005);
+            try {
+                webSocketProcessor.close(webSocket, 1005);
+            } catch (Exception ex) {
+                logger.error("{}", webSocket, ex);
+            }
         } else if (State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
             State s = State.class.cast(o);
