@@ -63,14 +63,14 @@ public final class Nettosphere {
     private final ChannelPipelineFactory pipelineFactory;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
-    private final BridgeRuntime handler;
+    private final BridgeRuntime runtime;
     private final AtomicBoolean started = new AtomicBoolean();
     private final ServerBootstrap bootstrapFlashPolicy;
     private final SocketAddress localPolicySocket;
 
     private Nettosphere(Config config) {
-        handler = new BridgeRuntime(config);
-        this.pipelineFactory = new NettyPipelineFactory(handler);
+        runtime = new BridgeRuntime(config);
+        this.pipelineFactory = new NettyPipelineFactory(runtime);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
         this.bootstrap = buildBootstrap();
 
@@ -95,7 +95,7 @@ public final class Nettosphere {
      * @return the {@link AtmosphereFramework} instance
      */
     public AtmosphereFramework framework() {
-        return handler.framework();
+        return runtime.framework();
     }
 
     /**
@@ -114,6 +114,11 @@ public final class Nettosphere {
             }
         }
         logger.info("NettoSphere {} Started.", Version.getRawVersion());
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run(){
+                Nettosphere.this.stop();
+            }
+        });
     }
 
     /**
@@ -121,7 +126,7 @@ public final class Nettosphere {
      */
     public void stop() {
         try {
-            handler.destroy();
+            runtime.destroy();
             final ChannelGroupFuture future = ALL_CHANNELS.close();
             future.awaitUninterruptibly();
             bootstrap.getFactory().releaseExternalResources();
