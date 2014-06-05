@@ -44,10 +44,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  .host("127.0.0.1")
  *  .initParam("foo", "bar")
  *  .resource("/", new AtmosphereHandlerAdapter() {
- *   <p/>
+ * <p/>
  *    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
  *    }
- *   <p/>
+ * <p/>
  * }).build();
  * <p/>
  * server = new Nettosphere.Builder().config(config).build();
@@ -92,6 +92,7 @@ public final class Nettosphere {
 
     /**
      * Return the {@link org.atmosphere.cpr.AtmosphereFramework} instance
+     *
      * @return the {@link AtmosphereFramework} instance
      */
     public AtmosphereFramework framework() {
@@ -114,8 +115,8 @@ public final class Nettosphere {
             }
         }
         logger.info("NettoSphere {} Started.", Version.getRawVersion());
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            public void run(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
                 Nettosphere.this.stop();
             }
         });
@@ -125,14 +126,12 @@ public final class Nettosphere {
      * Stop the Server
      */
     public void stop() {
-        try {
+        if (started.getAndSet(false)) {
             runtime.destroy();
             final ChannelGroupFuture future = ALL_CHANNELS.close();
             future.awaitUninterruptibly();
             bootstrap.getFactory().releaseExternalResources();
             ALL_CHANNELS.clear();
-        } finally {
-            started.set(false);
         }
     }
 
