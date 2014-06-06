@@ -152,6 +152,10 @@ public class Config {
         return b.excludedInterceptors;
     }
 
+    public boolean enablePong(){
+        return b.enablePong;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -179,6 +183,7 @@ public class Config {
         private int maxContentLength = 65536;
         private int writeBufferPoolSize = 50;
         private long writeBufferPoolCleanupFrequency = 30000;
+        private boolean enablePong = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -210,6 +215,17 @@ public class Config {
          */
         public Builder mappingPath(String mappingPath) {
             this.mappingPath = mappingPath;
+            return this;
+        }
+
+        /**
+         * Enable WebSokcet Pong message. Disabled by default.
+         *
+         * @param enablePong Enable WebSokcet Pong message
+         * @return this
+         */
+        public Builder enablePong(boolean enablePong) {
+            this.enablePong = enablePong;
             return this;
         }
 

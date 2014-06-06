@@ -346,7 +346,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else if (frame instanceof TextWebSocketFrame) {
             webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
         } else if (frame instanceof PongWebSocketFrame) {
-            ctx.getChannel().write(new PingWebSocketFrame(frame.getBinaryData()));
+            if (config.enablePong()) {
+                ctx.getChannel().write(new PingWebSocketFrame(frame.getBinaryData()));
+            } else {
+                logger.trace("Received Pong Frame on Channel {}", ctx.getChannel());
+            }
         } else {
             logger.warn("{} frame types not supported", frame.getClass());
             ctx.getChannel().close();
