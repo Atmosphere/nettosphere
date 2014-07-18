@@ -657,7 +657,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else if (State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
             State s = State.class.cast(o);
-            if (s.action == Action.SUSPEND) {
+            if (s.action.type() == Action.TYPE.SUSPEND) {
                 asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
