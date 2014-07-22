@@ -195,62 +195,62 @@
 <a class="jxr_linenumber" name="185" href="#185">185</a>             sendError(ctx, NOT_FOUND, e);
 <a class="jxr_linenumber" name="186" href="#186">186</a>             <strong class="jxr_keyword">return</strong>;
 <a class="jxr_linenumber" name="187" href="#187">187</a>         }
-<a class="jxr_linenumber" name="188" href="#188">188</a> 
-<a class="jxr_linenumber" name="189" href="#189">189</a>         <em class="jxr_comment">// Cache Validation</em>
-<a class="jxr_linenumber" name="190" href="#190">190</a>         String ifModifiedSince = request.getHeader(IF_MODIFIED_SINCE);
-<a class="jxr_linenumber" name="191" href="#191">191</a>         <strong class="jxr_keyword">if</strong> (file != <strong class="jxr_keyword">null</strong> &amp;&amp; ifModifiedSince != <strong class="jxr_keyword">null</strong> &amp;&amp; ifModifiedSince.length() != 0) {
-<a class="jxr_linenumber" name="192" href="#192">192</a>             SimpleDateFormat dateFormatter = <strong class="jxr_keyword">new</strong> SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-<a class="jxr_linenumber" name="193" href="#193">193</a>             Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSince);
-<a class="jxr_linenumber" name="194" href="#194">194</a> 
-<a class="jxr_linenumber" name="195" href="#195">195</a>             <em class="jxr_comment">// Only compare up to the second because the datetime format we send to the client does</em>
-<a class="jxr_linenumber" name="196" href="#196">196</a>             <em class="jxr_comment">// not have milliseconds</em>
-<a class="jxr_linenumber" name="197" href="#197">197</a>             <strong class="jxr_keyword">long</strong> ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
-<a class="jxr_linenumber" name="198" href="#198">198</a>             <strong class="jxr_keyword">long</strong> fileLastModifiedSeconds = file.lastModified() / 1000;
-<a class="jxr_linenumber" name="199" href="#199">199</a>             <strong class="jxr_keyword">if</strong> (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
-<a class="jxr_linenumber" name="200" href="#200">200</a>                 sendNotModified(ctx);
-<a class="jxr_linenumber" name="201" href="#201">201</a>                 <strong class="jxr_keyword">return</strong>;
-<a class="jxr_linenumber" name="202" href="#202">202</a>             }
-<a class="jxr_linenumber" name="203" href="#203">203</a>         }
-<a class="jxr_linenumber" name="204" href="#204">204</a> 
-<a class="jxr_linenumber" name="205" href="#205">205</a>         <strong class="jxr_keyword">long</strong> fileLength = raf.length();
-<a class="jxr_linenumber" name="206" href="#206">206</a> 
-<a class="jxr_linenumber" name="207" href="#207">207</a>         HttpResponse response = <strong class="jxr_keyword">new</strong> DefaultHttpResponse(HTTP_1_1, OK);
-<a class="jxr_linenumber" name="208" href="#208">208</a>         contentType(request, response, file);
-<a class="jxr_linenumber" name="209" href="#209">209</a>         setContentLength(response, fileLength);
-<a class="jxr_linenumber" name="210" href="#210">210</a>         setDateAndCacheHeaders(response,file);
-<a class="jxr_linenumber" name="211" href="#211">211</a> 
-<a class="jxr_linenumber" name="212" href="#212">212</a>         Channel ch = e.getChannel();
-<a class="jxr_linenumber" name="213" href="#213">213</a> 
-<a class="jxr_linenumber" name="214" href="#214">214</a>         <em class="jxr_comment">// Write the initial line and the header.</em>
-<a class="jxr_linenumber" name="215" href="#215">215</a>         ch.write(response);
-<a class="jxr_linenumber" name="216" href="#216">216</a> 
-<a class="jxr_linenumber" name="217" href="#217">217</a>         <em class="jxr_comment">// Write the content.</em>
-<a class="jxr_linenumber" name="218" href="#218">218</a>         ChannelFuture writeFuture;
-<a class="jxr_linenumber" name="219" href="#219">219</a>         <strong class="jxr_keyword">if</strong> (ch.getPipeline().get(SslHandler.<strong class="jxr_keyword">class</strong>) != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="220" href="#220">220</a>             <em class="jxr_comment">// Cannot use zero-copy with HTTPS.</em>
-<a class="jxr_linenumber" name="221" href="#221">221</a>             writeFuture = ch.write(<strong class="jxr_keyword">new</strong> ChunkedFile(raf, 0, fileLength, 8192));
-<a class="jxr_linenumber" name="222" href="#222">222</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="223" href="#223">223</a>             <em class="jxr_comment">// No encryption - use zero-copy.</em>
-<a class="jxr_linenumber" name="224" href="#224">224</a>             <strong class="jxr_keyword">final</strong> FileRegion region =
-<a class="jxr_linenumber" name="225" href="#225">225</a>                     <strong class="jxr_keyword">new</strong> DefaultFileRegion(raf.getChannel(), 0, fileLength);
-<a class="jxr_linenumber" name="226" href="#226">226</a>             writeFuture = ch.write(region);
-<a class="jxr_linenumber" name="227" href="#227">227</a>             writeFuture.addListener(<strong class="jxr_keyword">new</strong> ChannelFutureProgressListener() {
-<a class="jxr_linenumber" name="228" href="#228">228</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> operationComplete(ChannelFuture future) {
-<a class="jxr_linenumber" name="229" href="#229">229</a>                     region.releaseExternalResources();
-<a class="jxr_linenumber" name="230" href="#230">230</a>                 }
-<a class="jxr_linenumber" name="231" href="#231">231</a> 
-<a class="jxr_linenumber" name="232" href="#232">232</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> operationProgressed(
-<a class="jxr_linenumber" name="233" href="#233">233</a>                         ChannelFuture future, <strong class="jxr_keyword">long</strong> amount, <strong class="jxr_keyword">long</strong> current, <strong class="jxr_keyword">long</strong> total) {
-<a class="jxr_linenumber" name="234" href="#234">234</a>                 }
-<a class="jxr_linenumber" name="235" href="#235">235</a>             });
-<a class="jxr_linenumber" name="236" href="#236">236</a>         }
-<a class="jxr_linenumber" name="237" href="#237">237</a> 
-<a class="jxr_linenumber" name="238" href="#238">238</a>         <em class="jxr_comment">// Decide whether to close the connection or not.</em>
-<a class="jxr_linenumber" name="239" href="#239">239</a>         <strong class="jxr_keyword">if</strong> (!isKeepAlive(request)) {
-<a class="jxr_linenumber" name="240" href="#240">240</a>             <em class="jxr_comment">// Close the connection when the whole content is written out.</em>
-<a class="jxr_linenumber" name="241" href="#241">241</a>             writeFuture.addListener(ChannelFutureListener.CLOSE);
-<a class="jxr_linenumber" name="242" href="#242">242</a>         }
-<a class="jxr_linenumber" name="243" href="#243">243</a>         request.addHeader(SERVICED, <span class="jxr_string">"true"</span>);
+<a class="jxr_linenumber" name="188" href="#188">188</a>         request.addHeader(SERVICED, <span class="jxr_string">"true"</span>);
+<a class="jxr_linenumber" name="189" href="#189">189</a> 
+<a class="jxr_linenumber" name="190" href="#190">190</a>         <em class="jxr_comment">// Cache Validation</em>
+<a class="jxr_linenumber" name="191" href="#191">191</a>         String ifModifiedSince = request.getHeader(IF_MODIFIED_SINCE);
+<a class="jxr_linenumber" name="192" href="#192">192</a>         <strong class="jxr_keyword">if</strong> (file != <strong class="jxr_keyword">null</strong> &amp;&amp; ifModifiedSince != <strong class="jxr_keyword">null</strong> &amp;&amp; ifModifiedSince.length() != 0) {
+<a class="jxr_linenumber" name="193" href="#193">193</a>             SimpleDateFormat dateFormatter = <strong class="jxr_keyword">new</strong> SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+<a class="jxr_linenumber" name="194" href="#194">194</a>             Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSince);
+<a class="jxr_linenumber" name="195" href="#195">195</a> 
+<a class="jxr_linenumber" name="196" href="#196">196</a>             <em class="jxr_comment">// Only compare up to the second because the datetime format we send to the client does</em>
+<a class="jxr_linenumber" name="197" href="#197">197</a>             <em class="jxr_comment">// not have milliseconds</em>
+<a class="jxr_linenumber" name="198" href="#198">198</a>             <strong class="jxr_keyword">long</strong> ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
+<a class="jxr_linenumber" name="199" href="#199">199</a>             <strong class="jxr_keyword">long</strong> fileLastModifiedSeconds = file.lastModified() / 1000;
+<a class="jxr_linenumber" name="200" href="#200">200</a>             <strong class="jxr_keyword">if</strong> (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
+<a class="jxr_linenumber" name="201" href="#201">201</a>                 sendNotModified(ctx);
+<a class="jxr_linenumber" name="202" href="#202">202</a>                 <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="203" href="#203">203</a>             }
+<a class="jxr_linenumber" name="204" href="#204">204</a>         }
+<a class="jxr_linenumber" name="205" href="#205">205</a> 
+<a class="jxr_linenumber" name="206" href="#206">206</a>         <strong class="jxr_keyword">long</strong> fileLength = raf.length();
+<a class="jxr_linenumber" name="207" href="#207">207</a> 
+<a class="jxr_linenumber" name="208" href="#208">208</a>         HttpResponse response = <strong class="jxr_keyword">new</strong> DefaultHttpResponse(HTTP_1_1, OK);
+<a class="jxr_linenumber" name="209" href="#209">209</a>         contentType(request, response, file);
+<a class="jxr_linenumber" name="210" href="#210">210</a>         setContentLength(response, fileLength);
+<a class="jxr_linenumber" name="211" href="#211">211</a>         setDateAndCacheHeaders(response,file);
+<a class="jxr_linenumber" name="212" href="#212">212</a> 
+<a class="jxr_linenumber" name="213" href="#213">213</a>         Channel ch = e.getChannel();
+<a class="jxr_linenumber" name="214" href="#214">214</a> 
+<a class="jxr_linenumber" name="215" href="#215">215</a>         <em class="jxr_comment">// Write the initial line and the header.</em>
+<a class="jxr_linenumber" name="216" href="#216">216</a>         ch.write(response);
+<a class="jxr_linenumber" name="217" href="#217">217</a> 
+<a class="jxr_linenumber" name="218" href="#218">218</a>         <em class="jxr_comment">// Write the content.</em>
+<a class="jxr_linenumber" name="219" href="#219">219</a>         ChannelFuture writeFuture;
+<a class="jxr_linenumber" name="220" href="#220">220</a>         <strong class="jxr_keyword">if</strong> (ch.getPipeline().get(SslHandler.<strong class="jxr_keyword">class</strong>) != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="221" href="#221">221</a>             <em class="jxr_comment">// Cannot use zero-copy with HTTPS.</em>
+<a class="jxr_linenumber" name="222" href="#222">222</a>             writeFuture = ch.write(<strong class="jxr_keyword">new</strong> ChunkedFile(raf, 0, fileLength, 8192));
+<a class="jxr_linenumber" name="223" href="#223">223</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="224" href="#224">224</a>             <em class="jxr_comment">// No encryption - use zero-copy.</em>
+<a class="jxr_linenumber" name="225" href="#225">225</a>             <strong class="jxr_keyword">final</strong> FileRegion region =
+<a class="jxr_linenumber" name="226" href="#226">226</a>                     <strong class="jxr_keyword">new</strong> DefaultFileRegion(raf.getChannel(), 0, fileLength);
+<a class="jxr_linenumber" name="227" href="#227">227</a>             writeFuture = ch.write(region);
+<a class="jxr_linenumber" name="228" href="#228">228</a>             writeFuture.addListener(<strong class="jxr_keyword">new</strong> ChannelFutureProgressListener() {
+<a class="jxr_linenumber" name="229" href="#229">229</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> operationComplete(ChannelFuture future) {
+<a class="jxr_linenumber" name="230" href="#230">230</a>                     region.releaseExternalResources();
+<a class="jxr_linenumber" name="231" href="#231">231</a>                 }
+<a class="jxr_linenumber" name="232" href="#232">232</a> 
+<a class="jxr_linenumber" name="233" href="#233">233</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> operationProgressed(
+<a class="jxr_linenumber" name="234" href="#234">234</a>                         ChannelFuture future, <strong class="jxr_keyword">long</strong> amount, <strong class="jxr_keyword">long</strong> current, <strong class="jxr_keyword">long</strong> total) {
+<a class="jxr_linenumber" name="235" href="#235">235</a>                 }
+<a class="jxr_linenumber" name="236" href="#236">236</a>             });
+<a class="jxr_linenumber" name="237" href="#237">237</a>         }
+<a class="jxr_linenumber" name="238" href="#238">238</a> 
+<a class="jxr_linenumber" name="239" href="#239">239</a>         <em class="jxr_comment">// Decide whether to close the connection or not.</em>
+<a class="jxr_linenumber" name="240" href="#240">240</a>         <strong class="jxr_keyword">if</strong> (!isKeepAlive(request)) {
+<a class="jxr_linenumber" name="241" href="#241">241</a>             <em class="jxr_comment">// Close the connection when the whole content is written out.</em>
+<a class="jxr_linenumber" name="242" href="#242">242</a>             writeFuture.addListener(ChannelFutureListener.CLOSE);
+<a class="jxr_linenumber" name="243" href="#243">243</a>         }
 <a class="jxr_linenumber" name="244" href="#244">244</a>     }
 <a class="jxr_linenumber" name="245" href="#245">245</a> 
 <a class="jxr_linenumber" name="246" href="#246">246</a>     @Override
@@ -343,30 +343,34 @@
 <a class="jxr_linenumber" name="333" href="#333">333</a> 
 <a class="jxr_linenumber" name="334" href="#334">334</a>         <strong class="jxr_keyword">if</strong> (dot &gt; 0) {
 <a class="jxr_linenumber" name="335" href="#335">335</a>             String ext = substr.substring(dot + 1);
-<a class="jxr_linenumber" name="336" href="#336">336</a>             String contentType = MimeType.get(ext, defaultContentType);
-<a class="jxr_linenumber" name="337" href="#337">337</a>             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, contentType);
-<a class="jxr_linenumber" name="338" href="#338">338</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="339" href="#339">339</a>             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
-<a class="jxr_linenumber" name="340" href="#340">340</a>         }
-<a class="jxr_linenumber" name="341" href="#341">341</a> 
-<a class="jxr_linenumber" name="342" href="#342">342</a>     }
-<a class="jxr_linenumber" name="343" href="#343">343</a> 
-<a class="jxr_linenumber" name="344" href="#344">344</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
-<a class="jxr_linenumber" name="345" href="#345">345</a>         SimpleDateFormat dateFormatter = <strong class="jxr_keyword">new</strong> SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-<a class="jxr_linenumber" name="346" href="#346">346</a>         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
+<a class="jxr_linenumber" name="336" href="#336">336</a>             <strong class="jxr_keyword">int</strong> queryString = ext.indexOf(<span class="jxr_string">"?"</span>);
+<a class="jxr_linenumber" name="337" href="#337">337</a>             <strong class="jxr_keyword">if</strong> (queryString&gt;0){
+<a class="jxr_linenumber" name="338" href="#338">338</a>                 ext.substring(0, queryString);
+<a class="jxr_linenumber" name="339" href="#339">339</a>             }
+<a class="jxr_linenumber" name="340" href="#340">340</a>             String contentType = MimeType.get(ext, defaultContentType);
+<a class="jxr_linenumber" name="341" href="#341">341</a>             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, contentType);
+<a class="jxr_linenumber" name="342" href="#342">342</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="343" href="#343">343</a>             response.addHeader(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
+<a class="jxr_linenumber" name="344" href="#344">344</a>         }
+<a class="jxr_linenumber" name="345" href="#345">345</a> 
+<a class="jxr_linenumber" name="346" href="#346">346</a>     }
 <a class="jxr_linenumber" name="347" href="#347">347</a> 
-<a class="jxr_linenumber" name="348" href="#348">348</a>         <em class="jxr_comment">// Date header</em>
-<a class="jxr_linenumber" name="349" href="#349">349</a>         Calendar time = <strong class="jxr_keyword">new</strong> GregorianCalendar();
-<a class="jxr_linenumber" name="350" href="#350">350</a>         response.setHeader(DATE, dateFormatter.format(time.getTime()));
+<a class="jxr_linenumber" name="348" href="#348">348</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
+<a class="jxr_linenumber" name="349" href="#349">349</a>         SimpleDateFormat dateFormatter = <strong class="jxr_keyword">new</strong> SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+<a class="jxr_linenumber" name="350" href="#350">350</a>         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 <a class="jxr_linenumber" name="351" href="#351">351</a> 
-<a class="jxr_linenumber" name="352" href="#352">352</a>         <em class="jxr_comment">// Add cache headers</em>
-<a class="jxr_linenumber" name="353" href="#353">353</a>         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-<a class="jxr_linenumber" name="354" href="#354">354</a>         response.setHeader(EXPIRES, dateFormatter.format(time.getTime()));
-<a class="jxr_linenumber" name="355" href="#355">355</a>         response.setHeader(CACHE_CONTROL, <span class="jxr_string">"private, max-age="</span> + HTTP_CACHE_SECONDS);
-<a class="jxr_linenumber" name="356" href="#356">356</a>         response.setHeader(
-<a class="jxr_linenumber" name="357" href="#357">357</a>                 LAST_MODIFIED, dateFormatter.format(<strong class="jxr_keyword">new</strong> Date(fileToCache.lastModified())));
-<a class="jxr_linenumber" name="358" href="#358">358</a>     }
-<a class="jxr_linenumber" name="359" href="#359">359</a> }
+<a class="jxr_linenumber" name="352" href="#352">352</a>         <em class="jxr_comment">// Date header</em>
+<a class="jxr_linenumber" name="353" href="#353">353</a>         Calendar time = <strong class="jxr_keyword">new</strong> GregorianCalendar();
+<a class="jxr_linenumber" name="354" href="#354">354</a>         response.setHeader(DATE, dateFormatter.format(time.getTime()));
+<a class="jxr_linenumber" name="355" href="#355">355</a> 
+<a class="jxr_linenumber" name="356" href="#356">356</a>         <em class="jxr_comment">// Add cache headers</em>
+<a class="jxr_linenumber" name="357" href="#357">357</a>         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
+<a class="jxr_linenumber" name="358" href="#358">358</a>         response.setHeader(EXPIRES, dateFormatter.format(time.getTime()));
+<a class="jxr_linenumber" name="359" href="#359">359</a>         response.setHeader(CACHE_CONTROL, <span class="jxr_string">"private, max-age="</span> + HTTP_CACHE_SECONDS);
+<a class="jxr_linenumber" name="360" href="#360">360</a>         response.setHeader(
+<a class="jxr_linenumber" name="361" href="#361">361</a>                 LAST_MODIFIED, dateFormatter.format(<strong class="jxr_keyword">new</strong> Date(fileToCache.lastModified())));
+<a class="jxr_linenumber" name="362" href="#362">362</a>     }
+<a class="jxr_linenumber" name="363" href="#363">363</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>
