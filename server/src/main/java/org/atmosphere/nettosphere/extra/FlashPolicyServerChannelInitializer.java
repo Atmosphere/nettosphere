@@ -15,27 +15,23 @@
  */
 package org.atmosphere.nettosphere.extra;
 
-import static org.jboss.netty.channel.Channels.*;
-
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.handler.timeout.ReadTimeoutHandler;
-import org.jboss.netty.util.HashedWheelTimer;
-import org.jboss.netty.util.Timer;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
  * @author <a href="http://www.waywardmonkeys.com/">Bruce Mitchener</a>
  */
-public class FlashPolicyServerPipelineFactory implements ChannelPipelineFactory {
+@SuppressWarnings("rawtypes")
+public class FlashPolicyServerChannelInitializer extends ChannelInitializer {
 
-    private final Timer timer = new HashedWheelTimer();
-
-    public ChannelPipeline getPipeline() throws Exception {
+    @Override
+	protected void initChannel(Channel ch) throws Exception {
         // Create a default pipeline implementation.
-        ChannelPipeline pipeline = pipeline();
-        pipeline.addLast("timeout", new ReadTimeoutHandler(timer, 30));
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast("timeout", new ReadTimeoutHandler(30));
         pipeline.addLast("decoder", new FlashPolicyServerDecoder());
         pipeline.addLast("handler", new FlashPolicyServerHandler());
-        return pipeline;
-    }
+	}
 }

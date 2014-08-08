@@ -15,16 +15,17 @@
  */
 package org.atmosphere.nettosphere.util;
 
-import org.atmosphere.cpr.AtmosphereConfig;
-import org.atmosphere.util.ExecutorsFactory;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.atmosphere.cpr.AtmosphereConfig;
+import org.atmosphere.util.ExecutorsFactory;
+
 public class ChannelBufferPool {
-    private final ConcurrentLinkedQueue<ChannelBuffer> pool = new ConcurrentLinkedQueue<ChannelBuffer>();
+    private final ConcurrentLinkedQueue<ByteBuf> pool = new ConcurrentLinkedQueue<ByteBuf>();
     private int writeBufferPoolSize = 50;
 
     public ChannelBufferPool(final int minIdle) {
@@ -64,8 +65,8 @@ public class ChannelBufferPool {
         }
     }
 
-    public ChannelBuffer poll() {
-        ChannelBuffer channelBuffer;
+    public ByteBuf poll() {
+    	ByteBuf channelBuffer;
         if ((channelBuffer = pool.poll()) == null) {
             channelBuffer = createObject();
         }
@@ -73,7 +74,7 @@ public class ChannelBufferPool {
         return channelBuffer;
     }
 
-    public void offer(ChannelBuffer channelBuffer) {
+    public void offer(ByteBuf channelBuffer) {
         if (channelBuffer == null || writeBufferPoolSize == -1) {
             return;
         }
@@ -82,8 +83,8 @@ public class ChannelBufferPool {
         this.pool.offer(channelBuffer);
     }
 
-    protected ChannelBuffer createObject() {
-        return ChannelBuffers.dynamicBuffer();
+    protected ByteBuf createObject() {
+        return Unpooled.buffer();
     }
 
     private void initialize(final int minIdle) {

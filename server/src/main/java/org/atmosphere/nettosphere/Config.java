@@ -27,7 +27,7 @@ import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
+import io.netty.channel.ChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +116,7 @@ public class Config {
         return b.listener;
     }
 
-    public LinkedList<ChannelUpstreamHandler> channelUpstreamHandlers() {
+    public LinkedList<ChannelInboundHandler> channelUpstreamHandlers() {
         return b.nettyHandlers;
     }
 
@@ -175,7 +175,7 @@ public class Config {
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
         private SSLContext context;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
-        private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
+        private final LinkedList<ChannelInboundHandler> nettyHandlers = new LinkedList<ChannelInboundHandler>();
         private boolean supportChunking = true;
         private boolean aggregateRequestBodyInMemory = true;
         private boolean socketNoTcpDelay = true;
@@ -469,7 +469,7 @@ public class Config {
          * @param h {@link ChannelUpstreamHandler}
          * @return this;
          */
-        public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
+        public Builder channelUpstreamHandler(ChannelInboundHandler h) {
             nettyHandlers.addLast(h);
             return this;
         }

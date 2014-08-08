@@ -15,37 +15,31 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
-import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
-import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 import javax.net.ssl.SSLEngine;
 
-import static org.jboss.netty.channel.Channels.pipeline;
-
-class NettyPipelineFactory implements
-        ChannelPipelineFactory {
+class NettyChannelInitializer extends ChannelInitializer {
 
     private final transient BridgeRuntime bridgeRuntime;
     private final transient Config config;
 
-    public NettyPipelineFactory(final BridgeRuntime bridgeRuntime) {
+    public NettyChannelInitializer(final BridgeRuntime bridgeRuntime) {
         this.bridgeRuntime = bridgeRuntime;
         config = bridgeRuntime.config();
     }
 
-    /**
-     * Retrieve the channel pipeline factory.
-     *
-     * @see org.jboss.netty.channel.ChannelPipelineFactory#getPipeline()
-     */
-    public ChannelPipeline getPipeline() {
-        final ChannelPipeline pipeline = pipeline();
+	@Override
+	protected void initChannel(Channel ch) throws Exception {
+        final ChannelPipeline pipeline = ch.pipeline();
 
         if (config.sslContext() != null) {
             SSLEngine e = config.sslContext().createSSLEngine();
@@ -56,7 +50,7 @@ class NettyPipelineFactory implements
         pipeline.addLast("decoder", new HttpRequestDecoder());
 
         if (config.aggregateRequestBodyInMemory()) {
-            pipeline.addLast("aggregator", new HttpChunkAggregator(config.maxChunkContentLength()));
+            pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
         }
 
         pipeline.addLast("encoder", new HttpResponseEncoder());
@@ -65,13 +59,12 @@ class NettyPipelineFactory implements
             pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         }
 
-        for (ChannelUpstreamHandler h: config.channelUpstreamHandlers()) {
+        for (ChannelInboundHandler h: config.channelUpstreamHandlers()) {
             pipeline.addLast(h.getClass().getName(), h);
         }
 
         pipeline.addLast(BridgeRuntime.class.getName(), bridgeRuntime);
 
-        return pipeline;
-    }
+	}
 
 }
