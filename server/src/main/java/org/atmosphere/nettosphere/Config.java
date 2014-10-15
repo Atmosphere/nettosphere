@@ -159,7 +159,7 @@ public class Config {
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
-        private String host = "localhost";
+        private String host = "0.0.0.0";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
