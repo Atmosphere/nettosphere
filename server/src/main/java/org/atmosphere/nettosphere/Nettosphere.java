@@ -15,6 +15,14 @@
  */
 package org.atmosphere.nettosphere;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.nettosphere.extra.FlashPolicyServerPipelineFactory;
 import org.atmosphere.nettosphere.util.Version;
@@ -27,13 +35,6 @@ import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.  As simple as
@@ -72,7 +73,7 @@ public final class Nettosphere {
         runtime = new BridgeRuntime(config);
         this.pipelineFactory = new NettyPipelineFactory(runtime);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
-        this.bootstrap = buildBootstrap();
+        this.bootstrap = buildBootstrap(config);
 
         configureBootstrap(bootstrap, config);
 
@@ -144,11 +145,14 @@ public final class Nettosphere {
         return started.get();
     }
 
-    private ServerBootstrap buildBootstrap() {
+    private ServerBootstrap buildBootstrap(Config config) {
+    	ExecutorService bossExecutor = config.bossExecutor();
+    	if (bossExecutor == null) { bossExecutor = Executors.newCachedThreadPool(); }
+    	ExecutorService workerExecutor = config.workerExecutor();
+    	if (workerExecutor == null) { workerExecutor = Executors.newCachedThreadPool(); }
+    	
         final ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(
-                        Executors.newCachedThreadPool(),
-                        Executors.newCachedThreadPool()));
+                new NioServerSocketChannelFactory(bossExecutor, workerExecutor));
 
         bootstrap.setPipelineFactory(pipelineFactory);
         return bootstrap;

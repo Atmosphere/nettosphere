@@ -15,6 +15,18 @@
  */
 package org.atmosphere.nettosphere;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import javax.net.ssl.SSLContext;
+import javax.servlet.Servlet;
+
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -31,16 +43,6 @@ import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import javax.servlet.Servlet;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 /**
  * A Configuration class used to configure Atmosphere.
  */
@@ -52,6 +54,14 @@ public class Config {
         this.b = b;
     }
 
+    public ExecutorService bossExecutor() {
+    	return b.bossExecutor;
+    }
+    
+    public ExecutorService workerExecutor() {
+    	return b.workerExecutor;
+    }
+    
     public String host() {
         return b.host;
     }
@@ -159,6 +169,8 @@ public class Config {
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
+        private ExecutorService bossExecutor;
+        private ExecutorService workerExecutor;
         private String host = "0.0.0.0";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
@@ -263,7 +275,29 @@ public class Config {
             this.atmosphereDotXmlPath = atmosphereDotXmlPath;
             return this;
         }
-
+        
+        /**
+         * The Executor to be used in providing (the) I/O boss-thread(s).
+         *
+         * @param bossExecutor ExecutorService to be used for boss threads.
+         * @return this
+         */
+        public Builder bossExecutor(ExecutorService bossExecutor) {
+            this.bossExecutor = bossExecutor;
+            return this;
+        }
+        
+        /**
+         * The Executor to be used in providing (the) I/O worker-thread(s).
+         *
+         * @param workerExecutor ExecutorService to be used for worker threads.
+         * @return this
+         */
+        public Builder workerExecutor(ExecutorService workerExecutor) {
+            this.workerExecutor = workerExecutor;
+            return this;
+        }
+        
         /**
          * The server's host
          *
