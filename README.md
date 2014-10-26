@@ -1,6 +1,6 @@
 ## Nettosphere: A Java WebSocket and HTTP server powered by the [Atmosphere Framework](http://github.com/Atmosphere/atmosphere) and the [Netty Framework](http://netty.io/)
 
-The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download the [Chat](http://search.maven.org/remotecontent?filepath=org/atmosphere/nettosphere/samples/nettosphere-chat/1.4.2/nettosphere-chat-1.4.2-distribution.zip) or [Jersey](http://search.maven.org/remotecontent?filepath=org/atmosphere/nettosphere/samples/nettosphere-jersey-chat/1.4.2/nettosphere-jersey-chat-1.4.2-distribution.zip) distribution.
+The easiest way to get started with NettoSphere is to download a sample and start it. [Or look at the Javadoc](http://atmosphere.github.com/nettosphere/apidocs/). You can download one of our [sample](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.atmosphere.nettosphere.samples%22) distribution.
 
 ```bash
    % unzip nettosphere-<name>-distribution.jar
@@ -8,7 +8,7 @@ The easiest way to get started with NettoSphere is to download a sample and star
    % ./bin/nettosphere.sh
 ```
 
-Samples are the same as then one available in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/nettosphere/blob/master/samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/nettosphere/blob/master/samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
+[Samples](https://github.com/Atmosphere/atmosphere-samples/tree/master/nettosphere-samples) are the same as then one available in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
 
 Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphere) or use Maven
 
@@ -16,10 +16,9 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.0.0.RC1</version>
+         <version>2.1.1</version>
      </dependency>
 ```
-
 
 ### Super Simple Web Application
 
@@ -42,8 +41,12 @@ or
                     .host("127.0.0.1")
                     .port(8080)
                     .resource(new Handler() {
-                        void handle(AtmosphereResource r) {
-                            r.getResponse().write("Hello World").write("from Nettosphere").flush();
+                        public void handle(AtmosphereResource r) {
+                            try {
+                                r.getResponse().write("Hello World").write(" from Nettosphere").flushBuffer();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     })
                     .build())
@@ -137,4 +140,15 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
     mvn exec:java -Dexec.arguments='path to your exploded war file'
 
+#### Build Status
+[![Build Status](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/badge/icon)](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/)
+
+#### Changelogs
+
+2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
+
+2.0 release: [2.0.2](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.2&page=1&sort=updated&state=closed) [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
+
 We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/19d5c6b3b9b0ea430efb2fb14370dfab "githalytics.com")](http://githalytics.com/Atmosphere/nettosphere)

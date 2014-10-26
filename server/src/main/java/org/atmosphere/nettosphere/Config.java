@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Jeanfrancois Arcand
+ * Copyright 2014 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,17 +24,20 @@ import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.handler.ReflectorServletProcessor;
+import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLContext;
 import javax.servlet.Servlet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +72,7 @@ public class Config {
         return b.atmosphereDotXmlPath;
     }
 
-    public Class<Broadcaster> broadcaster() {
+    public Class<? extends Broadcaster> broadcaster() {
         return b.broadcasterClass;
     }
 
@@ -105,35 +108,102 @@ public class Config {
         return b.mappingPath;
     }
 
-    public SSLEngine engine() {
-        return b.engine;
+    public SSLContext sslContext() {
+        return b.context;
+    }
+
+    public SSLContextListener sslContextListener() {
+        return b.listener;
+    }
+
+    public LinkedList<ChannelUpstreamHandler> channelUpstreamHandlers() {
+        return b.nettyHandlers;
+    }
+
+    public boolean supportChunking() {
+        return b.supportChunking;
+    }
+
+    public boolean aggregateRequestBodyInMemory() {
+        return b.aggregateRequestBodyInMemory;
+    }
+
+    public boolean socketKeepAlive() {
+        return b.socketKeepAlive;
+    }
+
+    public boolean socketNoTcpDelay() {
+        return b.socketNoTcpDelay;
+    }
+
+    public int maxChunkContentLength() {
+        return b.maxContentLength;
+    }
+
+    public int  writeBufferPoolSize(){
+        return b.writeBufferPoolSize;
+    }
+
+    public long writeBufferPoolCleanupFrequency(){
+        return b.writeBufferPoolCleanupFrequency;
+    }
+
+    public List<String> excludedInterceptors(){
+        return b.excludedInterceptors;
+    }
+
+    public boolean enablePong(){
+        return b.enablePong;
     }
 
     public final static class Builder {
-        private List<String> paths = new ArrayList<String>();
+        private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
-        private String host = "localhost";
+        private String host = "0.0.0.0";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
         private Class<? extends WebSocketProtocol> webSocketProtocol = SimpleHttpProtocol.class;
 
-        private Class<Broadcaster> broadcasterClass;
+        private Class<? extends Broadcaster> broadcasterClass;
         private BroadcasterFactory broadcasterFactory;
         private Class<? extends BroadcasterCache> broadcasterCache;
         private final List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
+        private final List<String> excludedInterceptors = new ArrayList<String>();
         private String librariesPath = "." + File.separator + "lib";
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
-        private SSLEngine engine;
+        private SSLContext context;
+        private SSLContextListener listener = SSLContextListener.DEFAULT;
+        private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
+        private boolean supportChunking = true;
+        private boolean aggregateRequestBodyInMemory = true;
+        private boolean socketNoTcpDelay = true;
+        private boolean socketKeepAlive = true;
+        private int maxContentLength = 65536;
+        private int writeBufferPoolSize = 50;
+        private long writeBufferPoolCleanupFrequency = 30000;
+        private boolean enablePong = false;
 
         /**
-         * Set an SSLEngine in order enable SSL
-         * @param engine
+         * Set an SSLContext in order enable SSL
+         *
+         * @param context
          * @return this
          */
-        public Builder engine(SSLEngine engine) {
-            this.engine = engine;
+        public Builder sslContext(SSLContext context) {
+            this.context = context;
+            return this;
+        }
+
+        /**
+         * Add a {@link SSLContextListener}
+         *
+         * @param listener
+         * @return this
+         */
+        public Builder sslContextListener(SSLContextListener listener) {
+            this.listener = listener;
             return this;
         }
 
@@ -145,6 +215,29 @@ public class Config {
          */
         public Builder mappingPath(String mappingPath) {
             this.mappingPath = mappingPath;
+            return this;
+        }
+
+        /**
+         * Enable WebSokcet Pong message. Disabled by default.
+         *
+         * @param enablePong Enable WebSokcet Pong message
+         * @return this
+         */
+        public Builder enablePong(boolean enablePong) {
+            this.enablePong = enablePong;
+            return this;
+        }
+
+        /**
+         * When {@link #aggregateRequestBodyInMemory} is true,the maximum length of the aggregated content.
+         * If the length of the aggregated content exceeds this value,
+         * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.
+         *
+         * @return this
+         */
+        public Builder maxChunkContentLength(int maxChunkContentLength) {
+            this.maxContentLength = maxChunkContentLength;
             return this;
         }
 
@@ -309,7 +402,7 @@ public class Config {
          * @param broadcasterClass a Broadcaster
          * @return this
          */
-        public Builder broadcaster(Class<Broadcaster> broadcasterClass) {
+        public Builder broadcaster(Class<? extends Broadcaster> broadcasterClass) {
             this.broadcasterClass = broadcasterClass;
             return this;
         }
@@ -351,10 +444,110 @@ public class Config {
          * Add an {@link AtmosphereInterceptor}
          *
          * @param interceptor an {@link AtmosphereInterceptor}
-         * @return
+         * @return this
          */
         public Builder interceptor(AtmosphereInterceptor interceptor) {
             interceptors.add(interceptor);
+            return this;
+        }
+
+        /**
+         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}  
+         * are candidates for being excluded
+         *
+         * @param interceptor an {@link AtmosphereInterceptor}
+         * @return this
+         */
+        public Builder excludeInterceptor(String interceptor) {
+            excludedInterceptors.add(interceptor);
+            return this;
+        }
+
+        /**
+         * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}
+         *
+         * @param h {@link ChannelUpstreamHandler}
+         * @return this;
+         */
+        public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
+            nettyHandlers.addLast(h);
+            return this;
+        }
+
+        /**
+         * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
+         * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
+         * <p/>
+         * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
+         *
+         * @param supportChunking false to disable.
+         * @return this
+         */
+        public Builder supportChunking(boolean supportChunking) {
+            this.supportChunking = supportChunking;
+            return this;
+        }
+
+        /**
+         * By default, Nettosphere aggregate the HTTP request's body in memory an invoke an Atmosphere's components with
+         * a single {@link AtmosphereResource}. Setting supportChunkAggregator to false will instead invoke Atmosphere's component
+         * with a new {@link AtmosphereResource} each time the request's body is read in memory. Setting to false
+         * may significantly increase the performance and reduce memory footprint. Note that setting this value to false
+         * may deliver to your Atmosphere's component partial body, so your application must make sure to aggregate the
+         * body before parsing the data if needed. For example, if you are using JSON as format, make sure you parse the
+         * data incrementally.
+         *
+         * @param aggregateRequestBodyInMemory false to disable.
+         * @return this
+         */
+        public Builder aggregateRequestBodyInMemory(boolean aggregateRequestBodyInMemory) {
+            this.aggregateRequestBodyInMemory = aggregateRequestBodyInMemory;
+            return this;
+        }
+
+        /**
+         * Set Netty's Bootstrap 'child.tcpDelay'
+         *
+         * @param socketNoTcpDelay
+         * @return this
+         */
+        public Builder socketNoTcpDelay(boolean socketNoTcpDelay) {
+            this.socketNoTcpDelay = socketNoTcpDelay;
+            return this;
+        }
+
+        /**
+         * Set Netty's Bootstrap 'child.keepAlive'
+         *
+         * @param socketKeepAlive
+         * @return this
+         */
+        public Builder socketKeepAlive(boolean socketKeepAlive) {
+            this.socketKeepAlive = socketKeepAlive;
+            return this;
+        }
+
+        /**
+         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for
+         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be
+         * created and never pooled.
+         *
+         * @param writeBufferPoolSize the max size of the pool.
+         * @return this;
+         */
+        public Builder writeBufferPoolSize(int writeBufferPoolSize){
+            this.writeBufferPoolSize = writeBufferPoolSize;
+            return this;
+        }
+
+        /**
+         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default
+         * is 30000.
+         * @param writeBufferPoolCleanupFrequency  the frequency
+         * @return this
+         */
+        public Builder writeBufferPoolCleanupFrequency(long writeBufferPoolCleanupFrequency) {
+            this.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
             return this;
         }
 

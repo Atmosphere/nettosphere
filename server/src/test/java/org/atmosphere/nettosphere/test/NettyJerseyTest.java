@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Jeanfrancois Arcand
+ * Copyright 2014 Jeanfrancois Arcand
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,8 +22,6 @@ import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
-import org.atmosphere.cache.HeaderBroadcasterCache;
-import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Nettosphere;
 import org.slf4j.Logger;
@@ -37,6 +35,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.STREAMING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -76,34 +77,13 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             long t1 = System.currentTimeMillis();
-            Response r = c.prepareGet(urlTarget).execute().get(20, TimeUnit.SECONDS);
+            Response r = c.prepareGet(urlTarget).setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute().get(20, TimeUnit.SECONDS);
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             String resume = r.getResponseBody();
-            assertEquals(resume, "resume");
+            assertEquals(resume.trim(), "resume");
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 15000);
-        } catch (Exception e) {
-            logger.error("test failed", e);
-            fail(e.getMessage());
-        }
-
-        c.close();
-    }
-
-    @Test(timeOut = 20000, enabled = true)
-    public void testSuspendWithCommentsTimeout() {
-        logger.info("{}: running test: testSuspendWithCommentsTimeout", getClass().getSimpleName());
-
-        AsyncHttpClient c = new AsyncHttpClient();
-        try {
-            Response r = c.prepareGet(urlTarget + "/withComments").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute().get(10, TimeUnit.SECONDS);
-            assertNotNull(r);
-            assertEquals(r.getStatusCode(), 200);
-            String resume = r.getResponseBody();
-            String[] ct = r.getContentType().toLowerCase().split(";");
-            assertEquals(ct[0].trim(), "text/plain");
-            assertEquals(resume.trim(),"");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -175,7 +155,7 @@ public class NettyJerseyTest extends BaseTest {
         long t1 = System.currentTimeMillis();
 
         try {
-            Response r = c.prepareGet(urlTarget + "/subscribeAndUsingExternalThread").execute().get();
+            Response r = c.prepareGet(urlTarget + "/subscribeAndUsingExternalThread").setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute().get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
             long current = System.currentTimeMillis() - t1;
@@ -196,7 +176,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -243,7 +223,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -291,7 +271,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/foreverWithoutComments").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -317,7 +297,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "foo\n");
+            assertEquals(r.getResponseBody().trim(), "foo");
             long current = System.currentTimeMillis() - t1;
             assertTrue(current > 5000 && current < 10000);
         } catch (Exception e) {
@@ -337,7 +317,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/foreverWithoutComments").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
@@ -363,7 +343,7 @@ public class NettyJerseyTest extends BaseTest {
             Response r = response.get();
             assertNotNull(r);
             assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "&lt;script&gt;foo&lt;/script&gt;<br />");
+            assertEquals(r.getResponseBody().trim(), "&lt;script&gt;foo&lt;/script&gt;<br />");
         } catch (Exception e) {
             logger.error("test failed", e);
             fail(e.getMessage());
@@ -425,62 +405,6 @@ public class NettyJerseyTest extends BaseTest {
         c.close();
     }
 
-    @Test(timeOut = 60000, enabled = true)
-    public void testHeaderBroadcasterCache() throws IllegalAccessException, ClassNotFoundException, InstantiationException, IOException {
-        logger.info("{}: running test: testHeaderBroadcasterCache", getClass().getSimpleName());
-
-        server.stop();
-        port = findFreePort();
-        urlTarget = getUrlTarget(port);
-        Config config = new Config.Builder()
-                .port(port)
-                .host("127.0.0.1")
-                .resource(Resource.class)
-                .broadcasterCache(HeaderBroadcasterCache.class)
-                .build();
-        server = new Nettosphere.Builder().config(config).build();
-        server.start();
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        long t1 = System.currentTimeMillis();
-        AsyncHttpClient c = new AsyncHttpClient();
-        try {
-            // Suspend
-            c.preparePost(urlTarget).addParameter("message", "cacheme").execute().get();
-
-            // Broadcast
-            c.preparePost(urlTarget).addParameter("message", "cachememe").execute().get();
-
-            //Suspend
-            Response r = c.prepareGet(urlTarget + "/subscribeAndResume").addHeader(HeaderConfig.X_CACHE_DATE, String.valueOf(t1)).execute(new AsyncCompletionHandler<Response>() {
-
-                @Override
-                public Response onCompleted(Response r) throws Exception {
-                    try {
-                        return r;
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            }).get();
-
-            try {
-                latch.await(60, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                fail(e.getMessage());
-            }
-
-            assertNotNull(r);
-            assertEquals(r.getStatusCode(), 200);
-            assertEquals(r.getResponseBody(), "cacheme\ncachememe\n");
-        } catch (Exception e) {
-            logger.error("test failed", e);
-            fail(e.getMessage());
-        }
-
-        c.close();
-    }
-
     @Test(timeOut = 20000, enabled = true)
     public void testProgrammaticDelayBroadcast() {
         logger.info("{}: running test: testDelayBroadcast", getClass().getSimpleName());
@@ -489,7 +413,7 @@ public class NettyJerseyTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
-            c.prepareGet(urlTarget + "/forever").setHeader(HeaderConfig.X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
+            c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
 
                 @Override
                 public Response onCompleted(Response r) throws Exception {
