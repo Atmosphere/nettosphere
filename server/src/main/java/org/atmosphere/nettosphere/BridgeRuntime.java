@@ -132,25 +132,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         framework.setAtmosphereDotXmlPath(config.configFile());
-        framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
-            @Override
-            public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
-                Action a = super.suspended(request, response);
-                if (framework.getAtmosphereConfig().isSupportSession()) {
-                    AtmosphereResource r = request.resource();
-                    HttpSession s = request.getSession(true);
-                    if (s != null) {
-                        sessions.put(r.uuid(), request.getSession(true));
-                    }
-                }
-                return a;
-            }
-
-            @Override
-            public String toString() {
-                return "NettoSphereAsyncSupport";
-            }
-        });
 
         try {
             if (config.broadcasterFactory() != null) {
@@ -212,6 +193,27 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
+        
+        framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
+            @Override
+            public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
+                Action a = super.suspended(request, response);
+                if (framework.getAtmosphereConfig().isSupportSession()) {
+                    AtmosphereResource r = request.resource();
+                    HttpSession s = request.getSession(true);
+                    if (s != null) {
+                        sessions.put(r.uuid(), request.getSession(true));
+                    }
+                }
+                return a;
+            }
+
+            @Override
+            public String toString() {
+                return "NettoSphereAsyncSupport";
+            }
+        });
+        
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
 
