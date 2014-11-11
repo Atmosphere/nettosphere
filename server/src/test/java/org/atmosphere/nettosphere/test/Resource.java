@@ -121,7 +121,8 @@ public class Resource {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                 }
-                BroadcasterFactory.getDefault().lookup(JerseyBroadcaster.class, topic).broadcast("Echo: " + topic);
+                broadcaster.getBroadcasterConfig().getAtmosphereConfig().getBroadcasterFactory()
+                        .lookup(JerseyBroadcaster.class, topic).broadcast("Echo: " + topic);
             }
         });
 
