@@ -74,6 +74,12 @@ public class Context {
             return this;
         }
 
+
+        public Builder attributes(Map<String,Object> clone) {
+            attributes.putAll(clone);
+            return this;
+        }
+
         public Context build() {
             try {
                 Thread.currentThread().setContextClassLoader(Utils.createURLClassLoader(basePath));
@@ -199,5 +205,6 @@ public class Context {
     public String getServletContextName() {
         return "Atmosphere";
     }
+
 }
 

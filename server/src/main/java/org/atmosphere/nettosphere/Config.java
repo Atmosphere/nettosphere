@@ -166,6 +166,10 @@ public class Config {
         return b.enablePong;
     }
 
+    public Map<String, Object> servletContextAttributes(){
+        return b.servletContextAttributes;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -174,6 +178,8 @@ public class Config {
         private String host = "0.0.0.0";
         private int port = 8080;
         private final Map<String, String> initParams = new HashMap<String, String>();
+        private final Map<String, Object> servletContextAttributes = new HashMap<String, Object>();
+
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
         private Class<? extends WebSocketProtocol> webSocketProtocol = SimpleHttpProtocol.class;
 
@@ -595,6 +601,17 @@ public class Config {
                 paths.add("/");
             }
             return new Config(this);
+        }
+
+        /**
+         * Set ServletContext Attribute
+         * @param name
+         * @param value
+         * @return this
+         */
+        public Builder servletContextAttribute(String name, Object value) {
+            servletContextAttributes.put(name,value);
+            return this;
         }
     }
 }

@@ -168,7 +168,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
         }
 
-        final Context context = new Context.Builder().contextPath(config.mappingPath()).basePath(config.path()).build();
+        final Context context = new Context.Builder().attributes(config.servletContextAttributes()).contextPath(config.mappingPath()).basePath(config.path()).build();
         ServletContext ctx = (ServletContext) Proxy.newProxyInstance(BridgeRuntime.class.getClassLoader(), new Class[]{ServletContext.class},
                 new InvocationHandler() {
                     @Override
