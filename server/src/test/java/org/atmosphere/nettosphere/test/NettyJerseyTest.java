@@ -191,8 +191,8 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
-            c.preparePost(urlTarget + "/delay").addParameter("message", "foo").execute().get();
-            c.preparePost(urlTarget + "/publishAndResume").addParameter("message", "bar").execute().get();
+            c.preparePost(urlTarget + "/delay").addFormParam("message", "foo").execute().get();
+            c.preparePost(urlTarget + "/publishAndResume").addFormParam("message", "bar").execute().get();
 
             try {
                 latch.await(20, TimeUnit.SECONDS);
@@ -238,8 +238,8 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
-            c.preparePost(urlTarget + "/delay").addParameter("message", "foo").execute().get();
-            c.preparePost(urlTarget + "/delayAndResume").addParameter("message", "bar").execute().get();
+            c.preparePost(urlTarget + "/delay").addFormParam("message", "foo").execute().get();
+            c.preparePost(urlTarget + "/delayAndResume").addFormParam("message", "bar").execute().get();
 
             try {
                 latch.await(20, TimeUnit.SECONDS);
@@ -286,7 +286,7 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
-            c.preparePost(urlTarget + "/scheduleAndResume").addParameter("message", "foo").execute().get();
+            c.preparePost(urlTarget + "/scheduleAndResume").addFormParam("message", "foo").execute().get();
 
             try {
                 latch.await(20, TimeUnit.SECONDS);
@@ -332,7 +332,7 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(4000);
-            c.preparePost(urlTarget + "/filter").addParameter("message", "<script>foo</script>").execute().get();
+            c.preparePost(urlTarget + "/filter").addFormParam("message", "<script>foo</script>").execute().get();
 
             try {
                 latch.await(20, TimeUnit.SECONDS);
@@ -377,7 +377,7 @@ public class NettyJerseyTest extends BaseTest {
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
             for (int i = 0; i < 10; i++) {
-                c.preparePost(urlTarget + "/aggregate").addParameter("message",
+                c.preparePost(urlTarget + "/aggregate").addFormParam("message",
                         "==================================================").execute().get(5, TimeUnit.SECONDS);
             }
 
@@ -428,9 +428,9 @@ public class NettyJerseyTest extends BaseTest {
 
             // Let Atmosphere suspend the connections.
             Thread.sleep(2500);
-            Response r = c.preparePost(urlTarget + "/programmaticDelayBroadcast").addParameter("message", "foo").execute().get();
+            Response r = c.preparePost(urlTarget + "/programmaticDelayBroadcast").addFormParam("message", "foo").execute().get();
             assertEquals(r.getStatusCode(), 200);
-            r = c.preparePost(urlTarget + "/publishAndResume").addParameter("message", "bar").execute().get();
+            r = c.preparePost(urlTarget + "/publishAndResume").addFormParam("message", "bar").execute().get();
             assertEquals(r.getStatusCode(), 200);
 
             try {

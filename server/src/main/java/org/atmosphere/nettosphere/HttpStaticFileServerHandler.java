@@ -185,10 +185,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             sendError(ctx, NOT_FOUND, e);
             return;
         }
-        request.addHeader(SERVICED, "true");
+        request.headers().add(SERVICED, "true");
 
         // Cache Validation
-        String ifModifiedSince = request.getHeader(IF_MODIFIED_SINCE);
+        String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
         if (file != null && ifModifiedSince != null && ifModifiedSince.length() != 0) {
             SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
             Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSince);
@@ -306,15 +306,15 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 
         Calendar time = new GregorianCalendar();
-        response.setHeader(DATE, dateFormatter.format(time.getTime()));
+        response.headers().add(DATE, dateFormatter.format(time.getTime()));
     }
 
     protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent event) {
         logger.trace("Error {} for {}", status, event);
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
-        response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
-        response.setHeader(CONTENT_LENGTH, "0");
-        response.setHeader("Server", "Atmosphere-" + Version.getRawVersion());
+        response.headers().add(CONTENT_TYPE, "text/plain; charset=UTF-8");
+        response.headers().add(CONTENT_LENGTH, "0");
+        response.headers().add("Server", "Atmosphere-" + Version.getRawVersion());
 
         // Close the connection as soon as the error message is sent.
         ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE);
@@ -338,9 +338,9 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
                 ext.substring(0, queryString);
             }
             String contentType = MimeType.get(ext, defaultContentType);
-            response.addHeader(HttpHeaders.Names.CONTENT_TYPE, contentType);
+            response.headers().add(HttpHeaders.Names.CONTENT_TYPE, contentType);
         } else {
-            response.addHeader(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
+            response.headers().add(HttpHeaders.Names.CONTENT_TYPE, defaultContentType);
         }
 
     }
@@ -351,13 +351,13 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
 
         // Date header
         Calendar time = new GregorianCalendar();
-        response.setHeader(DATE, dateFormatter.format(time.getTime()));
+        response.headers().add(DATE, dateFormatter.format(time.getTime()));
 
         // Add cache headers
         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-        response.setHeader(EXPIRES, dateFormatter.format(time.getTime()));
-        response.setHeader(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
-        response.setHeader(
+        response.headers().add(EXPIRES, dateFormatter.format(time.getTime()));
+        response.headers().add(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+        response.headers().add(
                 LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
 }

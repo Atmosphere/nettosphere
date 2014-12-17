@@ -23,9 +23,11 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
 import com.ning.http.client.SSLEngineFactory;
-import com.ning.http.client.websocket.WebSocket;
-import com.ning.http.client.websocket.WebSocketTextListener;
-import com.ning.http.client.websocket.WebSocketUpgradeHandler;
+import com.ning.http.client.providers.netty.NettyAsyncHttpProvider;
+import com.ning.http.client.providers.netty.NettyAsyncHttpProviderConfig;
+import com.ning.http.client.ws.WebSocket;
+import com.ning.http.client.ws.WebSocketTextListener;
+import com.ning.http.client.ws.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
@@ -37,10 +39,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
@@ -357,10 +361,6 @@ public class NettyAtmosphereTest extends BaseTest {
             }
 
             @Override
-            public void onFragment(String fragment, boolean last) {
-            }
-
-            @Override
             public void onOpen(WebSocket websocket) {
             }
 
@@ -373,7 +373,7 @@ public class NettyAtmosphereTest extends BaseTest {
             public void onError(Throwable t) {
                 l.countDown();
             }
-        }).sendTextMessage("Ping");
+        }).sendMessage("Ping");
 
         l.await(5, TimeUnit.SECONDS);
 
@@ -410,10 +410,6 @@ public class NettyAtmosphereTest extends BaseTest {
             public void onMessage(String message) {
                 response.set(message);
                 l.countDown();
-            }
-
-            @Override
-            public void onFragment(String fragment, boolean last) {
             }
 
             @Override
@@ -483,16 +479,25 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setSSLEngineFactory(new SSLEngineFactory() {
+        NettyAsyncHttpProviderConfig cc = new NettyAsyncHttpProviderConfig();
+        cc.setSslEngineFactory(new SSLEngineFactory() {
 
             @Override
-            public SSLEngine newSSLEngine() throws GeneralSecurityException {
-                    SSLEngine sslEngine = sslContext.createSSLEngine();
-                    sslEngine.setUseClientMode(true);
-                    sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
-                    return sslEngine;
+            public SSLEngine newSSLEngine(String s, int i) throws GeneralSecurityException {
+                SSLEngine sslEngine = sslContext.createSSLEngine();
+                sslEngine.setUseClientMode(true);
+                sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+                return sslEngine;
             }
-        }).build());
+        });
+
+        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAsyncHttpClientProviderConfig(cc)
+                .setHostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String arg0, SSLSession arg1) {
+                        return true;
+                    }
+                }).build());
         Response response = c.prepareGet("https://127.0.0.1:" + port).execute().get();
         assertNotNull(response);
 
@@ -520,17 +525,24 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setSSLEngineFactory(new SSLEngineFactory() {
+        NettyAsyncHttpProviderConfig cc = new NettyAsyncHttpProviderConfig();
+        cc.setSslEngineFactory(new SSLEngineFactory() {
 
             @Override
-            public SSLEngine newSSLEngine() throws GeneralSecurityException {
-                    SSLEngine sslEngine = sslContext.createSSLEngine();
-                    sslEngine.setUseClientMode(true);
-                    sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
-                    return sslEngine;
+            public SSLEngine newSSLEngine(String s, int i) throws GeneralSecurityException {
+                SSLEngine sslEngine = sslContext.createSSLEngine();
+                sslEngine.setUseClientMode(true);
+                sslEngine.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+                return sslEngine;
             }
-        }).build());
-
+        });
+        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAsyncHttpClientProviderConfig(cc)
+                .setHostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String arg0, SSLSession arg1) {
+                        return true;
+                    }
+                }).build());
         final AtomicReference<String> response = new AtomicReference<String>();
         WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
         assertNotNull(webSocket);
@@ -539,10 +551,6 @@ public class NettyAtmosphereTest extends BaseTest {
             public void onMessage(String message) {
                 response.set(message);
                 l.countDown();
-            }
-
-            @Override
-            public void onFragment(String fragment, boolean last) {
             }
 
             @Override

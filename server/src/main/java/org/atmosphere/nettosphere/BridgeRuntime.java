@@ -247,8 +247,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (msg instanceof HttpRequest) {
             HttpRequest r = HttpRequest.class.cast(msg);
             // Netty fail to decode headers separated by a ','
-            List<String> c = r.getHeaders("Connection");
-            String u = r.getHeader("Upgrade");
+            List<String> c = r.headers().getAll("Connection");
+            String u = r.headers().get("Upgrade");
             boolean webSocket = false;
             if (u != null && u.equalsIgnoreCase("websocket")) {
                 webSocket = true;
@@ -687,7 +687,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private Map<String, String> getHeaders(final HttpRequest request) {
         final Map<String, String> headers = new HashMap<String, String>();
 
-        for (String name : request.getHeaderNames()) {
+        for (String name : request.headers().names()) {
             // TODO: Add support for multi header
             headers.put(name, HttpHeaders.getHeader(request, name));
         }
@@ -713,7 +713,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     private Set<javax.servlet.http.Cookie> getCookies(final HttpRequest request) {
         Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
-        String cookieHeader = request.getHeader("Cookie");
+        String cookieHeader = request.headers().get("Cookie");
         if (cookieHeader != null) {
             Set<Cookie> cookies = new CookieDecoder().decode(cookieHeader);
             for (Cookie cookie : cookies) {
@@ -775,7 +775,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private String getWebSocketLocation(HttpRequest req) {
-        return "ws://" + req.getHeader(HttpHeaders.Names.HOST) + req.getUri();
+        return "ws://" + req.headers().get(HttpHeaders.Names.HOST) + req.getUri();
     }
 
     private final static class NettyServletConfig implements ServletConfig {
