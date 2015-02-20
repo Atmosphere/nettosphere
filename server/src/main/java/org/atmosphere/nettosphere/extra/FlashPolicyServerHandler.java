@@ -15,33 +15,31 @@
  */
 package org.atmosphere.nettosphere.extra;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.timeout.ReadTimeoutException;
-import org.jboss.netty.util.CharsetUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty.util.CharsetUtil;
 
 /**
  * @author <a href="http://www.waywardmonkeys.com/">Bruce Mitchener</a>
  */
-public class FlashPolicyServerHandler extends SimpleChannelUpstreamHandler {
+public class FlashPolicyServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final String NEWLINE = "\r\n";
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object e) throws Exception {
 //        Object msg = e.getMessage();
-        ChannelFuture f = e.getChannel().write(this.getPolicyFileContents());
+        ChannelFuture f = ctx.channel().write(this.getPolicyFileContents());
         f.addListener(ChannelFutureListener.CLOSE);
     }
 
-    private ChannelBuffer getPolicyFileContents() throws Exception {
-        return ChannelBuffers.copiedBuffer(
+    private ByteBuf getPolicyFileContents() throws Exception {
+        return Unpooled.copiedBuffer(
             "<?xml version=\"1.0\"?>" + NEWLINE +
             "<!DOCTYPE cross-domain-policy SYSTEM \"/xml/dtds/cross-domain-policy.dtd\">" + NEWLINE +
             "" + NEWLINE +
@@ -60,14 +58,20 @@ public class FlashPolicyServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable t)
             throws Exception {
-        if (e.getCause() instanceof ReadTimeoutException) {
+        if (t.getCause() instanceof ReadTimeoutException) {
             System.out.println("Connection timed out.");
-            e.getChannel().close();
+            ctx.channel().close();
         } else {
-            e.getCause().printStackTrace();
-            e.getChannel().close();
+            t.getCause().printStackTrace();
+            ctx.channel().close();
         }
     }
+
+	@Override
+	protected void channelRead0(ChannelHandlerContext ctx, Object msg)
+			throws Exception {
+		channelRead(ctx, msg);
+	}
 }

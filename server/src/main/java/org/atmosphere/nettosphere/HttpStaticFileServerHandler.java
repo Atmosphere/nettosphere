@@ -32,24 +32,26 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.nettosphere.util.MimeType;
 import org.atmosphere.util.Version;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelFutureProgressListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.DefaultFileRegion;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.FileRegion;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedFile;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelProgressiveFuture;
+import io.netty.channel.ChannelProgressiveFutureListener;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.FileRegion;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedFile;
+import io.netty.util.AttributeKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,21 +68,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.DATE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.NOT_MODIFIED;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.DATE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
+import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
+import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_MODIFIED;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * A simple handler that serves incoming HTTP requests to send their respective
@@ -128,15 +130,18 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  *
  * </pre>
  */
-public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
+public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Object> {
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
     public static final int HTTP_CACHE_SECONDS = 60;
 
+    public static final AttributeKey<Object> ATTACHMENT =
+            AttributeKey.valueOf("HttpStaticFileServerHandler.attachment");
+    
     private final static Logger logger = LoggerFactory.getLogger(HttpStaticFileServerHandler.class);
 
-    public final static String STATIC_MAPPING = SimpleChannelUpstreamHandler.class.getName() + ".staticMapping";
-    public final static String SERVICED = SimpleChannelUpstreamHandler.class.getName() + ".serviced";
+    public final static String STATIC_MAPPING = SimpleChannelInboundHandler.class.getName() + ".staticMapping";
+    public final static String SERVICED = SimpleChannelInboundHandler.class.getName() + ".serviced";
     private final List<String> paths;
     private String defaultContentType = "text/html";
 
@@ -144,9 +149,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         this.paths = paths;
     }
 
-    @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        HttpRequest request = (HttpRequest) e.getMessage();
+    @SuppressWarnings("unchecked")
+	@Override
+    protected void channelRead0(ChannelHandlerContext ctx, Object e) throws Exception {
+        HttpRequest request = (HttpRequest) e;
         RandomAccessFile raf = null;
         boolean found = true;
         File file = null;
@@ -154,11 +160,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             String path = p + sanitizeUri(request.getUri());
             if (path.endsWith("/") || path.endsWith(File.separator)) {
                 path += "index.html";
-            }
-
-            if (path == null) {
-                found = false;
-                continue;
             }
 
             file = new File(path);
@@ -210,14 +211,14 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         setContentLength(response, fileLength);
         setDateAndCacheHeaders(response,file);
 
-        Channel ch = e.getChannel();
+        Channel ch = ctx.channel();
 
         // Write the initial line and the header.
         ch.write(response);
 
         // Write the content.
         ChannelFuture writeFuture;
-        if (ch.getPipeline().get(SslHandler.class) != null) {
+        if (ch.pipeline().get(SslHandler.class) != null) {
             // Cannot use zero-copy with HTTPS.
             writeFuture = ch.write(new ChunkedFile(raf, 0, fileLength, 8192));
         } else {
@@ -225,14 +226,18 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
             final FileRegion region =
                     new DefaultFileRegion(raf.getChannel(), 0, fileLength);
             writeFuture = ch.write(region);
-            writeFuture.addListener(new ChannelFutureProgressListener() {
-                public void operationComplete(ChannelFuture future) {
-                    region.releaseExternalResources();
-                }
+            writeFuture.addListeners(new ChannelProgressiveFutureListener() {
+				@Override
+				public void operationProgressed(
+						ChannelProgressiveFuture future, long progress,
+						long total) throws Exception {
+				}
 
-                public void operationProgressed(
-                        ChannelFuture future, long amount, long current, long total) {
-                }
+				@Override
+				public void operationComplete(ChannelProgressiveFuture future)
+						throws Exception {
+                    region.release();					
+				}
             });
         }
 
@@ -244,24 +249,24 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable t)
             throws Exception {
-        Channel ch = e.getChannel();
+        Channel ch = ctx.channel();
 
         // Prevent recursion when the client close the connection during a write operation. In that
         // scenario the sendError will be invoked, but will fail since the channel has already been closed
         // For an unknown reason,
-        if (ch.getAttachment() != null && Error.class.isAssignableFrom(ch.getAttachment().getClass())) {
+        if (ch.attr(ATTACHMENT) != null && Error.class.isAssignableFrom(ch.attr(ATTACHMENT).get().getClass())) {
             return;
         }
 
-        Throwable cause = e.getCause();
+        Throwable cause = t.getCause();
         if (cause instanceof TooLongFrameException) {
             sendError(ctx, BAD_REQUEST, null);
             return;
         }
 
-        ch.setAttachment(new Error());
+        ch.attr(ATTACHMENT).set(new Error());
         if (ch.isOpen()) {
             sendError(ctx, INTERNAL_SERVER_ERROR, null);
         }
@@ -298,7 +303,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         setDateHeader(response);
 
         // Close the connection as soon as the error message is sent.
-        ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE);
+        ctx.channel().write(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     private static void setDateHeader(HttpResponse response) {
@@ -306,18 +311,18 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 
         Calendar time = new GregorianCalendar();
-        response.headers().add(DATE, dateFormatter.format(time.getTime()));
+        response.headers().set(DATE, dateFormatter.format(time.getTime()));
     }
 
-    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent event) {
+    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, Object event) {
         logger.trace("Error {} for {}", status, event);
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
-        response.headers().add(CONTENT_TYPE, "text/plain; charset=UTF-8");
-        response.headers().add(CONTENT_LENGTH, "0");
-        response.headers().add("Server", "Atmosphere-" + Version.getRawVersion());
+        response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+        response.headers().set(CONTENT_LENGTH, "0");
+        response.headers().set("Server", "Atmosphere-" + Version.getRawVersion());
 
         // Close the connection as soon as the error message is sent.
-        ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE);
+        ctx.channel().write(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     protected void contentType(HttpRequest request, HttpResponse response, File resource) {
@@ -351,13 +356,14 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
 
         // Date header
         Calendar time = new GregorianCalendar();
-        response.headers().add(DATE, dateFormatter.format(time.getTime()));
+        response.headers().set(DATE, dateFormatter.format(time.getTime()));
 
         // Add cache headers
         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-        response.headers().add(EXPIRES, dateFormatter.format(time.getTime()));
-        response.headers().add(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
-        response.headers().add(
+        response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
+        response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+        response.headers().set(
                 LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
+
 }

@@ -15,32 +15,30 @@
  */
 package org.atmosphere.nettosphere;
 
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
     private final Channel channel;
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
-    private int bufferBinarySize = Integer.MAX_VALUE;
-    private int bufferStringSize = Integer.MAX_VALUE;
-    ;
     private boolean binaryWrite = false;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
@@ -49,12 +47,12 @@ public class NettyWebSocket extends WebSocket {
 
         String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXBINARYSIZE);
         if (s != null) {
-            bufferBinarySize = Integer.valueOf(s);
+            Integer.valueOf(s);
         }
 
         s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXTEXTSIZE);
         if (s != null) {
-            bufferStringSize = Integer.valueOf(s);
+            Integer.valueOf(s);
         }
     }
 
@@ -80,7 +78,7 @@ public class NettyWebSocket extends WebSocket {
         logger.trace("WebSocket.write()");
 
         if (binaryWrite) {
-            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data.getBytes("UTF-8"))));
+            channel.write(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data.getBytes("UTF-8"))));
         } else {
             channel.write(new TextWebSocketFrame(data));
         }
@@ -107,9 +105,9 @@ public class NettyWebSocket extends WebSocket {
         if (!channel.isOpen()) throw new IOException("Connection remotely closed");
 
         if (binaryWrite) {
-            channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
+            channel.write(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
         } else {
-            channel.write(new TextWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
+            channel.write(new TextWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
         }
         lastWrite = System.currentTimeMillis();
     }

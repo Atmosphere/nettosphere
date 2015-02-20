@@ -17,11 +17,11 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereResponse;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ import java.io.IOException;
  */
 public class StreamWriter extends ChannelWriter {
     private static final Logger logger = LoggerFactory.getLogger(StreamWriter.class);
-    private ChannelBuffer chainedBodyBuffer;
+    private ByteBuf chainedBodyBuffer;
 
     public StreamWriter(Channel channel, boolean writeHeader, boolean keepAlive) {
         super(channel, writeHeader, keepAlive);
@@ -41,14 +41,14 @@ public class StreamWriter extends ChannelWriter {
 
     @Override
     public AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
-        chainedBodyBuffer = ChannelBuffers.wrappedBuffer(chainedBodyBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
+        chainedBodyBuffer = Unpooled.wrappedBuffer(chainedBodyBuffer, Unpooled.wrappedBuffer(data, offset, length));
         lastWrite = System.currentTimeMillis();
         return this;
     }
 
     private void setUpBuffers() {
         if (chainedBodyBuffer == null) {
-            chainedBodyBuffer = ChannelBuffers.EMPTY_BUFFER;
+            chainedBodyBuffer = Unpooled.EMPTY_BUFFER;
         }
     }
 
@@ -58,9 +58,9 @@ public class StreamWriter extends ChannelWriter {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
             logger.trace("About to flush to {} for {}", channel, response.uuid());
 
-            ChannelBuffer statusAndHeadersBuffer = writeHeader ?
-                    ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes("UTF-8")) : ChannelBuffers.EMPTY_BUFFER;
-            ChannelBuffer drain = ChannelBuffers.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
+            ByteBuf statusAndHeadersBuffer = writeHeader ?
+                    Unpooled.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes("UTF-8")) : Unpooled.EMPTY_BUFFER;
+            ByteBuf drain = Unpooled.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
             channel.write(drain).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {

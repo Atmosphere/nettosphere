@@ -24,17 +24,33 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.atmosphere.cpr.AtmosphereFramework;
-import org.atmosphere.nettosphere.extra.FlashPolicyServerPipelineFactory;
+import org.atmosphere.nettosphere.extra.FlashPolicyServerChannelInitializer;
 import org.atmosphere.nettosphere.util.Version;
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.ChannelGroupFuture;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.ChannelGroupFuture;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoop;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty.util.concurrent.ImmediateEventExecutor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.channels.spi.SelectorProvider;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.  As simple as
@@ -60,20 +76,25 @@ public final class Nettosphere {
 
     public final static String FLASH_SUPPORT = Nettosphere.class.getName() + ".enableFlash";
     private static final Logger logger = LoggerFactory.getLogger(Nettosphere.class);
-    private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere");
-    private final ChannelPipelineFactory pipelineFactory;
+    private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere", 
+    		ImmediateEventExecutor.INSTANCE);
+    @SuppressWarnings("rawtypes")
+	private final ChannelInitializer channelInitializer;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
     private final BridgeRuntime runtime;
     private final AtomicBoolean started = new AtomicBoolean();
     private final ServerBootstrap bootstrapFlashPolicy;
     private final SocketAddress localPolicySocket;
+	private NioEventLoopGroup parentGroup;
+	private NioEventLoopGroup childGroup;
 
     private Nettosphere(Config config) {
         runtime = new BridgeRuntime(config);
-        this.pipelineFactory = new NettyPipelineFactory(runtime);
+        this.channelInitializer = new NettyChannelInitializer(runtime);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
-        this.bootstrap = buildBootstrap(config);
+        // TODO migrate https://github.com/flowersinthesand/nettosphere/commit/47ac25e6ce08e737df1c60b15cac4529f08eefef
+        this.bootstrap = buildBootstrap();
 
         configureBootstrap(bootstrap, config);
 
@@ -87,8 +108,8 @@ public final class Nettosphere {
     }
 
     private void configureBootstrap(ServerBootstrap bootstrap, Config config) {
-        bootstrap.setOption("child.tcpNoDelay", config.socketNoTcpDelay());
-        bootstrap.setOption("child.keepAlive", config.socketKeepAlive());
+        bootstrap.childOption(ChannelOption.TCP_NODELAY, config.socketNoTcpDelay());
+        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, config.socketKeepAlive());
     }
 
     /**
@@ -104,7 +125,7 @@ public final class Nettosphere {
      * Start the server
      */
     public void start() {
-        final Channel serverChannel = bootstrap.bind(localSocket);
+        final Channel serverChannel = bootstrap.bind(localSocket).channel();
         ALL_CHANNELS.add(serverChannel);
         started.set(true);
         if (bootstrapFlashPolicy != null) {
@@ -131,7 +152,6 @@ public final class Nettosphere {
             runtime.destroy();
             final ChannelGroupFuture future = ALL_CHANNELS.close();
             future.awaitUninterruptibly();
-            bootstrap.getFactory().releaseExternalResources();
             ALL_CHANNELS.clear();
         }
     }
@@ -145,28 +165,29 @@ public final class Nettosphere {
         return started.get();
     }
 
-    private ServerBootstrap buildBootstrap(Config config) {
-    	ExecutorService bossExecutor = config.bossExecutor();
-    	if (bossExecutor == null) { bossExecutor = Executors.newCachedThreadPool(); }
-    	ExecutorService workerExecutor = config.workerExecutor();
-    	if (workerExecutor == null) { workerExecutor = Executors.newCachedThreadPool(); }
-    	
-        final ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(bossExecutor, workerExecutor));
-
-        bootstrap.setPipelineFactory(pipelineFactory);
+    private ServerBootstrap buildBootstrap() {
+        final ServerBootstrap bootstrap = new ServerBootstrap();
+        parentGroup = new NioEventLoopGroup();
+        childGroup = new NioEventLoopGroup();
+		bootstrap
+        	.channel(NioServerSocketChannel.class)
+        	.group(parentGroup, childGroup);
+        
+        bootstrap.childHandler(channelInitializer);
         return bootstrap;
     }
 
     private ServerBootstrap buildBootstrapFlashPolicy() {
         // Configure the server.
-        final ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(
-                        Executors.newCachedThreadPool(),
-                        Executors.newCachedThreadPool()));
+        final ServerBootstrap bootstrap = new ServerBootstrap();
+        parentGroup = new NioEventLoopGroup();
+        childGroup = new NioEventLoopGroup();
+		bootstrap
+        	.channel(NioServerSocketChannel.class)
+        	.group(parentGroup, childGroup);
 
         // Set up the event pipeline factory.
-        bootstrap.setPipelineFactory(new FlashPolicyServerPipelineFactory());
+        bootstrap.childHandler(new FlashPolicyServerChannelInitializer());
         return bootstrap;
     }
 
