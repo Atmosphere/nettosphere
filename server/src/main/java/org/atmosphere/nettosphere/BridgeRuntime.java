@@ -32,6 +32,7 @@ import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
+import org.atmosphere.websocket.WebSocketEventListener;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -97,6 +98,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
+import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYPE.HANDSHAKE;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
@@ -288,6 +290,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (handshaker == null) {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
+
+            final WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
+            webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
+
             handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -297,7 +303,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         websocketChannels.add(ctx.getChannel());
 
                         AtmosphereRequest r = createAtmosphereRequest(ctx, request);
-                        WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
 
                         ctx.setAttachment(webSocket);
                         if (request.headers().contains("X-wakeUpNIO")) {
