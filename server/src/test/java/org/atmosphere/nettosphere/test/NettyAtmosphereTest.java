@@ -28,6 +28,7 @@ import com.ning.http.client.ws.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
@@ -642,7 +643,7 @@ public class NettyAtmosphereTest extends BaseTest {
         final AtomicReference<HttpResponseHeaders> response = new AtomicReference<HttpResponseHeaders>();
         AsyncHttpClient c = new AsyncHttpClient();
         try {
-            c.prepareGet(targetUrl + "/suspend").execute(new AsyncHandler<Response>() {
+            c.prepareGet(targetUrl + "/suspend?" + X_ATMOSPHERE_TRANSPORT + "=" + HeaderConfig.LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
     
                 @Override
                 public void onThrowable(Throwable t) {
