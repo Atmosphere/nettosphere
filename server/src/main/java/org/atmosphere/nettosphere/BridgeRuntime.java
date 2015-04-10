@@ -123,6 +123,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws");
     private final ChannelBufferPool channelBufferPool;
     private final AsynchronousProcessor asynchronousProcessor;
+    private final int maxWebSocketFrameSize;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -231,6 +232,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             framework.excludeInterceptor(s);
         }
         asynchronousProcessor = AsynchronousProcessor.class.cast(framework.getAsyncSupport());
+        maxWebSocketFrameSize = config.maxWebSocketFrameSize();
     }
 
     public AtmosphereFramework framework() {
@@ -284,7 +286,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             return;
         }
 
-        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
+        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
+                null,
+                false,
+                maxWebSocketFrameSize);
+
         WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
 
         if (handshaker == null) {

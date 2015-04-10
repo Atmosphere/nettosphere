@@ -166,6 +166,10 @@ public class Config {
         return b.enablePong;
     }
 
+    public int maxWebSocketFrameSize(){
+        return b.maxWebSocketFrameSize;
+    }
+
     public Map<String, Object> servletContextAttributes(){
         return b.servletContextAttributes;
     }
@@ -202,6 +206,7 @@ public class Config {
         private int writeBufferPoolSize = 50;
         private long writeBufferPoolCleanupFrequency = 30000;
         private boolean enablePong = false;
+        private int maxWebSocketFrameSize = 65536;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -211,6 +216,16 @@ public class Config {
          */
         public Builder sslContext(SSLContext context) {
             this.context = context;
+            return this;
+        }
+
+        /**
+         * Set the maximum WebSocket Frame Size. Default is 65536
+         * @param maxWebSocketFrameSize the maximum WebSocket Frame Size.
+         * @return this
+         */
+        public Builder maxWebSocketFrameSize(int maxWebSocketFrameSize) {
+            this.maxWebSocketFrameSize = maxWebSocketFrameSize;
             return this;
         }
 
