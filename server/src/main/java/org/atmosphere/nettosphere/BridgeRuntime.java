@@ -642,10 +642,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     public void destroy() {
         isShutdown.set(true);
+        if (framework != null) framework.destroy();
+
         httpChannels.close();
         websocketChannels.write(new CloseWebSocketFrame());
-
-        if (framework != null) framework.destroy();
         suspendTimer.shutdown();
     }
 

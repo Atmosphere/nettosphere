@@ -139,7 +139,7 @@ public class ChunkedWriter extends ChannelWriter {
                 lock.writeLock().lock();
 
                 // We got closed, so we throw an IOException so the message get cached.
-                if (doneProcessing.get()){
+                if (doneProcessing.get() && !response.resource().getAtmosphereConfig().framework().isDestroyed()){
                     throw new IOException(channel + ": content already processed for " + response.uuid());
                 }
 
