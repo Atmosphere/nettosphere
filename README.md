@@ -143,7 +143,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 #### Build Status
 [![Build Status](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/badge/icon)](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/)
 
-#### Changelogs
+#### [Changelogs](./CHANGELOG.md)
 
 2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
 
