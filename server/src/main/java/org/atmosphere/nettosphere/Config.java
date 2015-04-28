@@ -15,18 +15,6 @@
  */
 package org.atmosphere.nettosphere;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-
-import javax.net.ssl.SSLContext;
-import javax.servlet.Servlet;
-
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -43,6 +31,17 @@ import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.servlet.Servlet;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
 /**
  * A Configuration class used to configure Atmosphere.
  */
@@ -55,13 +54,13 @@ public class Config {
     }
 
     public ExecutorService bossExecutor() {
-    	return b.bossExecutor;
+        return b.bossExecutor;
     }
-    
+
     public ExecutorService workerExecutor() {
-    	return b.workerExecutor;
+        return b.workerExecutor;
     }
-    
+
     public String host() {
         return b.host;
     }
@@ -150,27 +149,31 @@ public class Config {
         return b.maxContentLength;
     }
 
-    public int  writeBufferPoolSize(){
+    public int writeBufferPoolSize() {
         return b.writeBufferPoolSize;
     }
 
-    public long writeBufferPoolCleanupFrequency(){
+    public long writeBufferPoolCleanupFrequency() {
         return b.writeBufferPoolCleanupFrequency;
     }
 
-    public List<String> excludedInterceptors(){
+    public List<String> excludedInterceptors() {
         return b.excludedInterceptors;
     }
 
-    public boolean enablePong(){
+    public boolean enablePong() {
         return b.enablePong;
     }
 
-    public int maxWebSocketFrameSize(){
+    public int maxWebSocketFrameSize() {
         return b.maxWebSocketFrameSize;
     }
 
-    public Map<String, Object> servletContextAttributes(){
+    public boolean textFrameAsBinary() {
+        return b.textFrameAsBinary;
+    }
+
+    public Map<String, Object> servletContextAttributes() {
         return b.servletContextAttributes;
     }
 
@@ -207,6 +210,7 @@ public class Config {
         private long writeBufferPoolCleanupFrequency = 30000;
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
+        private boolean textFrameAsBinary = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -221,6 +225,7 @@ public class Config {
 
         /**
          * Set the maximum WebSocket Frame Size. Default is 65536
+         *
          * @param maxWebSocketFrameSize the maximum WebSocket Frame Size.
          * @return this
          */
@@ -296,7 +301,7 @@ public class Config {
             this.atmosphereDotXmlPath = atmosphereDotXmlPath;
             return this;
         }
-        
+
         /**
          * The Executor to be used in providing (the) I/O boss-thread(s).
          *
@@ -307,7 +312,7 @@ public class Config {
             this.bossExecutor = bossExecutor;
             return this;
         }
-        
+
         /**
          * The Executor to be used in providing (the) I/O worker-thread(s).
          *
@@ -318,7 +323,7 @@ public class Config {
             this.workerExecutor = workerExecutor;
             return this;
         }
-        
+
         /**
          * The server's host
          *
@@ -507,7 +512,7 @@ public class Config {
         }
 
         /**
-         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}  
+         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}
          * are candidates for being excluded
          *
          * @param interceptor an {@link AtmosphereInterceptor}
@@ -532,7 +537,7 @@ public class Config {
         /**
          * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
          * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
-         * <p/>
+         * <p>
          * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
          *
          * @param supportChunking false to disable.
@@ -590,7 +595,7 @@ public class Config {
          * @param writeBufferPoolSize the max size of the pool.
          * @return this;
          */
-        public Builder writeBufferPoolSize(int writeBufferPoolSize){
+        public Builder writeBufferPoolSize(int writeBufferPoolSize) {
             this.writeBufferPoolSize = writeBufferPoolSize;
             return this;
         }
@@ -598,11 +603,24 @@ public class Config {
         /**
          * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default
          * is 30000.
-         * @param writeBufferPoolCleanupFrequency  the frequency
+         *
+         * @param writeBufferPoolCleanupFrequency the frequency
          * @return this
          */
         public Builder writeBufferPoolCleanupFrequency(long writeBufferPoolCleanupFrequency) {
             this.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
+            return this;
+        }
+
+        /**
+         * Do not decode {@link org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame} into a String and instead pass
+         * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.
+         *
+         * @param textFrameAsBinary
+         * @return
+         */
+        public Builder textFrameAsBinary(boolean textFrameAsBinary) {
+            this.textFrameAsBinary = textFrameAsBinary;
             return this;
         }
 
@@ -620,12 +638,13 @@ public class Config {
 
         /**
          * Set ServletContext Attribute
+         *
          * @param name
          * @param value
          * @return this
          */
         public Builder servletContextAttribute(String name, Object value) {
-            servletContextAttributes.put(name,value);
+            servletContextAttributes.put(name, value);
             return this;
         }
     }

@@ -393,6 +393,7 @@ public class NettyAtmosphereTest extends BaseTest {
     @Test
     public void webSocketHandlerTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
+        final AtomicBoolean handshake = new AtomicBoolean(true);
 
         Config config = new Config.Builder()
                 .port(port)
@@ -401,7 +402,9 @@ public class NettyAtmosphereTest extends BaseTest {
 
                     @Override
                     public void handle(AtmosphereResource r) {
-                        r.getResponse().write("Hello World from Nettosphere").closeStreamOrWriter();
+                        if (!handshake.getAndSet(false)) {
+                            r.getResponse().write("Hello World from Nettosphere");
+                        }
                     }
                 }).build();
 
@@ -433,11 +436,68 @@ public class NettyAtmosphereTest extends BaseTest {
                 public void onError(Throwable t) {
                 }
             });
-    
+            webSocket.sendMessage("Hello World from Nettosphere");
+
             l.await(5, TimeUnit.SECONDS);
     
             webSocket.close();
         assertEquals(response.get(), "Hello World from Nettosphere");
+        } finally {
+            c.close();
+        }
+    }
+
+    @Test
+    public void textFrameAsBinaryTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+
+        final AtomicBoolean handshake = new AtomicBoolean(true);
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .textFrameAsBinary(true)
+                .resource(new Handler() {
+
+                    @Override
+                    public void handle(AtmosphereResource r) {
+                        if (!handshake.getAndSet(false))
+                            r.getResponse().write(r.getRequest().body().asBytes()).closeStreamOrWriter();
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketTextListener() {
+                @Override
+                public void onMessage(String message) {
+                    response.set(message);
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
+
+                @Override
+                public void onClose(WebSocket websocket) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                }
+            });
+            webSocket.sendMessage("Hello World from Nettosphere");
+            l.await(20, TimeUnit.SECONDS);
+
+            webSocket.close();
+            assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
         }
