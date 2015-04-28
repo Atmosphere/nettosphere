@@ -317,6 +317,82 @@ public class NettyAtmosphereTest extends BaseTest {
     }
 
     @Test
+     public void subProtocolTest() throws Exception {
+         final CountDownLatch l = new CountDownLatch(1);
+
+         Config config = new Config.Builder()
+                 .port(port)
+                 .subProtocols("jfa-protocol")
+                 .host("127.0.0.1")
+                 .resource("/suspend", new AtmosphereHandler() {
+
+                     private final AtomicBoolean b = new AtomicBoolean(false);
+
+                     @Override
+                     public void onRequest(AtmosphereResource r) throws IOException {
+                         if (!b.getAndSet(true)) {
+                             r.suspend(-1);
+                         } else {
+                             r.getBroadcaster().broadcast(RESUME);
+                         }
+                     }
+
+                     @Override
+                     public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                         if (!r.isResuming() || !r.isCancelled()) {
+                             r.getResource().getResponse().getWriter().print(r.getMessage());
+                             r.getResource().resume();
+                         }
+                     }
+
+                     @Override
+                     public void destroy() {
+
+                     }
+                 }).build();
+
+         server = new Nettosphere.Builder().config(config).build();
+         assertNotNull(server);
+         server.start();
+
+         final AtomicReference<String> response = new AtomicReference<String>();
+         AsyncHttpClient c = new AsyncHttpClient();
+         try {
+             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
+                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+             assertNotNull(webSocket);
+             webSocket.addWebSocketListener(new WebSocketTextListener() {
+                 @Override
+                 public void onMessage(String message) {
+                     response.set(message);
+                     l.countDown();
+                 }
+
+                 @Override
+                 public void onOpen(WebSocket websocket) {
+                 }
+
+                 @Override
+                 public void onClose(WebSocket websocket) {
+                     l.countDown();
+                 }
+
+                 @Override
+                 public void onError(Throwable t) {
+                     l.countDown();
+                 }
+             }).sendMessage("Ping");
+
+             l.await(5, TimeUnit.SECONDS);
+
+             webSocket.close();
+             assertEquals(response.get(), RESUME);
+         } finally {
+             c.close();
+         }
+     }
+
+    @Test
     public void suspendWebSocketTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
 

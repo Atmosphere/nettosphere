@@ -288,7 +288,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
-                null,
+                config.subProtocols(),
                 false,
                 maxWebSocketFrameSize);
 

@@ -177,6 +177,10 @@ public class Config {
         return b.servletContextAttributes;
     }
 
+    public String subProtocols() {
+        return b.subProtocols;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -211,6 +215,7 @@ public class Config {
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
         private boolean textFrameAsBinary = false;
+        public String subProtocols = "";
 
         /**
          * Set an SSLContext in order enable SSL
@@ -617,10 +622,20 @@ public class Config {
          * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.
          *
          * @param textFrameAsBinary
-         * @return
+         * @return this
          */
         public Builder textFrameAsBinary(boolean textFrameAsBinary) {
             this.textFrameAsBinary = textFrameAsBinary;
+            return this;
+        }
+
+        /**
+         * A coma delimited of allowed WebSocket Sub Protocol (Sec-WebSocket-Protocol)
+         * @param subProtocols A coma delimited of allowed WebSocket Sub Protocol
+         * @return this
+         */
+        public Builder subProtocols(String subProtocols) {
+            this.subProtocols = subProtocols;
             return this;
         }
 
