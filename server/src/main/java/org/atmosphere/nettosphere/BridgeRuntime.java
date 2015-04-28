@@ -102,6 +102,7 @@ import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYP
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -298,6 +299,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else {
 
             final WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
+            final AtmosphereRequest r = createAtmosphereRequest(ctx, request);
+
+            if (!webSocketProcessor.handshake(r))  {
+                sendError(ctx, BAD_REQUEST, null);
+                return;
+            }
+
             webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
 
             handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
@@ -307,8 +315,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         future.getChannel().close();
                     } else {
                         websocketChannels.add(ctx.getChannel());
-
-                        AtmosphereRequest r = createAtmosphereRequest(ctx, request);
 
                         ctx.setAttachment(webSocket);
                         if (request.headers().contains("X-wakeUpNIO")) {
