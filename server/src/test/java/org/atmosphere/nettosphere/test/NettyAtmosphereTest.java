@@ -23,6 +23,7 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
 import com.ning.http.client.ws.WebSocket;
+import com.ning.http.client.ws.WebSocketPongListener;
 import com.ning.http.client.ws.WebSocketTextListener;
 import com.ning.http.client.ws.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.AtmosphereHandler;
@@ -33,6 +34,9 @@ import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
 import org.atmosphere.websocket.WebSocketEventListenerAdapter;
+import org.atmosphere.websocket.WebSocketHandler;
+import org.atmosphere.websocket.WebSocketPingPongListener;
+import org.atmosphere.websocket.WebSocketProcessor;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -115,7 +119,7 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
-    
+
             assertEquals(r.getStatusCode(), 200);
             assertEquals(b.get(), true);
         } finally {
@@ -173,48 +177,48 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
-    
+
                 final Response.ResponseBuilder b = new Response.ResponseBuilder();
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     response.set(b.build());
-    
+
                     l.countDown();
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
             assertEquals(r.getStatusCode(), 200);
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             assertEquals(response.get().getStatusCode(), 200);
             assertEquals(response.get().getResponseBody().trim(), RESUME);
         } finally {
@@ -267,48 +271,48 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
-    
+
                 final Response.ResponseBuilder b = new Response.ResponseBuilder();
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     response.set(b.build());
-    
+
                     l.countDown();
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
             assertEquals(r.getStatusCode(), 200);
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             assertEquals(response.get().getStatusCode(), 200);
             assertEquals(response.get().getResponseBody().trim(), RESUME);
         } finally {
@@ -317,80 +321,80 @@ public class NettyAtmosphereTest extends BaseTest {
     }
 
     @Test
-     public void subProtocolTest() throws Exception {
-         final CountDownLatch l = new CountDownLatch(1);
+    public void subProtocolTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
 
-         Config config = new Config.Builder()
-                 .port(port)
-                 .subProtocols("jfa-protocol")
-                 .host("127.0.0.1")
-                 .resource("/suspend", new AtmosphereHandler() {
+        Config config = new Config.Builder()
+                .port(port)
+                .subProtocols("jfa-protocol")
+                .host("127.0.0.1")
+                .resource("/suspend", new AtmosphereHandler() {
 
-                     private final AtomicBoolean b = new AtomicBoolean(false);
+                    private final AtomicBoolean b = new AtomicBoolean(false);
 
-                     @Override
-                     public void onRequest(AtmosphereResource r) throws IOException {
-                         if (!b.getAndSet(true)) {
-                             r.suspend(-1);
-                         } else {
-                             r.getBroadcaster().broadcast(RESUME);
-                         }
-                     }
+                    @Override
+                    public void onRequest(AtmosphereResource r) throws IOException {
+                        if (!b.getAndSet(true)) {
+                            r.suspend(-1);
+                        } else {
+                            r.getBroadcaster().broadcast(RESUME);
+                        }
+                    }
 
-                     @Override
-                     public void onStateChange(AtmosphereResourceEvent r) throws IOException {
-                         if (!r.isResuming() || !r.isCancelled()) {
-                             r.getResource().getResponse().getWriter().print(r.getMessage());
-                             r.getResource().resume();
-                         }
-                     }
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                        if (!r.isResuming() || !r.isCancelled()) {
+                            r.getResource().getResponse().getWriter().print(r.getMessage());
+                            r.getResource().resume();
+                        }
+                    }
 
-                     @Override
-                     public void destroy() {
+                    @Override
+                    public void destroy() {
 
-                     }
-                 }).build();
+                    }
+                }).build();
 
-         server = new Nettosphere.Builder().config(config).build();
-         assertNotNull(server);
-         server.start();
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
 
-         final AtomicReference<String> response = new AtomicReference<String>();
-         AsyncHttpClient c = new AsyncHttpClient();
-         try {
-             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
-                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
-             assertNotNull(webSocket);
-             webSocket.addWebSocketListener(new WebSocketTextListener() {
-                 @Override
-                 public void onMessage(String message) {
-                     response.set(message);
-                     l.countDown();
-                 }
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
+                    .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketTextListener() {
+                @Override
+                public void onMessage(String message) {
+                    response.set(message);
+                    l.countDown();
+                }
 
-                 @Override
-                 public void onOpen(WebSocket websocket) {
-                 }
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
 
-                 @Override
-                 public void onClose(WebSocket websocket) {
-                     l.countDown();
-                 }
+                @Override
+                public void onClose(WebSocket websocket) {
+                    l.countDown();
+                }
 
-                 @Override
-                 public void onError(Throwable t) {
-                     l.countDown();
-                 }
-             }).sendMessage("Ping");
+                @Override
+                public void onError(Throwable t) {
+                    l.countDown();
+                }
+            }).sendMessage("Ping");
 
-             l.await(5, TimeUnit.SECONDS);
+            l.await(5, TimeUnit.SECONDS);
 
-             webSocket.close();
-             assertEquals(response.get(), RESUME);
-         } finally {
-             c.close();
-         }
-     }
+            webSocket.close();
+            assertEquals(response.get(), RESUME);
+        } finally {
+            c.close();
+        }
+    }
 
     @Test
     public void suspendWebSocketTest() throws Exception {
@@ -441,24 +445,24 @@ public class NettyAtmosphereTest extends BaseTest {
                     response.set(message);
                     l.countDown();
                 }
-    
+
                 @Override
                 public void onOpen(WebSocket websocket) {
                 }
-    
+
                 @Override
                 public void onClose(WebSocket websocket) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public void onError(Throwable t) {
                     l.countDown();
                 }
             }).sendMessage("Ping");
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             webSocket.close();
             assertEquals(response.get(), RESUME);
         } finally {
@@ -499,15 +503,15 @@ public class NettyAtmosphereTest extends BaseTest {
                     response.set(message);
                     l.countDown();
                 }
-    
+
                 @Override
                 public void onOpen(WebSocket websocket) {
                 }
-    
+
                 @Override
                 public void onClose(WebSocket websocket) {
                 }
-    
+
                 @Override
                 public void onError(Throwable t) {
                 }
@@ -515,9 +519,9 @@ public class NettyAtmosphereTest extends BaseTest {
             webSocket.sendMessage("Hello World from Nettosphere");
 
             l.await(5, TimeUnit.SECONDS);
-    
+
             webSocket.close();
-        assertEquals(response.get(), "Hello World from Nettosphere");
+            assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
         }
@@ -601,7 +605,7 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             Response response = c.prepareGet(targetUrl).execute().get();
             assertNotNull(response);
-    
+
             assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -634,7 +638,7 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             Response response = c.prepareGet("https://127.0.0.1:" + port).execute().get();
             assertNotNull(response);
-    
+
             assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -662,9 +666,9 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
-            .setAcceptAnyCertificate(true)
-            .setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"})
-            .build());
+                .setAcceptAnyCertificate(true)
+                .setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"})
+                .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();
             WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
@@ -675,22 +679,22 @@ public class NettyAtmosphereTest extends BaseTest {
                     response.set(message);
                     l.countDown();
                 }
-    
+
                 @Override
                 public void onOpen(WebSocket websocket) {
                 }
-    
+
                 @Override
                 public void onClose(WebSocket websocket) {
                 }
-    
+
                 @Override
                 public void onError(Throwable t) {
                 }
             });
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             webSocket.close();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
@@ -780,42 +784,42 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend?" + X_ATMOSPHERE_TRANSPORT + "=" + HeaderConfig.LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     response.set(headers);
                     l.countDown();
                     return STATE.ABORT;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             Thread.sleep(2000);
-    
+
             server.stop();
             l.await(20, TimeUnit.SECONDS);
-    
+
             assertNotNull(response.get());
         } finally {
             c.close();
@@ -868,48 +872,48 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
-    
+
                 final Response.ResponseBuilder b = new Response.ResponseBuilder();
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     response.set(b.build());
-    
+
                     l.countDown();
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
             assertEquals(r.getStatusCode(), 200);
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             assertEquals(response.get().getStatusCode(), 200);
             assertEquals(response.get().getResponseBody().trim(), RESUME);
         } finally {
@@ -966,54 +970,54 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
-    
+
                 final Response.ResponseBuilder b = new Response.ResponseBuilder();
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     response.set(b.build());
-    
+
                     l.countDown();
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             StringBuilder b = new StringBuilder();
-            for (int i=0; i < 10000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 b.append("======");
             }
             b.append("message");
-    
+
             Response r = c.preparePost(targetUrl + "/suspend").setContentLength(b.toString().length()).setBody(b.toString()).execute().get();
             assertEquals(r.getStatusCode(), 200);
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             assertEquals(response.get().getStatusCode(), 200);
             assertEquals(response.get().getResponseBody().trim(), b.toString());
         } finally {
@@ -1070,58 +1074,147 @@ public class NettyAtmosphereTest extends BaseTest {
         AsyncHttpClient c = new AsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
-    
+
                 final Response.ResponseBuilder b = new Response.ResponseBuilder();
-    
+
                 @Override
                 public void onThrowable(Throwable t) {
                     l.countDown();
                 }
-    
+
                 @Override
                 public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return STATE.CONTINUE;
                 }
-    
+
                 @Override
                 public Response onCompleted() throws Exception {
                     response.set(b.build());
-    
+
                     l.countDown();
                     return null;
                 }
             });
-    
+
             suspendCD.await(5, TimeUnit.SECONDS);
-    
+
             StringBuilder b = new StringBuilder();
-            for (int i=0; i < 10000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 b.append("======");
             }
             b.append("message");
-    
+
             Response r = c.preparePost(targetUrl + "/suspend").setContentLength(b.toString().length()).setBody(b.toString()).execute().get();
             assertEquals(r.getStatusCode(), 200);
-    
+
             l.await(5, TimeUnit.SECONDS);
-    
+
             assertEquals(response.get().getStatusCode(), 200);
             assertEquals(response.get().getResponseBody().trim(), b.toString());
         } finally {
             c.close();
         }
     }
+
+    public final static class PingPongHandler implements WebSocketHandler, WebSocketPingPongListener {
+
+        @Override
+        public void onByteMessage(org.atmosphere.websocket.WebSocket webSocket, byte[] data, int offset, int length) throws IOException {
+
+        }
+
+        @Override
+        public void onTextMessage(org.atmosphere.websocket.WebSocket webSocket, String data) throws IOException {
+
+        }
+
+        @Override
+        public void onOpen(org.atmosphere.websocket.WebSocket webSocket) throws IOException {
+
+        }
+
+        @Override
+        public void onClose(org.atmosphere.websocket.WebSocket webSocket) {
+
+        }
+
+        @Override
+        public void onError(org.atmosphere.websocket.WebSocket webSocket, WebSocketProcessor.WebSocketException t) {
+
+        }
+
+        @Override
+        public void onPong(org.atmosphere.websocket.WebSocket webSocket, byte[] bytes, int i, int i1) {
+        }
+
+        @Override
+        public void onPing(org.atmosphere.websocket.WebSocket webSocket, byte[] bytes, int i, int i1) {
+            webSocket.sendPong("Hello from server".getBytes());
+        }
+    }
+
+    @Test
+    public void pingPongTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .resource("/pingPong", PingPongHandler.class).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketPongListener() {
+                @Override
+                public void onPong(byte[] message) {
+                    response.set(new String(message));
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+
+                }
+
+                @Override
+                public void onClose(WebSocket websocket) {
+
+                }
+
+                @Override
+                public void onError(Throwable t) {
+
+                }
+            }).sendPing("Hello from Client".getBytes());
+
+            l.await(5, TimeUnit.SECONDS);
+
+            webSocket.close();
+            assertEquals(response.get(), "Hello from server");
+        } finally {
+            c.close();
+        }
+    }
+
+
 }

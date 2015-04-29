@@ -18,6 +18,7 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsynchronousProcessor;
+import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -26,6 +27,7 @@ import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
@@ -33,6 +35,8 @@ import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
+import org.atmosphere.websocket.WebSocketHandler;
+import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -96,6 +100,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.AtmosphereFramework.REFLECTOR_ATMOSPHEREHANDLER;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYPE.HANDSHAKE;
@@ -157,6 +162,21 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         for (Map.Entry<String, AtmosphereHandler> e : handlersMap.entrySet()) {
             framework.addAtmosphereHandler(e.getKey(), e.getValue());
         }
+
+        final Map<String, WebSocketHandler> webSocketHandlerMap = config.webSocketHandlersMap();
+
+        if (handlersMap.size() == 0 && !webSocketHandlerMap.isEmpty()) {
+            framework.addAtmosphereHandler(Broadcaster.ROOT_MASTER, REFLECTOR_ATMOSPHEREHANDLER);
+        }
+
+        framework.getAtmosphereConfig().startupHook(new AtmosphereConfig.StartupHook() {
+            @Override
+            public void started(AtmosphereFramework framework) {
+                for (Map.Entry<String, WebSocketHandler> e : webSocketHandlerMap.entrySet()) {
+                    framework.addWebSocketHandler(e.getKey(), e.getValue());
+                }
+            }
+        });
 
         if (config.webSocketProtocol() != null) {
             framework.setWebSocketProtocolClassName(config.webSocketProtocol().getName());
@@ -358,13 +378,24 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (frame instanceof CloseWebSocketFrame) {
             ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
-            ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
+            ChannelBuffer binaryData = frame.getBinaryData();
+            if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            } else {
+                ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
+            }
         } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
             ChannelBuffer binaryData = frame.getBinaryData();
             webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
             webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
         } else if (frame instanceof PongWebSocketFrame) {
+            ChannelBuffer binaryData = frame.getBinaryData();
+
+            if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            }
+
             if (config.enablePong()) {
                 ctx.getChannel().write(new PingWebSocketFrame(frame.getBinaryData()));
             } else {

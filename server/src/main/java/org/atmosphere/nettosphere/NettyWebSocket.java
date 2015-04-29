@@ -26,6 +26,8 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,5 +130,25 @@ public class NettyWebSocket extends WebSocket {
         if (impl != null) {
             channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
         }
+    }
+
+    /**
+     * Send a WebSocket Ping
+     * @param payload the bytes to send
+     * @return this
+     */
+    public WebSocket sendPing(byte[] payload) {
+        channel.write(new PingWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
+        return this;
+    }
+
+    /**
+     * Send a WebSocket Pong
+     * @param payload the bytes to send
+     * @return this
+     */
+    public WebSocket sendPong(byte[] payload) {
+        channel.write(new PongWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
+        return this;
     }
 }

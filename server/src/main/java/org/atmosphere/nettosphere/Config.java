@@ -25,6 +25,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.handler.ReflectorServletProcessor;
 import org.atmosphere.nettosphere.util.SSLContextListener;
+import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -87,6 +88,10 @@ public class Config {
 
     public Map<String, AtmosphereHandler> handlersMap() {
         return b.handlers;
+    }
+
+    public Map<String, WebSocketHandler> webSocketHandlersMap() {
+        return b.webSocketHandlers;
     }
 
     public BroadcasterFactory broadcasterFactory() {
@@ -192,6 +197,8 @@ public class Config {
         private final Map<String, Object> servletContextAttributes = new HashMap<String, Object>();
 
         private final Map<String, AtmosphereHandler> handlers = new HashMap<String, AtmosphereHandler>();
+        private final Map<String, WebSocketHandler> webSocketHandlers = new HashMap<String, WebSocketHandler>();
+
         private Class<? extends WebSocketProtocol> webSocketProtocol = SimpleHttpProtocol.class;
 
         private Class<? extends Broadcaster> broadcasterClass;
@@ -387,6 +394,18 @@ public class Config {
         }
 
         /**
+         * Add an {@link WebSocketHandler} that will be mapped to the specified path
+         *
+         * @param path a mapping path
+         * @param c    an {@link AtmosphereHandler}
+         * @return this
+         */
+        public Builder resource(String path, WebSocketHandler c) {
+            webSocketHandlers.put(path, c);
+            return this;
+        }
+
+        /**
          * Add an {@link Servlet} that will be mapped to the specified path
          *
          * @param path a mapping path
@@ -450,6 +469,8 @@ public class Config {
             try {
                 if (AtmosphereHandler.class.isAssignableFrom(c)) {
                     handlers.put(path, AtmosphereHandler.class.cast(c.newInstance()));
+                } else if (WebSocketHandler.class.isAssignableFrom(c)) {
+                    webSocketHandlers.put(path, WebSocketHandler.class.cast(c.newInstance()));
                 } else if (Servlet.class.isAssignableFrom(c)) {
                     handlers.put(path, new ReflectorServletProcessor(Servlet.class.cast(c.newInstance())));
                 } else {
