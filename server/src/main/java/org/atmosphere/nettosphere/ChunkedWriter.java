@@ -19,6 +19,7 @@ import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.nettosphere.util.ChannelBufferPool;
+import org.atmosphere.nettosphere.util.Utils;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -140,7 +141,7 @@ public class ChunkedWriter extends ChannelWriter {
 
                 // We got closed, so we throw an IOException so the message get cached.
                 if (doneProcessing.get() && !response.resource().getAtmosphereConfig().framework().isDestroyed()){
-                    throw new IOException(channel + ": content already processed for " + response.uuid());
+                    throw Utils.ioExceptionForChannel(channel, response.uuid());
                 }
 
                 channel.write(writeBuffer).addListener(new ChannelFutureListener() {

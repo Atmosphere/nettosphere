@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
+
 public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
@@ -42,7 +44,8 @@ public class NettyWebSocket extends WebSocket {
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
     private int bufferBinarySize = Integer.MAX_VALUE;
     private int bufferStringSize = Integer.MAX_VALUE;
-    ;
+
+
     private boolean binaryWrite = false;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
@@ -78,7 +81,7 @@ public class NettyWebSocket extends WebSocket {
      */
     public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
+        if (!channel.isOpen()) throw REMOTELY_CLOSED;
         logger.trace("WebSocket.write()");
 
         if (binaryWrite) {
@@ -106,7 +109,7 @@ public class NettyWebSocket extends WebSocket {
 
     void _write(byte[] data, int offset, int length) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
+        if (!channel.isOpen()) throw REMOTELY_CLOSED;
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));

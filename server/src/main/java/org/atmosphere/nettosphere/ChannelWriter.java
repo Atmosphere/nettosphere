@@ -18,6 +18,7 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereInterceptorWriter;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.nettosphere.util.Utils;
 import org.atmosphere.util.ByteArrayAsyncWriter;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -100,7 +101,7 @@ public abstract class ChannelWriter extends AtmosphereInterceptorWriter {
     public AsyncIOWriter write(AtmosphereResponse response, byte[] data, int offset, int length) throws IOException {
 
         if (doneProcessing.get()) {
-            throw new IOException(channel + ": content already processed for " + response.uuid());
+            throw Utils.ioExceptionForChannel(channel, response.uuid());
         }
 
         boolean transform = filters.size() > 0 && response.getStatus() < 400;

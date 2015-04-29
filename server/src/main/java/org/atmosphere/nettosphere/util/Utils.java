@@ -15,6 +15,8 @@
  */
 package org.atmosphere.nettosphere.util;
 
+import org.jboss.netty.channel.Channel;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +32,18 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class Utils {
+
+    public static final IOException REMOTELY_CLOSED = new IOException("Connection remotely closed");
+
+    {
+        REMOTELY_CLOSED.setStackTrace(new StackTraceElement[]{});
+    }
+
+    public static final IOException ioExceptionForChannel(Channel channel, String uuid) {
+        IOException ioe = new IOException(channel + ": content already processed for " + uuid);
+        ioe.setStackTrace(new StackTraceElement[]{});
+        return ioe;
+    }
 
     public final static URLClassLoader createURLClassLoader(String dirPath) throws IOException {
 

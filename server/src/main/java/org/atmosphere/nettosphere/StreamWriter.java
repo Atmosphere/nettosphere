@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.nettosphere.util.Utils;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -71,7 +72,7 @@ public class StreamWriter extends ChannelWriter {
                 }
             });
         } else {
-            throw new IOException(channel + ": content already processed for " + response.uuid());
+            throw Utils.ioExceptionForChannel(channel, response.uuid());
         }
     }
 
