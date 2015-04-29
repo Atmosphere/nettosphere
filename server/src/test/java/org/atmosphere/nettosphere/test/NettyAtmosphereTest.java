@@ -23,6 +23,7 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Response;
 import com.ning.http.client.ws.WebSocket;
+import com.ning.http.client.ws.WebSocketPingListener;
 import com.ning.http.client.ws.WebSocketPongListener;
 import com.ning.http.client.ws.WebSocketTextListener;
 import com.ning.http.client.ws.WebSocketUpgradeHandler;
@@ -1158,6 +1159,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         @Override
         public void onPong(org.atmosphere.websocket.WebSocket webSocket, byte[] bytes, int i, int i1) {
+            webSocket.sendPing("Hello from server".getBytes());
         }
 
         @Override
@@ -1167,7 +1169,7 @@ public class NettyAtmosphereTest extends BaseTest {
     }
 
     @Test
-    public void pingPongTest() throws Exception {
+    public void pingTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
 
         Config config = new Config.Builder()
@@ -1216,5 +1218,53 @@ public class NettyAtmosphereTest extends BaseTest {
         }
     }
 
+    @Test
+    public void pongTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
 
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .resource("/pingPong", PingPongHandler.class).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketPingListener() {
+                @Override
+                public void onPing(byte[] message) {
+                    response.set(new String(message));
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+
+                }
+
+                @Override
+                public void onClose(WebSocket websocket) {
+
+                }
+
+                @Override
+                public void onError(Throwable t) {
+
+                }
+            }).sendPong("Hello from Client".getBytes());
+
+            l.await(5, TimeUnit.SECONDS);
+
+            webSocket.close();
+            assertEquals(response.get(), "Hello from server");
+        } finally {
+            c.close();
+        }
+    }
 }
