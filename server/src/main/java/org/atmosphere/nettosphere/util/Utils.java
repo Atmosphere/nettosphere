@@ -15,6 +15,9 @@
  */
 package org.atmosphere.nettosphere.util;
 
+import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResponse;
 import org.jboss.netty.channel.Channel;
 
 import java.io.BufferedOutputStream;
@@ -23,6 +26,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -38,6 +44,8 @@ public class Utils {
     {
         REMOTELY_CLOSED.setStackTrace(new StackTraceElement[]{});
     }
+
+    private final static NoAlloc NO_ALLOC = new NoAlloc();
 
     public static final IOException ioExceptionForChannel(Channel channel, String uuid) {
         IOException ioe = new IOException(channel + ": content already processed for " + uuid);
@@ -346,5 +354,44 @@ public class Utils {
         }
         return result;
 
+    }
+
+    private final static class NoAlloc {
+        public String toString() {
+            return "config.noInternalAlloc == true";
+        }
+    }
+
+    public final static AtmosphereResource proxiedAtmosphereResource() {
+        return (AtmosphereResource)
+                Proxy.newProxyInstance(AtmosphereResource.class.getClassLoader(), new Class[]{AtmosphereResource.class},
+                        new InvocationHandler() {
+                            @Override
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                return NO_ALLOC;
+                            }
+                        });
+    }
+
+    public final static AtmosphereRequest proxiedAtmosphereRequest() {
+        return (AtmosphereRequest)
+                Proxy.newProxyInstance(AtmosphereResource.class.getClassLoader(), new Class[]{AtmosphereRequest.class},
+                        new InvocationHandler() {
+                            @Override
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                return NO_ALLOC;
+                            }
+                        });
+    }
+
+    public final static AtmosphereResponse proxiedAtmosphereResponse() {
+        return (AtmosphereResponse)
+                Proxy.newProxyInstance(AtmosphereResource.class.getClassLoader(), new Class[]{AtmosphereResponse.class},
+                        new InvocationHandler() {
+                            @Override
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                return NO_ALLOC;
+                            }
+                        });
     }
 }

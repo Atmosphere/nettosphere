@@ -32,6 +32,7 @@ import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.ChannelBufferPool;
+import org.atmosphere.nettosphere.util.Utils;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
@@ -131,6 +132,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final AsynchronousProcessor asynchronousProcessor;
     private final int maxWebSocketFrameSize;
 
+    private final AtmosphereRequest proxiedRequest;
+    private final AtmosphereResponse proxiedResponse;
+    private final AtmosphereResource proxiedResource;
+
     public BridgeRuntime(final Config config) {
         super(config.path());
         this.config = config;
@@ -217,7 +222,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
-        
+
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
             @Override
             public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
@@ -237,7 +242,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 return "NettoSphereAsyncSupport";
             }
         });
-        
+
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
 
@@ -254,6 +259,16 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
         asynchronousProcessor = AsynchronousProcessor.class.cast(framework.getAsyncSupport());
         maxWebSocketFrameSize = config.maxWebSocketFrameSize();
+
+        if (config.noInternalAlloc()) {
+            proxiedRequest = Utils.proxiedAtmosphereRequest();
+            proxiedResponse = Utils.proxiedAtmosphereResponse();
+            proxiedResource = Utils.proxiedAtmosphereResource();
+        } else {
+            proxiedRequest = null;
+            proxiedResponse = null;
+            proxiedResource = null;
+        }
     }
 
     public AtmosphereFramework framework() {
@@ -319,9 +334,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else {
 
             final WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
-            final AtmosphereRequest r = createAtmosphereRequest(ctx, request);
+            final AtmosphereRequest atmosphereRequest
+                    = createAtmosphereRequest(ctx, request);
 
-            if (!webSocketProcessor.handshake(r))  {
+            if (!webSocketProcessor.handshake(atmosphereRequest)) {
                 sendError(ctx, BAD_REQUEST, null);
                 return;
             }
@@ -364,7 +380,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                 webSocket.write(" ");
                             }
                         }
-                        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
+
+                        if (config.noInternalAlloc()) {
+                            webSocket.resource(proxiedResource);
+                        }
+
+                        AtmosphereResponse response = config.noInternalAlloc() ? proxiedResponse :
+                                AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
+                        webSocketProcessor.open(webSocket, atmosphereRequest, response);
                     }
                 }
             });
@@ -408,6 +431,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+        if (config.noInternalAlloc()) {
+            return proxiedRequest;
+        }
+
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         final String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");

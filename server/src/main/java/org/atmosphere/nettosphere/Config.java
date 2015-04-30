@@ -186,6 +186,10 @@ public class Config {
         return b.subProtocols;
     }
 
+    public boolean noInternalAlloc() {
+        return b.noInternalAlloc;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -223,6 +227,7 @@ public class Config {
         private int maxWebSocketFrameSize = 65536;
         private boolean textFrameAsBinary = false;
         public String subProtocols = "";
+        private boolean noInternalAlloc = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -563,7 +568,7 @@ public class Config {
         /**
          * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
          * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
-         * <p>
+         * <p/>
          * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
          *
          * @param supportChunking false to disable.
@@ -652,11 +657,27 @@ public class Config {
 
         /**
          * A coma delimited of allowed WebSocket Sub Protocol (Sec-WebSocket-Protocol)
+         *
          * @param subProtocols A coma delimited of allowed WebSocket Sub Protocol
          * @return this
          */
         public Builder subProtocols(String subProtocols) {
             this.subProtocols = subProtocols;
+            return this;
+        }
+
+        /**
+         * Proxy {@link org.atmosphere.cpr.AtmosphereRequest}, {@link AtmosphereResource} and {@link org.atmosphere.cpr.AtmosphereRequest}
+         * with no ops implementations.
+         * <p/>
+         * Set it to true only if you are using WebSocket with a your own implementation of {@link org.atmosphere.websocket.WebSocketProcessor}. The WebSocketProcessor MUST not invoked those objects and only use the {@link org.atmosphere.websocket.WebSocket} API.
+         * <p/>
+         * Default is false
+         * @param noInternalAlloc
+         * @return this
+         */
+        public Builder noInternalAlloc(boolean noInternalAlloc) {
+            this.noInternalAlloc = noInternalAlloc;
             return this;
         }
 
