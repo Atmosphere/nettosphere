@@ -32,7 +32,6 @@ import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
 import org.atmosphere.nettosphere.util.ChannelBufferPool;
-import org.atmosphere.nettosphere.util.Utils;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
@@ -261,9 +260,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         maxWebSocketFrameSize = config.maxWebSocketFrameSize();
 
         if (config.noInternalAlloc()) {
-            proxiedRequest = Utils.proxiedAtmosphereRequest();
-            proxiedResponse = Utils.proxiedAtmosphereResponse();
-            proxiedResource = Utils.proxiedAtmosphereResource();
+            proxiedRequest = new AtmosphereRequest.Builder().build();
+            proxiedResponse = new AtmosphereResponse.Builder().build();
+            proxiedResource = new AtmosphereResourceImpl();
         } else {
             proxiedRequest = null;
             proxiedResponse = null;
