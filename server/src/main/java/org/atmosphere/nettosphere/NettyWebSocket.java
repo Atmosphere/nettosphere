@@ -65,7 +65,7 @@ public class NettyWebSocket extends WebSocket {
 
     public WebSocket resource(AtmosphereResource r) {
         super.resource(r);
-        if (r != null) {
+        if (r != null && r.getRequest() != null) {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
             } catch (Exception ex) {
