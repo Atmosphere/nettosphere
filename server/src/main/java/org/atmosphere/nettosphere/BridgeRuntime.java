@@ -50,14 +50,14 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.Cookie;
-import org.jboss.netty.handler.codec.http.CookieDecoder;
+import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
@@ -789,26 +789,28 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
         String cookieHeader = request.headers().get("Cookie");
         if (cookieHeader != null) {
-            Set<Cookie> cookies = new CookieDecoder().decode(cookieHeader);
+            Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieHeader);
             for (Cookie cookie : cookies) {
-                javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.getName(), cookie.getValue());
-                if (cookie.getComment() != null) {
-                    c.setComment(cookie.getComment());
-                }
+                javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.name(), cookie.value());
+// Netty 3.10.2
+//                if (cookie.getComment() != null) {
+//                    c.setComment(cookie.getComment());
+//                }
 
-                if (cookie.getDomain() != null) {
-                    c.setDomain(cookie.getDomain());
+                if (cookie.domain() != null) {
+                    c.setDomain(cookie.domain());
                 }
 
                 c.setHttpOnly(cookie.isHttpOnly());
-                c.setMaxAge(cookie.getMaxAge());
+                c.setMaxAge((int) cookie.maxAge());
 
-                if (cookie.getPath() != null) {
-                    c.setPath(cookie.getPath());
+                if (cookie.path() != null) {
+                    c.setPath(cookie.path());
                 }
 
                 c.setSecure(cookie.isSecure());
-                c.setVersion(cookie.getVersion());
+// Netty 3.10.2
+//                c.setVersion(cookie.getVersion());
                 result.add(c);
 
             }

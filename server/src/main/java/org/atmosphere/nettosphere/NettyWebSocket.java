@@ -44,8 +44,6 @@ public class NettyWebSocket extends WebSocket {
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
     private int bufferBinarySize = Integer.MAX_VALUE;
     private int bufferStringSize = Integer.MAX_VALUE;
-
-
     private boolean binaryWrite = false;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
