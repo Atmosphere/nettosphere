@@ -18,6 +18,7 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AsynchronousProcessor;
+import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -26,6 +27,7 @@ import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
@@ -33,6 +35,8 @@ import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
+import org.atmosphere.websocket.WebSocketHandler;
+import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -46,14 +50,14 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.Cookie;
-import org.jboss.netty.handler.codec.http.CookieDecoder;
+import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
@@ -96,12 +100,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.atmosphere.cpr.AtmosphereFramework.REFLECTOR_ATMOSPHEREHANDLER;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYPE.HANDSHAKE;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -124,6 +130,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final ChannelBufferPool channelBufferPool;
     private final AsynchronousProcessor asynchronousProcessor;
     private final int maxWebSocketFrameSize;
+
+    private final AtmosphereRequest proxiedRequest;
+    private final AtmosphereResponse proxiedResponse;
+    private final AtmosphereResource proxiedResource;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -156,6 +166,21 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         for (Map.Entry<String, AtmosphereHandler> e : handlersMap.entrySet()) {
             framework.addAtmosphereHandler(e.getKey(), e.getValue());
         }
+
+        final Map<String, WebSocketHandler> webSocketHandlerMap = config.webSocketHandlersMap();
+
+        if (handlersMap.size() == 0 && !webSocketHandlerMap.isEmpty()) {
+            framework.addAtmosphereHandler(Broadcaster.ROOT_MASTER, REFLECTOR_ATMOSPHEREHANDLER);
+        }
+
+        framework.getAtmosphereConfig().startupHook(new AtmosphereConfig.StartupHook() {
+            @Override
+            public void started(AtmosphereFramework framework) {
+                for (Map.Entry<String, WebSocketHandler> e : webSocketHandlerMap.entrySet()) {
+                    framework.addWebSocketHandler(e.getKey(), e.getValue());
+                }
+            }
+        });
 
         if (config.webSocketProtocol() != null) {
             framework.setWebSocketProtocolClassName(config.webSocketProtocol().getName());
@@ -196,7 +221,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } catch (ServletException e) {
             throw new RuntimeException(e);
         }
-        
+
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
             @Override
             public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
@@ -216,7 +241,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 return "NettoSphereAsyncSupport";
             }
         });
-        
+
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
 
@@ -233,6 +258,16 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
         asynchronousProcessor = AsynchronousProcessor.class.cast(framework.getAsyncSupport());
         maxWebSocketFrameSize = config.maxWebSocketFrameSize();
+
+        if (config.noInternalAlloc()) {
+            proxiedRequest = new AtmosphereRequest.Builder().build();
+            proxiedResponse = new AtmosphereResponse.Builder().build();
+            proxiedResource = new AtmosphereResourceImpl();
+        } else {
+            proxiedRequest = null;
+            proxiedResponse = null;
+            proxiedResource = null;
+        }
     }
 
     public AtmosphereFramework framework() {
@@ -287,7 +322,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
-                null,
+                config.subProtocols(),
                 false,
                 maxWebSocketFrameSize);
 
@@ -298,6 +333,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } else {
 
             final WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
+            final AtmosphereRequest atmosphereRequest
+                    = createAtmosphereRequest(ctx, request);
+
+            if (!webSocketProcessor.handshake(atmosphereRequest)) {
+                sendError(ctx, BAD_REQUEST, null);
+                return;
+            }
+
             webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
 
             handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
@@ -307,8 +350,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         future.getChannel().close();
                     } else {
                         websocketChannels.add(ctx.getChannel());
-
-                        AtmosphereRequest r = createAtmosphereRequest(ctx, request);
 
                         ctx.setAttachment(webSocket);
                         if (request.headers().contains("X-wakeUpNIO")) {
@@ -338,7 +379,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                 webSocket.write(" ");
                             }
                         }
-                        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
+
+                        if (config.noInternalAlloc()) {
+                            webSocket.resource(proxiedResource);
+                        }
+
+                        AtmosphereResponse response = config.noInternalAlloc() ? proxiedResponse :
+                                AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
+                        webSocketProcessor.open(webSocket, atmosphereRequest, response);
                     }
                 }
             });
@@ -352,13 +400,24 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (frame instanceof CloseWebSocketFrame) {
             ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
-            ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
-        } else if (frame instanceof BinaryWebSocketFrame) {
+            ChannelBuffer binaryData = frame.getBinaryData();
+            if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            } else {
+                ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
+            }
+        } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
             ChannelBuffer binaryData = frame.getBinaryData();
             webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
             webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
         } else if (frame instanceof PongWebSocketFrame) {
+            ChannelBuffer binaryData = frame.getBinaryData();
+
+            if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            }
+
             if (config.enablePong()) {
                 ctx.getChannel().write(new PingWebSocketFrame(frame.getBinaryData()));
             } else {
@@ -371,6 +430,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+        if (config.noInternalAlloc()) {
+            return proxiedRequest;
+        }
+
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         final String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
@@ -726,26 +789,28 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
         String cookieHeader = request.headers().get("Cookie");
         if (cookieHeader != null) {
-            Set<Cookie> cookies = new CookieDecoder().decode(cookieHeader);
+            Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieHeader);
             for (Cookie cookie : cookies) {
-                javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.getName(), cookie.getValue());
-                if (cookie.getComment() != null) {
-                    c.setComment(cookie.getComment());
-                }
+                javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.name(), cookie.value());
+// Netty 3.10.2
+//                if (cookie.getComment() != null) {
+//                    c.setComment(cookie.getComment());
+//                }
 
-                if (cookie.getDomain() != null) {
-                    c.setDomain(cookie.getDomain());
+                if (cookie.domain() != null) {
+                    c.setDomain(cookie.domain());
                 }
 
                 c.setHttpOnly(cookie.isHttpOnly());
-                c.setMaxAge(cookie.getMaxAge());
+                c.setMaxAge((int) cookie.maxAge());
 
-                if (cookie.getPath() != null) {
-                    c.setPath(cookie.getPath());
+                if (cookie.path() != null) {
+                    c.setPath(cookie.path());
                 }
 
                 c.setSecure(cookie.isSecure());
-                c.setVersion(cookie.getVersion());
+// Netty 3.10.2
+//                c.setVersion(cookie.getVersion());
                 result.add(c);
 
             }

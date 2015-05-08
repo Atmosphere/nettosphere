@@ -26,12 +26,16 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
 
 public class NettyWebSocket extends WebSocket {
 
@@ -40,7 +44,6 @@ public class NettyWebSocket extends WebSocket {
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
     private int bufferBinarySize = Integer.MAX_VALUE;
     private int bufferStringSize = Integer.MAX_VALUE;
-    ;
     private boolean binaryWrite = false;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config) {
@@ -60,7 +63,7 @@ public class NettyWebSocket extends WebSocket {
 
     public WebSocket resource(AtmosphereResource r) {
         super.resource(r);
-        if (r != null) {
+        if (r != null && r.getRequest() != null) {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
             } catch (Exception ex) {
@@ -76,7 +79,7 @@ public class NettyWebSocket extends WebSocket {
      */
     public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
+        if (!channel.isOpen()) throw REMOTELY_CLOSED;
         logger.trace("WebSocket.write()");
 
         if (binaryWrite) {
@@ -104,7 +107,7 @@ public class NettyWebSocket extends WebSocket {
 
     void _write(byte[] data, int offset, int length) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) throw new IOException("Connection remotely closed");
+        if (!channel.isOpen()) throw REMOTELY_CLOSED;
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
@@ -128,5 +131,25 @@ public class NettyWebSocket extends WebSocket {
         if (impl != null) {
             channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
         }
+    }
+
+    /**
+     * Send a WebSocket Ping
+     * @param payload the bytes to send
+     * @return this
+     */
+    public WebSocket sendPing(byte[] payload) {
+        channel.write(new PingWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
+        return this;
+    }
+
+    /**
+     * Send a WebSocket Pong
+     * @param payload the bytes to send
+     * @return this
+     */
+    public WebSocket sendPong(byte[] payload) {
+        channel.write(new PongWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
+        return this;
     }
 }
