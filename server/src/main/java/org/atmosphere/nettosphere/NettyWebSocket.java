@@ -45,8 +45,10 @@ public class NettyWebSocket extends WebSocket {
     private int bufferBinarySize = Integer.MAX_VALUE;
     private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
+    private final boolean noInternalAlloc;
+    private final String idString;
 
-    public NettyWebSocket(Channel channel, AtmosphereConfig config) {
+    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc) {
         super(config);
         this.channel = channel;
 
@@ -59,6 +61,8 @@ public class NettyWebSocket extends WebSocket {
         if (s != null) {
             bufferStringSize = Integer.valueOf(s);
         }
+        this.noInternalAlloc = noInternalAlloc;
+        idString = String.valueOf(channel.getId());
     }
 
     public WebSocket resource(AtmosphereResource r) {
@@ -67,8 +71,8 @@ public class NettyWebSocket extends WebSocket {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
             } catch (Exception ex) {
-                ex.printStackTrace();
-                // Don't fail for any readon.
+                logger.trace("", ex);
+                // Don't fail for any reason.
             }
         }
         return this;
@@ -77,6 +81,7 @@ public class NettyWebSocket extends WebSocket {
     /**
      * {@inheritDoc}
      */
+    @Override
     public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
         if (!channel.isOpen()) throw REMOTELY_CLOSED;
@@ -157,9 +162,10 @@ public class NettyWebSocket extends WebSocket {
 
     /**
      * Return the underlying {@link Channel#getId()}
-     * @return
+     *
+     * @return underlying {@link Channel#getId()}
      */
     public int channelUuid() {
-       return channel.getId();
+        return channel.getId();
     }
 }
