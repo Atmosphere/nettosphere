@@ -885,5 +885,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
+    public ChannelGroup httpChannels() {
+        return httpChannels;
+    }
 
+    public ChannelGroup websocketChannels() {
+        return websocketChannels;
+    }
+
+    public ChannelBufferPool channelBufferPool() {
+        return channelBufferPool;
+    }
 }

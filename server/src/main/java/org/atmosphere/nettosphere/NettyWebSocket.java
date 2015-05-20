@@ -135,6 +135,7 @@ public class NettyWebSocket extends WebSocket {
 
     /**
      * Send a WebSocket Ping
+     *
      * @param payload the bytes to send
      * @return this
      */
@@ -145,11 +146,20 @@ public class NettyWebSocket extends WebSocket {
 
     /**
      * Send a WebSocket Pong
+     *
      * @param payload the bytes to send
      * @return this
      */
     public WebSocket sendPong(byte[] payload) {
         channel.write(new PongWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
         return this;
+    }
+
+    /**
+     * Return the underlying {@link Channel#getId()}
+     * @return
+     */
+    public int channelUuid() {
+       return channel.getId();
     }
 }
