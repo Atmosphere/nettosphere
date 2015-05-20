@@ -20,6 +20,9 @@ import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.group.ChannelGroup;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * This class expose some runtime properties of the Netty implementation
  *
@@ -65,6 +68,24 @@ public class RuntimeEngine {
     }
 
     /**
+     * Return all connected {@link WebSocket}.
+     *
+     * @return all connected {@link WebSocket}.
+     */
+    public Set<WebSocket> findAllWebSockets() {
+        Set<WebSocket> s = new HashSet<WebSocket>();
+        for (Channel c : runtime.websocketChannels()) {
+            if (c != null) {
+                Object o = c.getAttachment();
+                if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
+                    s.add(WebSocket.class.cast(o));
+                }
+            }
+        }
+        return s;
+    }
+
+    /**
      * Return the {@link ChannelGroup} associated with HTTP requests.
      *
      * @return the {@link ChannelGroup} associated with HTTP requests.
@@ -84,6 +105,7 @@ public class RuntimeEngine {
 
     /**
      * The {@link ChannelBufferPool} when enabled.
+     *
      * @return {@link ChannelBufferPool} when enabled.
      */
     public ChannelBufferPool channelBufferPool() {
