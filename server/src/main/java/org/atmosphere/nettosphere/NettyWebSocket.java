@@ -46,7 +46,6 @@ public class NettyWebSocket extends WebSocket {
     private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
-    private final String idString;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc) {
         super(config);
@@ -62,11 +61,16 @@ public class NettyWebSocket extends WebSocket {
             bufferStringSize = Integer.valueOf(s);
         }
         this.noInternalAlloc = noInternalAlloc;
-        idString = String.valueOf(channel.getId());
+
     }
 
     public WebSocket resource(AtmosphereResource r) {
         super.resource(r);
+
+        if (noInternalAlloc) {
+            this.uuid = String.valueOf(channel.getId());
+        }
+
         if (r != null && r.getRequest() != null) {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
