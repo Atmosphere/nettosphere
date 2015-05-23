@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
@@ -46,6 +47,7 @@ public class NettyWebSocket extends WebSocket {
     private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
+    private Object attachment;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc) {
         super(config);
@@ -165,11 +167,29 @@ public class NettyWebSocket extends WebSocket {
     }
 
     /**
-     * Return the underlying {@link Channel#getId()}
+     * The remote ip address.
      *
-     * @return underlying {@link Channel#getId()}
+     * @return The remote ip address.
      */
-    public int channelUuid() {
-        return channel.getId();
+    public String address() {
+        return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
+
+    /**
+     * Attach an object. Be careful when attaching an object as it can cause memory leak
+     *
+     * @oaram object
+     */
+    public NettyWebSocket attachment(Object attachment) {
+        this.attachment = attachment;
+        return this;
+    }
+
+    /**
+     * Return the attachment
+     */
+    public Object attachment() {
+        return attachment;
+    }
+
 }
