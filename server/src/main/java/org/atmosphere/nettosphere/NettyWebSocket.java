@@ -48,7 +48,7 @@ public class NettyWebSocket extends WebSocket {
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
 
-    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc) {
+    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
         super(config);
         this.channel = channel;
 
@@ -62,7 +62,7 @@ public class NettyWebSocket extends WebSocket {
             bufferStringSize = Integer.valueOf(s);
         }
         this.noInternalAlloc = noInternalAlloc;
-
+        this.binaryWrite = binaryWrite;
     }
 
     public WebSocket resource(AtmosphereResource r) {
