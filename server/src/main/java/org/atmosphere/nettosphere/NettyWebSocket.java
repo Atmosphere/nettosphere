@@ -72,7 +72,7 @@ public class NettyWebSocket extends WebSocket {
             this.uuid = String.valueOf(channel.getId());
         }
 
-        if (r != null && r.getRequest() != null) {
+        if (!binaryWrite && r != null && r.getRequest() != null) {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
             } catch (Exception ex) {

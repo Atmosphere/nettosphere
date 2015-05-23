@@ -351,7 +351,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     } else {
                         websocketChannels.add(ctx.getChannel());
 
-                        ctx.setAttachment(webSocket);
+                        ctx.getChannel().setAttachment(webSocket);
                         if (request.headers().contains("X-wakeUpNIO")) {
                             /**
                              * https://github.com/AsyncHttpClient/async-http-client/issues/471
@@ -397,25 +397,26 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
 
         // Check for closing frame
+        Object attachment = ctx.getChannel().getAttachment();
         if (frame instanceof CloseWebSocketFrame) {
             ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
             ChannelBuffer binaryData = frame.getBinaryData();
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
             } else {
                 ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
             }
         } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
             ChannelBuffer binaryData = frame.getBinaryData();
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, ((TextWebSocketFrame) frame).getText());
         } else if (frame instanceof PongWebSocketFrame) {
             ChannelBuffer binaryData = frame.getBinaryData();
 
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
             }
 
             if (config.enablePong()) {
@@ -573,7 +574,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     forceSuspend = true;
                 }
             } else {
-                request = State.class.cast(ctx.getAttachment()).request;
+                request = State.class.cast(ctx.getChannel().getAttachment()).request;
                 boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
                 Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
 
@@ -632,7 +633,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
             final State state = new State(request, action == null ? Action.CONTINUE : action);
-            ctx.setAttachment(state);
+            ctx.getChannel().setAttachment(state);
 
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
                 if (action.timeout() != -1) {
@@ -715,7 +716,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
-        Object o = ctx.getAttachment();
+        Object o = ctx.getChannel().getAttachment();
 
         if (o == null) return;
 
