@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
@@ -50,13 +51,13 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -134,6 +135,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final AtmosphereRequest proxiedRequest;
     private final AtmosphereResponse proxiedResponse;
     private final AtmosphereResource proxiedResource;
+
+    private int webSocketTimeout = -1;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -220,6 +223,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             framework.externalizeDestroy(true).init(new NettyServletConfig(config.initParams(), ctx));
         } catch (ServletException e) {
             throw new RuntimeException(e);
+        }
+
+        int max = framework.getAtmosphereConfig().getInitParameter(ApplicationConfig.WEBSOCKET_IDLETIME, -1);
+        if (max != -1) {
+            webSocketTimeout = max;
         }
 
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
@@ -387,6 +395,19 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         AtmosphereResponse response = config.noInternalAlloc() ? proxiedResponse :
                                 AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
                         webSocketProcessor.open(webSocket, atmosphereRequest, response);
+
+                        if (webSocketTimeout > 0) {
+                            final AtomicReference<Future<?>> f = new AtomicReference<Future<?>>();
+                            f.set(suspendTimer.scheduleAtFixedRate(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (webSocket.isOpen() && webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
+                                        webSocket.close();
+                                        f.get().cancel(true);
+                                    }
+                                }
+                            }, 60, 60, TimeUnit.MILLISECONDS));
+                        }
                     }
                 }
             });

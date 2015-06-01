@@ -63,6 +63,7 @@ public class NettyWebSocket extends WebSocket {
         }
         this.noInternalAlloc = noInternalAlloc;
         this.binaryWrite = binaryWrite;
+        this.lastWrite = System.currentTimeMillis();
     }
 
     public WebSocket resource(AtmosphereResource r) {

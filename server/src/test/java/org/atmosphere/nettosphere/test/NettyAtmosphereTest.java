@@ -27,6 +27,7 @@ import com.ning.http.client.ws.WebSocketPingListener;
 import com.ning.http.client.ws.WebSocketPongListener;
 import com.ning.http.client.ws.WebSocketTextListener;
 import com.ning.http.client.ws.WebSocketUpgradeHandler;
+import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
@@ -62,6 +63,7 @@ import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 public class NettyAtmosphereTest extends BaseTest {
     private final static String RESUME = "Resume";
@@ -1263,6 +1265,75 @@ public class NettyAtmosphereTest extends BaseTest {
 
             webSocket.close();
             assertEquals(response.get(), "Hello from server");
+        } finally {
+            c.close();
+        }
+    }
+
+
+    @Test
+    public void timeoutTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+
+        Config config = new Config.Builder()
+                .port(port)
+                .initParam(ApplicationConfig.WEBSOCKET_IDLETIME, "5000")
+                .subProtocols("jfa-protocol")
+                .host("127.0.0.1")
+                .resource("/suspend", new AtmosphereHandler() {
+
+                    private final AtomicBoolean b = new AtomicBoolean(false);
+
+                    @Override
+                    public void onRequest(AtmosphereResource r) throws IOException {
+                        r.suspend(-1);
+                    }
+
+                    @Override
+                    public void onStateChange(AtmosphereResourceEvent r) throws IOException {
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new AsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
+                    .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketTextListener() {
+                @Override
+                public void onMessage(String message) {
+                    response.set(message);
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
+
+                @Override
+                public void onClose(WebSocket websocket) {
+                    l.countDown();
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                }
+            });
+
+            l.await(10, TimeUnit.SECONDS);
+
+            assertNull(response.get());
+            assertEquals(l.getCount(), 0);
         } finally {
             c.close();
         }
