@@ -406,7 +406,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                         f.get().cancel(true);
                                     }
                                 }
-                            }, 60, 60, TimeUnit.MILLISECONDS));
+                            }, webSocketTimeout, webSocketTimeout, TimeUnit.MILLISECONDS));
                         }
                     }
                 }
