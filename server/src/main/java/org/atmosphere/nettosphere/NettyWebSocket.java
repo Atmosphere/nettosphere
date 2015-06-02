@@ -180,8 +180,12 @@ public class NettyWebSocket extends WebSocket {
         return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
 
-    public WebSocket closeFuture(Future<?> closeFuture) {
+    protected WebSocket closeFuture(Future<?> closeFuture) {
         this.closeFuture = closeFuture;
         return this;
+    }
+
+    protected Future<?> closeFuture() {
+        return closeFuture;
     }
 }
