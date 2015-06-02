@@ -18,7 +18,6 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -34,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
@@ -47,6 +47,8 @@ public class NettyWebSocket extends WebSocket {
     private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
+    private Future<?> closeFuture;
+    private final AtomicBoolean isClosed = new AtomicBoolean();
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
         super(config);
@@ -138,9 +140,12 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public void close() {
-        AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
-        if (impl != null) {
-            channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+        if (isClosed.getAndSet(true)) return;
+
+        channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+
+        if (closeFuture != null) {
+            closeFuture.cancel(true);
         }
     }
 
@@ -175,4 +180,8 @@ public class NettyWebSocket extends WebSocket {
         return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
 
+    public WebSocket closeFuture(Future<?> closeFuture) {
+        this.closeFuture = closeFuture;
+        return this;
+    }
 }
