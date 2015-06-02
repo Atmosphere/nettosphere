@@ -400,7 +400,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                             webSocket.closeFuture(suspendTimer.scheduleAtFixedRate(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (webSocket.isOpen() && webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
+                                    if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
                                         webSocket.close();
                                     }
                                 }
