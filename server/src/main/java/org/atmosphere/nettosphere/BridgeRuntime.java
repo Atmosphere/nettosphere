@@ -416,6 +416,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
 
+        logger.trace("Received frame {}", frame.getClass().getName());
+
         // Check for closing frame
         Object attachment = ctx.getChannel().getAttachment();
         if (frame instanceof CloseWebSocketFrame) {
