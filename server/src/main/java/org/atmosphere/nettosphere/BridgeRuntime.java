@@ -401,6 +401,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                 @Override
                                 public void run() {
                                     if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
+                                        logger.debug("Timing out {}", webSocket);
                                         webSocket.close();
                                     }
                                 }
