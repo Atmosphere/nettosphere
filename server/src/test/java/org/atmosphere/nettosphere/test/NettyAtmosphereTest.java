@@ -39,6 +39,8 @@ import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
+import org.jboss.netty.handler.ssl.SslContext;
+import org.jboss.netty.handler.ssl.util.SelfSignedCertificate;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -643,6 +645,65 @@ public class NettyAtmosphereTest extends BaseTest {
             assertNotNull(response);
 
             assertEquals(response.getResponseBody(), "Hello World from Nettosphere");
+        } finally {
+            c.close();
+        }
+    }
+
+    @Test
+    public void nettySslContextTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        SslContext sslCtx = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .sslContext(sslCtx)
+                .resource(new Handler() {
+
+                    @Override
+                    public void handle(AtmosphereResource r) {
+                        r.getResponse().write("Hello World from Nettosphere").closeStreamOrWriter();
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+                .setAcceptAnyCertificate(true)
+                .build());
+        try {
+            final AtomicReference<String> response = new AtomicReference<String>();
+            WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketTextListener() {
+                @Override
+                public void onMessage(String message) {
+                    response.set(message);
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
+
+                @Override
+                public void onClose(WebSocket websocket) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                }
+            });
+
+            l.await(5, TimeUnit.SECONDS);
+
+            webSocket.close();
+            assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
         }
