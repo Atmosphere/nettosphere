@@ -749,7 +749,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             logger.trace("Closing {}", webSocket.uuid());
 
             try {
-                webSocket.closeFuture().cancel(true);
+                if (webSocket.closeFuture() != null) {
+                    webSocket.closeFuture().cancel(true);
+                }
 
                 webSocketProcessor.close(webSocket, 1005);
             } catch (Exception ex) {
