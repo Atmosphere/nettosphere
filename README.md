@@ -145,6 +145,8 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 #### [Change Log](./CHANGELOG.md)
 
+2.2 release: [2.2.3](https://goo.gl/PQ60X0)
+
 2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
 
 2.0 release: [2.0.2](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.2&page=1&sort=updated&state=closed) [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
