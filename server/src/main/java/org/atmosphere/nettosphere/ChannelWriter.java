@@ -35,8 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class ChannelWriter extends AtmosphereInterceptorWriter {
     protected final static Logger logger = LoggerFactory.getLogger(StreamWriter.class);
     protected final static String END = Integer.toHexString(0);
-    protected final static byte[] CHUNK_DELIMITER = "\r\n".getBytes();
-    protected final static byte[] ENDCHUNK = (END + "\r\n\r\n").getBytes();
+    protected static final String CRLF = "\r\n";
+    protected final static byte[] CHUNK_DELIMITER = CRLF.getBytes();
+    protected final static byte[] ENDCHUNK = (END + CRLF + CRLF).getBytes();
 
     protected final Channel channel;
     protected final AtomicBoolean doneProcessing = new AtomicBoolean(false);
@@ -132,23 +133,22 @@ public abstract class ChannelWriter extends AtmosphereInterceptorWriter {
                 .append(response.getStatus())
                 .append(" ")
                 .append(response.getStatusMessage())
-                .append("\n");
+                .append(CRLF);
 
         Map<String, String> headers = response.headers();
         String contentType = response.getContentType();
 
-        b.append("Content-Type").append(":").append(headers.get("Content-Type") == null ? contentType : headers.get("Content-Type")).append("\n");
+        b.append("Content-Type").append(":").append(headers.get("Content-Type") == null ? contentType : headers.get("Content-Type")).append(CRLF);
         if (contentLength != -1) {
-            b.append("Content-Length").append(":").append(contentLength).append("\n");
+            b.append("Content-Length").append(":").append(contentLength).append(CRLF);
         }
 
         for (String s : headers.keySet()) {
             if (!s.equalsIgnoreCase("Content-Type")) {
-                b.append(s).append(":").append(headers.get(s)).append("\n");
+                b.append(s).append(":").append(headers.get(s)).append(CRLF);
             }
         }
-        b.deleteCharAt(b.length() - 1);
-        b.append("\r\n\r\n");
+        b.append(CRLF);
         return b.toString();
     }
 
