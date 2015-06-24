@@ -16,7 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.3.1</version>
+         <version>2.3.2</version>
      </dependency>
 ```
 
