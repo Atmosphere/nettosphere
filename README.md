@@ -16,7 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.3.2</version>
+         <version>2.3.3</version>
      </dependency>
 ```
 
@@ -145,7 +145,7 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 #### [Change Log](./CHANGELOG.md)
 
-2.2 release: [2.3.2](https://goo.gl/gaTKLZ ) [2.3.1](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.1+is%3Aclosed) [2.3.0](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.0+is%3Aclosed)
+2.2 release: [2.3.3](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.3+is%3Aclosed) [2.3.2](https://goo.gl/gaTKLZ ) [2.3.1](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.1+is%3Aclosed) [2.3.0](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.0+is%3Aclosed)
 
 2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
 
