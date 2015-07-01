@@ -25,9 +25,11 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereRequestImpl;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.cpr.AtmosphereResponseImpl;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
@@ -268,8 +270,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         maxWebSocketFrameSize = config.maxWebSocketFrameSize();
 
         if (config.noInternalAlloc()) {
-            proxiedRequest = new AtmosphereRequest.Builder().build();
-            proxiedResponse = new AtmosphereResponse.Builder().build();
+            proxiedRequest = new AtmosphereRequestImpl.Builder().build();
+            proxiedResponse = new AtmosphereResponseImpl.Builder().build();
             proxiedResource = new AtmosphereResourceImpl();
         } else {
             proxiedRequest = null;
@@ -393,7 +395,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         }
 
                         AtmosphereResponse response = config.noInternalAlloc() ? proxiedResponse :
-                                AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
+                                AtmosphereResponseImpl.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
                         webSocketProcessor.open(webSocket, atmosphereRequest, response);
 
                         if (webSocketTimeout > 0) {
@@ -505,7 +507,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         final Map<String, Object> attributes = new HashMap<String, Object>();
-        AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
+        AtmosphereRequestImpl.Builder requestBuilder = new AtmosphereRequestImpl.Builder();
         requestBuilder.requestURI(url.substring(l))
                 .requestURL(url)
                 .pathInfo(url.substring(l))
@@ -587,7 +589,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
 
                 // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
-                AtmosphereRequest.Body b = request.body();
+                AtmosphereRequestImpl.Body b = request.body();
                 if (!aggregateBodyInMemory
                         && !hrequest.getMethod().equals(GET)
                         && !b.isEmpty()
@@ -618,7 +620,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
             }
 
-            response = new AtmosphereResponse.Builder()
+            response = new AtmosphereResponseImpl.Builder()
                     .asyncIOWriter(asyncWriter)
                     .writeHeader(writeHeader)
                     .destroyable(false)
