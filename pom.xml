@@ -48,27 +48,13 @@
             <dependency>
                 <groupId>org.atmosphere</groupId>
                 <artifactId>nettosphere</artifactId>
-                <version>${pom.version}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.atmosphere</groupId>
                 <artifactId>atmosphere-runtime</artifactId>
                 <version>${atmosphere.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-jbossweb</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-tomcat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-tomcat7</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -102,7 +88,7 @@
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>1.9.3</version>
+                <version>1.9.28</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -115,7 +101,7 @@
             <dependency>
             	<groupId>io.netty</groupId>
             	<artifactId>netty-all</artifactId>
-            	<version>4.0.21.Final</version>
+            	<version>4.0.28.Final</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -305,6 +291,6 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>2.3.0-SNAPSHOT</atmosphere.version>
+        <atmosphere.version>2.3.4-SNAPSHOT</atmosphere.version>
     </properties>
 </project>
