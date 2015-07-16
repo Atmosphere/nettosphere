@@ -18,7 +18,6 @@ package org.atmosphere.nettosphere;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -33,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
@@ -45,8 +46,11 @@ public class NettyWebSocket extends WebSocket {
     private int bufferBinarySize = Integer.MAX_VALUE;
     private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
+    private final boolean noInternalAlloc;
+    private Future<?> closeFuture;
+    private final AtomicBoolean isClosed = new AtomicBoolean();
 
-    public NettyWebSocket(Channel channel, AtmosphereConfig config) {
+    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
         super(config);
         this.channel = channel;
 
@@ -59,16 +63,24 @@ public class NettyWebSocket extends WebSocket {
         if (s != null) {
             bufferStringSize = Integer.valueOf(s);
         }
+        this.noInternalAlloc = noInternalAlloc;
+        this.binaryWrite = binaryWrite;
+        this.lastWrite = System.currentTimeMillis();
     }
 
     public WebSocket resource(AtmosphereResource r) {
         super.resource(r);
-        if (r != null && r.getRequest() != null) {
+
+        if (noInternalAlloc) {
+            this.uuid = String.valueOf(channel.getId());
+        }
+
+        if (!binaryWrite && r != null && r.getRequest() != null) {
             try {
                 binaryWrite = IOUtils.isBodyBinary(r.getRequest());
             } catch (Exception ex) {
-                ex.printStackTrace();
-                // Don't fail for any readon.
+                logger.trace("", ex);
+                // Don't fail for any reason.
             }
         }
         return this;
@@ -77,10 +89,11 @@ public class NettyWebSocket extends WebSocket {
     /**
      * {@inheritDoc}
      */
+    @Override
     public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
         if (!channel.isOpen()) throw REMOTELY_CLOSED;
-        logger.trace("WebSocket.write()");
+        logger.trace("WebSocket.write() as binary {}", binaryWrite);
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data.getBytes("UTF-8"))));
@@ -107,7 +120,9 @@ public class NettyWebSocket extends WebSocket {
 
     void _write(byte[] data, int offset, int length) throws IOException {
         firstWrite.set(true);
+
         if (!channel.isOpen()) throw REMOTELY_CLOSED;
+        logger.trace("WebSocket.write() as binary {}", binaryWrite);
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
@@ -127,14 +142,18 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public void close() {
-        AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
-        if (impl != null) {
-            channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+        if (isClosed.getAndSet(true)) return;
+
+        channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+
+        if (closeFuture != null) {
+            closeFuture.cancel(true);
         }
     }
 
     /**
      * Send a WebSocket Ping
+     *
      * @param payload the bytes to send
      * @return this
      */
@@ -145,11 +164,30 @@ public class NettyWebSocket extends WebSocket {
 
     /**
      * Send a WebSocket Pong
+     *
      * @param payload the bytes to send
      * @return this
      */
     public WebSocket sendPong(byte[] payload) {
         channel.write(new PongWebSocketFrame(ChannelBuffers.wrappedBuffer(payload)));
         return this;
+    }
+
+    /**
+     * The remote ip address.
+     *
+     * @return The remote ip address.
+     */
+    public String address() {
+        return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
+    }
+
+    protected WebSocket closeFuture(Future<?> closeFuture) {
+        this.closeFuture = closeFuture;
+        return this;
+    }
+
+    protected Future<?> closeFuture() {
+        return closeFuture;
     }
 }

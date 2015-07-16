@@ -17,6 +17,7 @@ package org.atmosphere.nettosphere;
 
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AsynchronousProcessor;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
@@ -24,9 +25,11 @@ import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereMappingException;
 import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereRequestImpl;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.cpr.AtmosphereResponseImpl;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
@@ -50,13 +53,13 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -134,6 +137,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final AtmosphereRequest proxiedRequest;
     private final AtmosphereResponse proxiedResponse;
     private final AtmosphereResource proxiedResource;
+
+    private int webSocketTimeout = -1;
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -222,6 +227,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             throw new RuntimeException(e);
         }
 
+        int max = framework.getAtmosphereConfig().getInitParameter(ApplicationConfig.WEBSOCKET_IDLETIME, -1);
+        if (max != -1) {
+            webSocketTimeout = max;
+        }
+
         framework.setAsyncSupport(new NettyCometSupport(framework.getAtmosphereConfig()) {
             @Override
             public Action suspended(AtmosphereRequest request, AtmosphereResponse response) throws IOException, ServletException {
@@ -260,8 +270,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         maxWebSocketFrameSize = config.maxWebSocketFrameSize();
 
         if (config.noInternalAlloc()) {
-            proxiedRequest = new AtmosphereRequest.Builder().build();
-            proxiedResponse = new AtmosphereResponse.Builder().build();
+            proxiedRequest = new AtmosphereRequestImpl.Builder().build();
+            proxiedResponse = new AtmosphereResponseImpl.Builder().build();
             proxiedResource = new AtmosphereResourceImpl();
         } else {
             proxiedRequest = null;
@@ -332,7 +342,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
 
-            final WebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig());
+            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite());
             final AtmosphereRequest atmosphereRequest
                     = createAtmosphereRequest(ctx, request);
 
@@ -351,7 +361,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     } else {
                         websocketChannels.add(ctx.getChannel());
 
-                        ctx.setAttachment(webSocket);
+                        ctx.getChannel().setAttachment(webSocket);
                         if (request.headers().contains("X-wakeUpNIO")) {
                             /**
                              * https://github.com/AsyncHttpClient/async-http-client/issues/471
@@ -385,8 +395,20 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         }
 
                         AtmosphereResponse response = config.noInternalAlloc() ? proxiedResponse :
-                                AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
+                                AtmosphereResponseImpl.newInstance(framework.getAtmosphereConfig(), atmosphereRequest, webSocket);
                         webSocketProcessor.open(webSocket, atmosphereRequest, response);
+
+                        if (webSocketTimeout > 0) {
+                            webSocket.closeFuture(suspendTimer.scheduleAtFixedRate(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
+                                        logger.debug("Timing out {}", webSocket);
+                                        webSocket.close();
+                                    }
+                                }
+                            }, webSocketTimeout, webSocketTimeout, TimeUnit.MILLISECONDS));
+                        }
                     }
                 }
             });
@@ -396,26 +418,29 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
 
+        logger.trace("Received frame {}", frame.getClass().getName());
+
         // Check for closing frame
+        Object attachment = ctx.getChannel().getAttachment();
         if (frame instanceof CloseWebSocketFrame) {
             ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
             ChannelBuffer binaryData = frame.getBinaryData();
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
             } else {
                 ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
             }
         } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
             ChannelBuffer binaryData = frame.getBinaryData();
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) ctx.getAttachment(), ((TextWebSocketFrame) frame).getText());
+            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, ((TextWebSocketFrame) frame).getText());
         } else if (frame instanceof PongWebSocketFrame) {
             ChannelBuffer binaryData = frame.getBinaryData();
 
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) ctx.getAttachment(), binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
             }
 
             if (config.enablePong()) {
@@ -482,7 +507,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         final Map<String, Object> attributes = new HashMap<String, Object>();
-        AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
+        AtmosphereRequestImpl.Builder requestBuilder = new AtmosphereRequestImpl.Builder();
         requestBuilder.requestURI(url.substring(l))
                 .requestURL(url)
                 .pathInfo(url.substring(l))
@@ -564,7 +589,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
 
                 // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
-                AtmosphereRequest.Body b = request.body();
+                AtmosphereRequestImpl.Body b = request.body();
                 if (!aggregateBodyInMemory
                         && !hrequest.getMethod().equals(GET)
                         && !b.isEmpty()
@@ -573,7 +598,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     forceSuspend = true;
                 }
             } else {
-                request = State.class.cast(ctx.getAttachment()).request;
+                request = State.class.cast(ctx.getChannel().getAttachment()).request;
                 boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
                 Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
 
@@ -595,7 +620,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
             }
 
-            response = new AtmosphereResponse.Builder()
+            response = new AtmosphereResponseImpl.Builder()
                     .asyncIOWriter(asyncWriter)
                     .writeHeader(writeHeader)
                     .destroyable(false)
@@ -632,7 +657,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
             final State state = new State(request, action == null ? Action.CONTINUE : action);
-            ctx.setAttachment(state);
+            ctx.getChannel().setAttachment(state);
 
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
                 if (action.timeout() != -1) {
@@ -715,17 +740,19 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
-        Object o = ctx.getAttachment();
+        Object o = ctx.getChannel().getAttachment();
 
         if (o == null) return;
 
         if (WebSocket.class.isAssignableFrom(o.getClass())) {
-            WebSocket webSocket = WebSocket.class.cast(o);
-            AtmosphereResource r = webSocket.resource();
-
-            logger.trace("Closing {}", r != null ? r.uuid() : "NULL");
+            NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
+            logger.trace("Closing {}", webSocket.uuid());
 
             try {
+                if (webSocket.closeFuture() != null) {
+                    webSocket.closeFuture().cancel(true);
+                }
+
                 webSocketProcessor.close(webSocket, 1005);
             } catch (Exception ex) {
                 logger.error("{}", webSocket, ex);
@@ -885,5 +912,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
+    public ChannelGroup httpChannels() {
+        return httpChannels;
+    }
 
+    public ChannelGroup websocketChannels() {
+        return websocketChannels;
+    }
+
+    public ChannelBufferPool channelBufferPool() {
+        return channelBufferPool;
+    }
 }

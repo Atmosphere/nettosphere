@@ -29,6 +29,7 @@ import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,6 +127,10 @@ public class Config {
         return b.context;
     }
 
+    public SslContext nettySslContext() {
+        return b.sslContext;
+    }
+
     public SSLContextListener sslContextListener() {
         return b.listener;
     }
@@ -190,6 +195,11 @@ public class Config {
         return b.noInternalAlloc;
     }
 
+    public boolean binaryWrite() {
+        return b.binaryWrite;
+    }
+
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -214,6 +224,7 @@ public class Config {
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
         private SSLContext context;
+        private SslContext sslContext;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
         private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
         private boolean supportChunking = true;
@@ -228,6 +239,7 @@ public class Config {
         private boolean textFrameAsBinary = false;
         public String subProtocols = "";
         private boolean noInternalAlloc = false;
+        private boolean binaryWrite = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -237,6 +249,17 @@ public class Config {
          */
         public Builder sslContext(SSLContext context) {
             this.context = context;
+            return this;
+        }
+
+        /**
+         * Set the {@link SslContext}
+         *
+         * @param sslContext
+         * @return this
+         */
+        public Builder sslContext(SslContext sslContext) {
+            this.sslContext = sslContext;
             return this;
         }
 
@@ -673,11 +696,23 @@ public class Config {
          * Set it to true only if you are using WebSocket with a your own implementation of {@link org.atmosphere.websocket.WebSocketProcessor}. The WebSocketProcessor MUST not invoked those objects and only use the {@link org.atmosphere.websocket.WebSocket} API.
          * <p/>
          * Default is false
+         *
          * @param noInternalAlloc
          * @return this
          */
         public Builder noInternalAlloc(boolean noInternalAlloc) {
             this.noInternalAlloc = noInternalAlloc;
+            return this;
+        }
+
+        /**
+         * Write binary frame when websocket transport is used.
+         *
+         * @param binaryWrite true or false
+         * @return this
+         */
+        public Builder binaryWrite(boolean binaryWrite) {
+            this.binaryWrite = binaryWrite;
             return this;
         }
 

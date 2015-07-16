@@ -53,6 +53,10 @@ class NettyPipelineFactory implements
             pipeline.addLast("ssl", new SslHandler(e));
         }
 
+        if (config.nettySslContext() != null) {
+            pipeline.addLast("ssl", config.nettySslContext().newHandler());
+        }
+
         pipeline.addLast("decoder", new HttpRequestDecoder());
 
         if (config.aggregateRequestBodyInMemory()) {

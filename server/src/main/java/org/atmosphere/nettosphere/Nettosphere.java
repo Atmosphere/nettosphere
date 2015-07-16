@@ -15,14 +15,6 @@
  */
 package org.atmosphere.nettosphere;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.nettosphere.extra.FlashPolicyServerPipelineFactory;
 import org.atmosphere.nettosphere.util.Version;
@@ -35,6 +27,14 @@ import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Start Atmosphere on top of Netty. To configure Atmosphere, use the {@link Config}.  As simple as
@@ -68,6 +68,7 @@ public final class Nettosphere {
     private final AtomicBoolean started = new AtomicBoolean();
     private final ServerBootstrap bootstrapFlashPolicy;
     private final SocketAddress localPolicySocket;
+    private final RuntimeEngine runtimeEngine;
 
     private Nettosphere(Config config) {
         runtime = new BridgeRuntime(config);
@@ -84,6 +85,7 @@ public final class Nettosphere {
             this.bootstrapFlashPolicy = null;
             localPolicySocket = null;
         }
+        runtimeEngine = new RuntimeEngine(runtime);
     }
 
     private void configureBootstrap(ServerBootstrap bootstrap, Config config) {
@@ -186,6 +188,14 @@ public final class Nettosphere {
             return new Nettosphere(config);
         }
 
+    }
+
+    /**
+     * Return the {@link RuntimeEngine}
+     * @return the {@link RuntimeEngine}
+     */
+    public RuntimeEngine runtimeEngine() {
+        return runtimeEngine;
     }
 
     public static void main(String[] args) throws Exception {
