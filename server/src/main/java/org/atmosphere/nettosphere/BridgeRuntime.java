@@ -746,8 +746,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         if (WebSocket.class.isAssignableFrom(o.getClass())) {
             NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
-            AtmosphereResource r = webSocket.resource();
-
             logger.trace("Closing {}", webSocket.uuid());
 
             try {
