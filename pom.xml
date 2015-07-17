@@ -226,7 +226,7 @@
                         <version>2.5</version>
                         <configuration>
                             <aggregate>true</aggregate>
-                            <source>1.6</source>
+                            <source>1.7</source>
                             <encoding>UTF-8</encoding>
                             <maxmemory>1g</maxmemory>
                             <links>
@@ -309,8 +309,8 @@
     <properties>
         <distMgmtSnapshotsUrl>http://oss.sonatype.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
-        <source.property>1.6</source.property>
-        <target.property>1.6</target.property>
+        <source.property>1.7</source.property>
+        <target.property>1.7</target.property>
         <atmosphere.version>2.4.0-SNAPSHOT</atmosphere.version>
     </properties>
 </project>
