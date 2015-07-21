@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jeanfrancois Arcand
+ * Copyright 2015 Async-IO.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -67,13 +67,14 @@ public class ChunkedWriter extends ChannelWriter {
             final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
             try {
                 lock.writeLock().lock();
-                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         channelBufferPool.offer(recycle.get());
                         prepareForClose(response);
                     }
                 });
+                channel.flush();
             } finally {
                 lock.writeLock().unlock();
             }
@@ -101,7 +102,7 @@ public class ChunkedWriter extends ChannelWriter {
         	ByteBuf writeBuffer = writeHeaders(response);
 
             writeBuffer = Unpooled.wrappedBuffer(writeBuffer, END);
-            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+            channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     logger.trace("Async Closing Done {}", channel);
@@ -110,6 +111,7 @@ public class ChunkedWriter extends ChannelWriter {
                     }
                 }
             });
+
         }
     }
 
@@ -143,7 +145,7 @@ public class ChunkedWriter extends ChannelWriter {
                     throw new IOException(channel + ": content already processed for " + response.uuid());
                 }
 
-                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         channelBufferPool.offer(recycle.get());
