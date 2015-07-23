@@ -16,11 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-<<<<<<< HEAD
          <version>2.3.3</version>
-=======
-         <version>2.3.1</version>
->>>>>>> origin/nettosphere-2.4.x
      </dependency>
 ```
 
