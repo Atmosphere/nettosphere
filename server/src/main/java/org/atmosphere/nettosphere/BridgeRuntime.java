@@ -15,6 +15,35 @@
  */
 package org.atmosphere.nettosphere;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpChunkedInput;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.ImmediateEventExecutor;
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.ApplicationConfig;
@@ -34,42 +63,12 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
-import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
-import org.jboss.netty.handler.codec.http.HttpChunk;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-import org.jboss.netty.handler.codec.http.cookie.Cookie;
-import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import org.jboss.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.WebSocketFrame;
-import org.jboss.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
-import org.jboss.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,34 +102,35 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static io.netty.channel.ChannelHandler.Sharable;
+import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static io.netty.handler.codec.http.HttpMethod.GET;
+import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static org.atmosphere.cpr.AtmosphereFramework.REFLECTOR_ATMOSPHEREHANDLER;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYPE.HANDSHAKE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
-import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * Bridge the Atmosphere Framework with Netty.
  *
  * @author Jeanfrancois Arcand
  */
+@Sharable
 public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final static String KEEP_ALIVE = BridgeRuntime.class.getName() + "_keep-alive";
     private static final Logger logger = LoggerFactory.getLogger(BridgeRuntime.class);
+
     private final AtmosphereFramework framework;
     private final Config config;
     private final ScheduledExecutorService suspendTimer;
     private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebSocketProcessor webSocketProcessor;
-    private final ChannelGroup httpChannels = new DefaultChannelGroup("http");
-    private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws");
-    private final ChannelBufferPool channelBufferPool;
+    private final ChannelGroup httpChannels = new DefaultChannelGroup("http", ImmediateEventExecutor.INSTANCE);
+    private final ChannelGroup websocketChannels = new DefaultChannelGroup("ws", ImmediateEventExecutor.INSTANCE);
     private final AsynchronousProcessor asynchronousProcessor;
     private final int maxWebSocketFrameSize;
 
@@ -139,6 +139,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final AtmosphereResource proxiedResource;
 
     private int webSocketTimeout = -1;
+    private final byte[] EMPTY = new byte[0];
 
     public BridgeRuntime(final Config config) {
         super(config.path());
@@ -255,14 +256,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         suspendTimer = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
         webSocketProcessor = WebSocketProcessorFactory.getDefault().getWebSocketProcessor(framework);
 
-        if (config.supportChunking()) {
-            channelBufferPool = new ChannelBufferPool(0, config.writeBufferPoolSize(),
-                    config.writeBufferPoolCleanupFrequency(), framework.getAtmosphereConfig());
-        } else {
-            // Dangerous
-            channelBufferPool = null;
-        }
-
         for (String s : config.excludedInterceptors()) {
             framework.excludeInterceptor(s);
         }
@@ -285,11 +278,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        Object msg = messageEvent.getMessage();
+    public void channelRead(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+        Object msg = messageEvent;
 
         if (isShutdown.get()) {
-            ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
+            ctx.channel().close().addListener(ChannelFutureListener.CLOSE);
             return;
         }
 
@@ -317,13 +310,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
         } else if (msg instanceof WebSocketFrame) {
             handleWebSocketFrame(ctx, messageEvent);
-        } else if (msg instanceof HttpChunk) {
+        } else if (msg instanceof HttpChunkedInput) {
             handleHttp(ctx, messageEvent);
         }
     }
 
-    private void handleWebSocketHandshake(final ChannelHandlerContext ctx, MessageEvent messageEvent) throws IOException, URISyntaxException {
-        final HttpRequest request = (HttpRequest) messageEvent.getMessage();
+    private void handleWebSocketHandshake(final ChannelHandlerContext ctx, Object messageEvent) throws IOException, URISyntaxException {
+        final HttpRequest request = (HttpRequest) messageEvent;
 
         // Allow only GET methods.
         if (request.getMethod() != GET) {
@@ -331,6 +324,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             return;
         }
 
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
                 config.subProtocols(),
                 false,
@@ -339,57 +333,27 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
 
         if (handshaker == null) {
-            wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
+            wsFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-
-            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite());
-            final AtmosphereRequest atmosphereRequest
-                    = createAtmosphereRequest(ctx, request);
+            final NettyWebSocket webSocket = new NettyWebSocket(ctx.channel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite());
+            final AtmosphereRequest atmosphereRequest = createAtmosphereRequest(ctx, request, EMPTY);
 
             if (!webSocketProcessor.handshake(atmosphereRequest)) {
-                sendError(ctx, BAD_REQUEST, null);
+                sendError(ctx, HttpResponseStatus.BAD_REQUEST, null);
                 return;
             }
 
             webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
 
-            handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
+            handshaker.handshake(ctx.channel(), (FullHttpRequest) request).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (!future.isSuccess()) {
-                        future.getChannel().close();
+                        future.channel().close();
                     } else {
-                        websocketChannels.add(ctx.getChannel());
+                        websocketChannels.add(ctx.channel());
 
-                        ctx.getChannel().setAttachment(webSocket);
-                        if (request.headers().contains("X-wakeUpNIO")) {
-                            /**
-                             * https://github.com/AsyncHttpClient/async-http-client/issues/471
-                             *
-                             * Netty 3.9.x has an issue and is unable to detect the websocket frame that will be produced if an AtmosphereInterceptor
-                             * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is the message is lost when Netty decode the Handshake
-                             * request. This can be easily reproduced when wAsync is used with NettoSphere as server. For example, the following message
-                             *
-                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                             HTTP/1.1 101 Switching Protocols.
-                             Upgrade: websocket.
-                             Connection: Upgrade.
-                             Sec-WebSocket-Accept: mFFTAW8KVZebToQFZZcFVWmJh8Y=.
-                             .
-
-
-                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                             .21808c569-099b-4d8f-b657-c5965df40449|1391270901601
-
-                             can be lost because the Netty's Decoder fail to realize the handshake contained a response's body. The error doesn't occurs all the time but under
-                             load happens more easily.
-                             */
-                            // Wake up the remote NIO Selector so Netty don't read the hanshake and the first message in a single read.
-                            for (int i = 0; i < 512; i++) {
-                                webSocket.write(" ");
-                            }
-                        }
-
+                        ctx.channel().attr(ATTACHMENT).set(webSocket);
                         if (config.noInternalAlloc()) {
                             webSocket.resource(proxiedResource);
                         }
@@ -415,55 +379,54 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
-    private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
-        WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
+    private void handleWebSocketFrame(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+        WebSocketFrame frame = (WebSocketFrame) messageEvent;
 
         logger.trace("Received frame {}", frame.getClass().getName());
 
         // Check for closing frame
-        Object attachment = ctx.getChannel().getAttachment();
+        WebSocket attachment = WebSocket.class.cast(ctx.channel().attr(ATTACHMENT).get());
+        ByteBuf binaryData = frame.content();
+        byte[] body = null;
+        if (binaryData.isReadable()) {
+            body = new byte[binaryData.readableBytes()];
+            binaryData.readBytes(body);
+        }
         if (frame instanceof CloseWebSocketFrame) {
-            ctx.getChannel().write(frame).addListener(ChannelFutureListener.CLOSE);
+            ctx.channel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
-            ChannelBuffer binaryData = frame.getBinaryData();
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing( attachment, body, 0, body.length);
             } else {
-                ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
+                ctx.channel().writeAndFlush(new PongWebSocketFrame(binaryData));
             }
         } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
-            ChannelBuffer binaryData = frame.getBinaryData();
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+            webSocketProcessor.invokeWebSocketProtocol( attachment, body, 0, body.length);
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketProcessor.invokeWebSocketProtocol((WebSocket) attachment, ((TextWebSocketFrame) frame).getText());
+            webSocketProcessor.invokeWebSocketProtocol( attachment, ((TextWebSocketFrame) frame).text());
         } else if (frame instanceof PongWebSocketFrame) {
-            ChannelBuffer binaryData = frame.getBinaryData();
 
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong((WebSocket) attachment, binaryData.array(), binaryData.arrayOffset(), binaryData.readableBytes());
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong( attachment, body, 0, body.length);
             }
 
             if (config.enablePong()) {
-                ctx.getChannel().write(new PingWebSocketFrame(frame.getBinaryData()));
+                ctx.channel().writeAndFlush(new PingWebSocketFrame(frame.content()));
             } else {
-                logger.trace("Received Pong Frame on Channel {}", ctx.getChannel());
+                logger.trace("Received Pong Frame on Channel {}", ctx.channel());
             }
         } else {
             logger.warn("{} frame types not supported", frame.getClass());
-            ctx.getChannel().close();
+            ctx.channel().close();
         }
     }
 
-    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
-        if (config.noInternalAlloc()) {
-            return proxiedRequest;
-        }
-
+    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request, byte[] body) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
         final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         final String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
         final long cl = HttpHeaders.getContentLength(request, 0);
-        String method = request.getMethod().getName();
+        String method = request.getMethod().name();
 
         String queryString = requestUri.getQuery();
         Map<String, String[]> qs = new HashMap<String, String[]>();
@@ -472,7 +435,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         if (ct.equalsIgnoreCase("application/x-www-form-urlencoded")) {
-            parseQueryString(qs, new String(request.getContent().array(), "UTF-8"));
+            if (FullHttpRequest.class.isAssignableFrom(request.getClass())) {
+                parseQueryString(qs, new String(body));
+            }
         }
 
         String u = requestUri.toURL().toString();
@@ -525,27 +490,26 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .remoteInetSocketAddress(new Callable<InetSocketAddress>() {
                     @Override
                     public InetSocketAddress call() throws Exception {
-                        return (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+                        return (InetSocketAddress) ctx.channel().remoteAddress();
                     }
                 })
                 .localInetSocketAddress(new Callable<InetSocketAddress>() {
 
                     @Override
                     public InetSocketAddress call() throws Exception {
-                        return (InetSocketAddress) ctx.getChannel().getLocalAddress();
+                        return (InetSocketAddress) ctx.channel().localAddress();
                     }
                 });
 
-        ChannelBuffer internalBuffer = request.getContent();
-        if (!config.aggregateRequestBodyInMemory() && !method.equalsIgnoreCase("GET")) {
-            return requestBuilder.body(internalBuffer.array()).build();
-        } else {
-            logger.trace("Unable to read in memory the request's bytes. Using stream");
-            return requestBuilder.inputStream(new ChannelBufferInputStream(internalBuffer)).build();
+        if (body.length > 0) {
+            requestBuilder.body(body);
         }
+
+        return requestBuilder.build();
+
     }
 
-    private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
+    private void handleHttp(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
 
         boolean skipClose = false;
         AtmosphereResponse response = null;
@@ -560,20 +524,23 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         boolean aggregateBodyInMemory = config.aggregateRequestBodyInMemory();
 
         try {
-            if (messageEvent.getMessage() instanceof HttpRequest) {
-                final HttpRequest hrequest = (HttpRequest) messageEvent.getMessage();
-                boolean ka = HttpHeaders.isKeepAlive(hrequest);
-                asyncWriter = config.supportChunking() ?
-                        new ChunkedWriter(ctx.getChannel(), true, ka, channelBufferPool) :
-                        new StreamWriter(ctx.getChannel(), true, ka);
+            if (messageEvent instanceof HttpRequest) {
+                final HttpRequest hrequest = (HttpRequest) messageEvent;
 
-                method = hrequest.getMethod().getName();
+                byte[] body = EMPTY;
+                if (FullHttpRequest.class.isAssignableFrom(messageEvent.getClass())) {
+                    ByteBuf b = FullHttpRequest.class.cast(messageEvent).content();
+                    if (b.isReadable()) {
+                        body = new byte[b.readableBytes()];
+                        b.readBytes(body);
+                    }
+                }
 
                 // First let's try to see if it's a static resources
                 if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
                     try {
                         hrequest.headers().add(STATIC_MAPPING, "true");
-                        super.messageReceived(ctx, messageEvent);
+                        super.channelRead(ctx, messageEvent);
 
                         if (HttpHeaders.getHeader(hrequest, SERVICED) != null) {
                             return;
@@ -585,7 +552,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     }
                 }
 
-                request = createAtmosphereRequest(ctx, hrequest);
+                boolean ka = HttpHeaders.isKeepAlive(hrequest);
+                asyncWriter = config.supportChunking() ?
+                        new ChunkedWriter(ctx.channel(), true, ka) :
+                        new StreamWriter(ctx.channel(), true, ka);
+
+                method = hrequest.getMethod().name();
+
+                request = createAtmosphereRequest(ctx, hrequest, body);
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
 
                 // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
@@ -598,21 +572,21 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     forceSuspend = true;
                 }
             } else {
-                request = State.class.cast(ctx.getChannel().getAttachment()).request;
-                boolean isLast = HttpChunk.class.cast(messageEvent.getMessage()).isLast();
+                request = State.class.cast(ctx.attr(ATTACHMENT).get()).request;
+                boolean isLast = HttpChunkedInput.class.cast(messageEvent).isEndOfInput();
                 Boolean ka = (Boolean) request.getAttribute(KEEP_ALIVE);
 
                 asyncWriter = config.supportChunking() ?
-                        new ChunkedWriter(ctx.getChannel(), isLast, ka, channelBufferPool) :
-                        new StreamWriter(ctx.getChannel(), isLast, ka);
+                        new ChunkedWriter(ctx.channel(), isLast, ka) :
+                        new StreamWriter(ctx.channel(), isLast, ka);
                 method = request.getMethod();
-                ChannelBuffer internalBuffer = HttpChunk.class.cast(messageEvent.getMessage()).getContent();
+                ByteBuf internalBuffer = HttpChunkedInput.class.cast(messageEvent).readChunk(ctx).content();
 
                 if (!aggregateBodyInMemory && internalBuffer.hasArray()) {
                     request.body(internalBuffer.array());
                 } else {
                     logger.trace("Unable to read in memory the request's bytes. Using stream");
-                    request.body(new ChannelBufferInputStream(internalBuffer));
+                    request.body(new ByteBufInputStream(internalBuffer));
                 }
 
                 if (!isLast) {
@@ -625,7 +599,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     .writeHeader(writeHeader)
                     .destroyable(false)
                     .header("Connection", "Keep-Alive")
-                    .header("Server", "Nettosphere/2.0")
+                    .header("Server", "Nettosphere/3.0")
                     .request(request).build();
 
             if (config.supportChunking()) {
@@ -657,7 +631,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             final Action action = (Action) request.getAttribute(NettyCometSupport.SUSPEND);
             final State state = new State(request, action == null ? Action.CONTINUE : action);
-            ctx.getChannel().setAttachment(state);
+
+            ctx.attr(ATTACHMENT).set(state);
 
             if (action != null && action.type() == Action.TYPE.SUSPEND) {
                 if (action.timeout() != -1) {
@@ -681,14 +656,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             }
         } catch (AtmosphereMappingException ex) {
             if (method.equalsIgnoreCase("GET")) {
-                logger.trace("Unable to map the request {}, trying static file", messageEvent.getMessage());
-                try {
-                    skipClose = true;
-                    super.messageReceived(ctx, messageEvent);
-                } catch (Exception e) {
-                    logger.error("Unable to process request", e);
-                    throw new IOException(e);
-                }
+                logger.trace("Unable to map the request {}, trying static file", messageEvent);
             }
         } catch (Throwable e) {
             logger.error("Unable to process request", e);
@@ -699,7 +667,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     if (!skipClose && response != null) {
                         asyncWriter.close(response);
                     } else {
-                        httpChannels.add(ctx.getChannel());
+                        httpChannels.add(ctx.channel());
                     }
                 }
             } finally {
@@ -713,14 +681,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, MessageEvent e) {
+    public void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, FullHttpRequest e) {
         // For websocket, we can't send an error
-        if (websocketChannels.contains(ctx.getChannel())) {
+        logger.trace("Error {} for {}", status, e);
+        if (websocketChannels.contains(ctx.channel())) {
             logger.debug("Error {} for {}", status, e);
-            ctx.getChannel().close().addListener(ChannelFutureListener.CLOSE);
+            ctx.channel().close().addListener(ChannelFutureListener.CLOSE);
         } else if (e != null) {
-            final HttpRequest request = (HttpRequest) e.getMessage();
-            if (HttpHeaders.getHeader(request, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
+            if (HttpHeaders.getHeader(e, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
                 super.sendError(ctx, status, e);
             }
         } else {
@@ -738,9 +706,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelClosed(ctx, e);
-        Object o = ctx.getChannel().getAttachment();
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        Object o = ctx.attr(ATTACHMENT).get();
 
         if (o == null) return;
 
@@ -764,13 +732,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
-            logger.error("Invalid state {} and Channel {}", o, ctx.getChannel());
+            logger.error("Invalid state {} and Channel {}", o, ctx.channel());
         }
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-            throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         // Ignore Disconnect exception.
         if (e.getCause() != null
                 && (e.getCause().getClass().equals(ClosedChannelException.class)
@@ -816,13 +783,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         Set<javax.servlet.http.Cookie> result = new HashSet<javax.servlet.http.Cookie>();
         String cookieHeader = request.headers().get("Cookie");
         if (cookieHeader != null) {
-            Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieHeader);
-            for (Cookie cookie : cookies) {
+            Set<io.netty.handler.codec.http.cookie.Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieHeader);
+            for (io.netty.handler.codec.http.cookie.Cookie cookie : cookies) {
                 javax.servlet.http.Cookie c = new javax.servlet.http.Cookie(cookie.name(), cookie.value());
-// Netty 3.10.2
-//                if (cookie.getComment() != null) {
-//                    c.setComment(cookie.getComment());
-//                }
 
                 if (cookie.domain() != null) {
                     c.setDomain(cookie.domain());
@@ -830,14 +793,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
                 c.setHttpOnly(cookie.isHttpOnly());
                 c.setMaxAge((int) cookie.maxAge());
-
                 if (cookie.path() != null) {
                     c.setPath(cookie.path());
                 }
 
                 c.setSecure(cookie.isSecure());
-// Netty 3.10.2
-//                c.setVersion(cookie.getVersion());
                 result.add(c);
 
             }
@@ -851,14 +811,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
         // Generate an error page if response status code is not OK (200).
-        if (res.getStatus().getCode() != 200) {
-            res.setContent(ChannelBuffers.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
-            setContentLength(res, res.getContent().readableBytes());
+        if (res.getStatus().code() != 200) {
+            FullHttpResponse response = (FullHttpResponse) res;
+            response.content().writeBytes(Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
+            setContentLength(res, response.content().readableBytes());
         }
 
         // Send the response and close the connection if necessary.
-        ChannelFuture f = ctx.getChannel().write(res);
-        if (!isKeepAlive(req) || res.getStatus().getCode() != 200) {
+        ChannelFuture f = ctx.channel().write(res);
+        if (!isKeepAlive(req) || res.getStatus().code() != 200) {
             f.addListener(ChannelFutureListener.CLOSE);
         }
     }
@@ -920,7 +881,4 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         return websocketChannels;
     }
 
-    public ChannelBufferPool channelBufferPool() {
-        return channelBufferPool;
-    }
 }

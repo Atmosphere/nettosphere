@@ -15,10 +15,9 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.atmosphere.nettosphere.util.ChannelBufferPool;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
 import org.atmosphere.websocket.WebSocket;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.group.ChannelGroup;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -43,10 +42,10 @@ public class RuntimeEngine {
      * @return the underlying {@link Channel}.
      */
     public Channel find(int id) {
-        Channel c = runtime.websocketChannels().find(id);
+        Channel c = null; /*runtime.websocketChannels().find(id);
         if (c == null) {
             c = runtime.httpChannels().find(id);
-        }
+        }   */
         return c;
     }
 
@@ -57,13 +56,13 @@ public class RuntimeEngine {
      * @return the associated {@link WebSocket} attached to the {@link Channel}
      */
     public WebSocket findWebSocket(int id) {
-        Channel c = runtime.websocketChannels().find(id);
+        Channel c = null; /*runtime.websocketChannels().find(id);
         if (c != null) {
-            Object o = c.getAttachment();
+            Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
             if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
                 return WebSocket.class.cast(o);
             }
-        }
+        }  */
         return null;
     }
 
@@ -76,7 +75,7 @@ public class RuntimeEngine {
         Set<WebSocket> s = new HashSet<WebSocket>();
         for (Channel c : runtime.websocketChannels()) {
             if (c != null) {
-                Object o = c.getAttachment();
+                Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
                     s.add(WebSocket.class.cast(o));
                 }
@@ -103,12 +102,4 @@ public class RuntimeEngine {
         return runtime.websocketChannels();
     }
 
-    /**
-     * The {@link ChannelBufferPool} when enabled.
-     *
-     * @return {@link ChannelBufferPool} when enabled.
-     */
-    public ChannelBufferPool channelBufferPool() {
-        return runtime.channelBufferPool();
-    }
 }

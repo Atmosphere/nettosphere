@@ -27,6 +27,8 @@ import com.ning.http.client.ws.WebSocketPingListener;
 import com.ning.http.client.ws.WebSocketPongListener;
 import com.ning.http.client.ws.WebSocketTextListener;
 import com.ning.http.client.ws.WebSocketUpgradeHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -39,8 +41,6 @@ import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
-import org.jboss.netty.handler.ssl.SslContext;
-import org.jboss.netty.handler.ssl.util.SelfSignedCertificate;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -220,6 +220,7 @@ public class NettyAtmosphereTest extends BaseTest {
             suspendCD.await(5, TimeUnit.SECONDS);
 
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
+
             assertEquals(r.getStatusCode(), 200);
 
             l.await(5, TimeUnit.SECONDS);
@@ -579,8 +580,8 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
             });
             webSocket.sendMessage("Hello World from Nettosphere");
-            l.await(20, TimeUnit.SECONDS);
 
+            l.await(5, TimeUnit.SECONDS);
             webSocket.close();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {

@@ -15,6 +15,8 @@
  */
 package org.atmosphere.nettosphere;
 
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.handler.ssl.SslContext;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptor;
@@ -28,8 +30,6 @@ import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,7 +135,7 @@ public class Config {
         return b.listener;
     }
 
-    public LinkedList<ChannelUpstreamHandler> channelUpstreamHandlers() {
+    public LinkedList<ChannelInboundHandler> channelUpstreamHandlers() {
         return b.nettyHandlers;
     }
 
@@ -157,14 +157,6 @@ public class Config {
 
     public int maxChunkContentLength() {
         return b.maxContentLength;
-    }
-
-    public int writeBufferPoolSize() {
-        return b.writeBufferPoolSize;
-    }
-
-    public long writeBufferPoolCleanupFrequency() {
-        return b.writeBufferPoolCleanupFrequency;
     }
 
     public List<String> excludedInterceptors() {
@@ -200,6 +192,10 @@ public class Config {
     }
 
 
+    public boolean epoll() {
+        return b.epoll;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -226,20 +222,19 @@ public class Config {
         private SSLContext context;
         private SslContext sslContext;
         private SSLContextListener listener = SSLContextListener.DEFAULT;
-        private final LinkedList<ChannelUpstreamHandler> nettyHandlers = new LinkedList<ChannelUpstreamHandler>();
+        private final LinkedList<ChannelInboundHandler> nettyHandlers = new LinkedList<ChannelInboundHandler>();
         private boolean supportChunking = true;
         private boolean aggregateRequestBodyInMemory = true;
         private boolean socketNoTcpDelay = true;
         private boolean socketKeepAlive = true;
         private int maxContentLength = 65536;
-        private int writeBufferPoolSize = 50;
-        private long writeBufferPoolCleanupFrequency = 30000;
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
         private boolean textFrameAsBinary = false;
         public String subProtocols = "";
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
+        public boolean epoll = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -583,7 +578,7 @@ public class Config {
          * @param h {@link ChannelUpstreamHandler}
          * @return this;
          */
-        public Builder channelUpstreamHandler(ChannelUpstreamHandler h) {
+        public Builder channelUpstreamHandler(ChannelInboundHandler h) {
             nettyHandlers.addLast(h);
             return this;
         }
@@ -642,31 +637,6 @@ public class Config {
         }
 
         /**
-         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for
-         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be
-         * created and never pooled.
-         *
-         * @param writeBufferPoolSize the max size of the pool.
-         * @return this;
-         */
-        public Builder writeBufferPoolSize(int writeBufferPoolSize) {
-            this.writeBufferPoolSize = writeBufferPoolSize;
-            return this;
-        }
-
-        /**
-         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default
-         * is 30000.
-         *
-         * @param writeBufferPoolCleanupFrequency the frequency
-         * @return this
-         */
-        public Builder writeBufferPoolCleanupFrequency(long writeBufferPoolCleanupFrequency) {
-            this.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
-            return this;
-        }
-
-        /**
          * Do not decode {@link org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame} into a String and instead pass
          * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.
          *
@@ -719,7 +689,7 @@ public class Config {
         /**
          * Build an instance of this class.
          *
-         * @return
+         * @return this;
          */
         public Config build() {
             if (paths.isEmpty()) {
@@ -737,6 +707,17 @@ public class Config {
          */
         public Builder servletContextAttribute(String name, Object value) {
             servletContextAttributes.put(name, value);
+            return this;
+        }
+
+        /**
+         * Use {@link io.netty.channel.epoll.EpollEventLoopGroup}
+         * @See http://netty.io/wiki/native-transports.html
+         *
+         * @return this
+         */
+        public Builder epoll(boolean epoll) {
+            this.epoll = epoll;
             return this;
         }
     }

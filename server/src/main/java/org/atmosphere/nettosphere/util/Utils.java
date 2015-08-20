@@ -15,7 +15,7 @@
  */
 package org.atmosphere.nettosphere.util;
 
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

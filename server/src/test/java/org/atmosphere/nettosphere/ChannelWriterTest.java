@@ -1,8 +1,8 @@
 package org.atmosphere.nettosphere;
 
+import io.netty.channel.Channel;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereResponse;
-import org.jboss.netty.channel.Channel;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

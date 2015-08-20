@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -19,8 +20,8 @@
         <connection>scm:git:git@github.com:Atmosphere/nettosphere.git</connection>
         <url>https://github.com/Atmosphere/nettosphere</url>
         <developerConnection>scm:git:git@github.com:Atmosphere/nettosphere.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
     <issueManagement>
         <system>github</system>
         <url>https://github.com/Atmosphere/nettosphere/issues</url>
@@ -48,53 +49,39 @@
             <dependency>
                 <groupId>org.atmosphere</groupId>
                 <artifactId>nettosphere</artifactId>
-                <version>${pom.version}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.atmosphere</groupId>
                 <artifactId>atmosphere-runtime</artifactId>
                 <version>${atmosphere.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-jbossweb</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-tomcat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.atmosphere</groupId>
-                        <artifactId>atmosphere-compat-tomcat7</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>3.10.3.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.6.4</version>
+                <version>1.7.7</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
-                <version>1.0.13</version>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.0.13</version>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-servlet_3.0_spec</artifactId>
                 <version>1.0</version>
                 <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.0.30.Final</version>
             </dependency>
 
             <!-- Test -->
@@ -105,9 +92,15 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>1.10.19</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>1.9.20</version>
+                <version>1.9.28</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -116,12 +109,6 @@
                 <version>5.8</version>
                 <scope>test</scope>
                 <classifier>jdk15</classifier>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>1.10.19</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -172,6 +159,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5</version>
+                <!--$NO-MVN-MAN-VER$-->
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -260,7 +248,7 @@
                         <link>http://docs.oracle.com/javaee/6/docs/api/</link>
                         <link>http://docs.oracle.com/javase/6/docs/api/</link>
                     </links>
-                    <excludePackageNames />
+                    <excludePackageNames/>
                 </configuration>
             </plugin>
             <plugin>
@@ -311,7 +299,6 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.6</source.property>
         <target.property>1.6</target.property>
-        <atmosphere.version>3.0.0-SNAPSHOT</atmosphere.version>
+        <atmosphere.version>2.4.0-SNAPSHOT</atmosphere.version>
     </properties>
 </project>
-

@@ -15,16 +15,15 @@
  */
 package org.atmosphere.nettosphere;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import org.atmosphere.cpr.AsyncIOWriter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResponse;
-import org.atmosphere.nettosphere.util.ChannelBufferPool;
 import org.atmosphere.nettosphere.util.Utils;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,42 +38,47 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class ChunkedWriter extends ChannelWriter {
     private static final Logger logger = LoggerFactory.getLogger(ChunkedWriter.class);
-    private final ChannelBufferPool channelBufferPool;
-    private final ChannelBuffer END = ChannelBuffers.wrappedBuffer(ENDCHUNK);
-    private final ChannelBuffer DELIMITER = ChannelBuffers.wrappedBuffer(CHUNK_DELIMITER);
+    private final ByteBuf END = Unpooled.wrappedBuffer(ENDCHUNK);
+    private final ByteBuf DELIMITER = Unpooled.wrappedBuffer(CHUNK_DELIMITER);
     private final AtomicBoolean headerWritten = new AtomicBoolean();
     // We need a lock here to prevent two threads from competing to execute the write and the close operation concurrently.
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive, ChannelBufferPool channelBufferPool) {
+    public ChunkedWriter(Channel channel, boolean writeHeader, boolean keepAlive) {
         super(channel, writeHeader, keepAlive);
-        this.channelBufferPool = channelBufferPool;
     }
 
-    private ChannelBuffer writeHeaders(AtmosphereResponse response) throws UnsupportedEncodingException {
+    private ByteBuf writeHeaders(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
-            ChannelBuffer writeBuffer = channelBufferPool.poll();
-            return ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
+        	ByteBuf writeBuffer = Unpooled.buffer();
+            return Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
         }
-        return ChannelBuffers.EMPTY_BUFFER;
+        return Unpooled.EMPTY_BUFFER;
+    }
+
+    private ByteBuf writeHeadersForHttp(AtmosphereResponse response) throws UnsupportedEncodingException {
+        if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
+            return Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8"));
+        }
+        return Unpooled.EMPTY_BUFFER;
     }
 
     @Override
     public void close(final AtmosphereResponse response) throws IOException {
         if (!channel.isOpen() || doneProcessing.get()) return;
 
-        ChannelBuffer writeBuffer = writeHeaders(response);
-        if (writeBuffer.readableBytes() > 0 && response != null) {
-            final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
+        ByteBuf writeBuffer = writeHeadersForHttp(response);
+        if (writeBuffer.capacity() > 0 && response != null) {
+            final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
             try {
                 lock.writeLock().lock();
-                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+                channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
-                        channelBufferPool.offer(recycle.get());
                         prepareForClose(response);
                     }
                 });
+                channel.flush();
             } finally {
                 lock.writeLock().unlock();
             }
@@ -99,10 +103,15 @@ public class ChunkedWriter extends ChannelWriter {
 
     void _close(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
-            ChannelBuffer writeBuffer = writeHeaders(response);
+        	ByteBuf writeBuffer = writeHeaders(response);
 
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, END);
-            channel.write(writeBuffer).addListener(new ChannelFutureListener() {
+            if (writeBuffer.capacity() != 0) {
+                writeBuffer = Unpooled.wrappedBuffer(writeBuffer, END);
+            } else {
+                writeBuffer = Unpooled.buffer(ENDCHUNK.length).writeBytes(ENDCHUNK);
+            }
+
+            channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     logger.trace("Async Closing Done {}", channel);
@@ -111,6 +120,7 @@ public class ChunkedWriter extends ChannelWriter {
                     }
                 }
             });
+
         }
     }
 
@@ -123,18 +133,21 @@ public class ChunkedWriter extends ChannelWriter {
                 return this;
             }
 
-            ChannelBuffer writeBuffer = writeHeaders(response);
+            ByteBuf writeBuffer = writeHeaders(response);
             if (headerWritten.get()) {
-                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")));
-                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
+                if (writeBuffer.capacity() != 0) {
+                    writeBuffer = Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")), DELIMITER);
+                } else {
+                    writeBuffer = Unpooled.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8"), CHUNK_DELIMITER);
+                }
             }
 
-            writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
+            writeBuffer = Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(data, offset, length));
             if (headerWritten.get()) {
-                writeBuffer = ChannelBuffers.wrappedBuffer(writeBuffer, DELIMITER);
+                writeBuffer.writeBytes(CHUNK_DELIMITER);
             }
 
-            final AtomicReference<ChannelBuffer> recycle = new AtomicReference<ChannelBuffer>(writeBuffer);
+            final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
 
             try {
                 lock.writeLock().lock();
@@ -144,15 +157,10 @@ public class ChunkedWriter extends ChannelWriter {
                     throw Utils.ioExceptionForChannel(channel, response.uuid());
                 }
 
-                channel.write(writeBuffer).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        channelBufferPool.offer(recycle.get());
-                        if (channel.isOpen() && !future.isSuccess()) {
-                            _close(response);
-                        }
-                    }
-                });
+                channel.writeAndFlush(writeBuffer);
+            } catch (IOException ex) {
+                logger.warn("", ex);
+                throw ex;
             } finally {
                 lock.writeLock().unlock();
             }
