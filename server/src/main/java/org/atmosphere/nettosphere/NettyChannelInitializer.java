@@ -48,9 +48,7 @@ class NettyChannelInitializer extends ChannelInitializer {
 
         pipeline.addLast("decoder", new HttpRequestDecoder());
 
-        if (config.aggregateRequestBodyInMemory()) {
-            pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
-        }
+        pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
 
         if (config.supportChunking()) {
             pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
