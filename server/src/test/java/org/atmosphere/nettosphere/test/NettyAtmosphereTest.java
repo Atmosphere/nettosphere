@@ -207,9 +207,9 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
             });
 
-            suspendCD.await(5, TimeUnit.SECONDS);
+            suspendCD.await(60, TimeUnit.SECONDS);
 
-            Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
+            Response r = c.prepareGet(targetUrl + "/suspend").addHeader("f", "bar").execute().get();
             assertEquals(r.getStatusCode(), 200);
 
             l.await(5, TimeUnit.SECONDS);
@@ -301,7 +301,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
             });
 
-            suspendCD.await(5, TimeUnit.SECONDS);
+            suspendCD.await(60, TimeUnit.HOURS);
 
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
             assertEquals(r.getStatusCode(), 200);

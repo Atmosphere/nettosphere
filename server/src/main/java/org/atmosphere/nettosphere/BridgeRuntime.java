@@ -15,25 +15,6 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.atmosphere.container.NettyCometSupport;
-import org.atmosphere.cpr.Action;
-import org.atmosphere.cpr.AsynchronousProcessor;
-import org.atmosphere.cpr.AtmosphereFramework;
-import org.atmosphere.cpr.AtmosphereHandler;
-import org.atmosphere.cpr.AtmosphereInterceptor;
-import org.atmosphere.cpr.AtmosphereMappingException;
-import org.atmosphere.cpr.AtmosphereRequest;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereResourceImpl;
-import org.atmosphere.cpr.AtmosphereResponse;
-import org.atmosphere.cpr.FrameworkConfig;
-import org.atmosphere.cpr.HeaderConfig;
-import org.atmosphere.cpr.WebSocketProcessorFactory;
-import org.atmosphere.nettosphere.util.ChannelBufferPool;
-import org.atmosphere.util.FakeHttpSession;
-import org.atmosphere.websocket.WebSocket;
-import org.atmosphere.websocket.WebSocketProcessor;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
@@ -52,6 +33,7 @@ import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -63,8 +45,26 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.ImmediateEventExecutor;
-import io.netty.util.concurrent.ImmediateExecutor;
-
+import org.atmosphere.container.NettyCometSupport;
+import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.AsynchronousProcessor;
+import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereInterceptor;
+import org.atmosphere.cpr.AtmosphereMappingException;
+import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereRequestImpl;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceImpl;
+import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.cpr.AtmosphereResponseImpl;
+import org.atmosphere.cpr.FrameworkConfig;
+import org.atmosphere.cpr.HeaderConfig;
+import org.atmosphere.cpr.WebSocketProcessorFactory;
+import org.atmosphere.nettosphere.util.ChannelBufferPool;
+import org.atmosphere.util.FakeHttpSession;
+import org.atmosphere.websocket.WebSocket;
+import org.atmosphere.websocket.WebSocketProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
@@ -99,14 +98,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
-import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
+import static io.netty.channel.ChannelHandler.Sharable;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static io.netty.channel.ChannelHandler.Sharable;
+import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
 /**
  * Bridge the Atmosphere Framework with Netty.
  *
@@ -288,6 +287,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             return;
         }
 
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
         WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
 
@@ -333,7 +333,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                 webSocket.write(" ");
                             }
                         }
-                        webSocketProcessor.open(webSocket, r, AtmosphereResponse.newInstance(framework.getAtmosphereConfig(), r, webSocket));
+                        webSocketProcessor.open(webSocket, r, AtmosphereResponseImpl.newInstance(framework.getAtmosphereConfig(), r, webSocket));
                     }
                 }
             });
@@ -365,8 +365,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
     }
 
-    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest req) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
-    	final FullHttpRequest request = (FullHttpRequest) req;
+    private AtmosphereRequest createAtmosphereRequest(final ChannelHandlerContext ctx, final HttpRequest request) throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
     	final String base = getBaseUri(request);
         final URI requestUri = new URI(base.substring(0, base.length() - 1) + request.getUri());
         final String ct = HttpHeaders.getHeader(request, "Content-Type", "text/plain");
@@ -380,7 +379,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         if (ct.equalsIgnoreCase("application/x-www-form-urlencoded")) {
-            parseQueryString(qs, new String(request.content().array(), "UTF-8"));
+            if (FullHttpRequest.class.isAssignableFrom(request.getClass())) {
+                parseQueryString(qs, new String(FullHttpRequest.class.cast(request).content().array(), "UTF-8"));
+            }
         }
 
         String u = requestUri.toURL().toString();
@@ -415,7 +416,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         final Map<String, Object> attributes = new HashMap<String, Object>();
-        AtmosphereRequest.Builder requestBuilder = new AtmosphereRequest.Builder();
+        AtmosphereRequestImpl.Builder requestBuilder = new AtmosphereRequestImpl.Builder();
         requestBuilder.requestURI(url.substring(l))
                 .requestURL(url)
                 .pathInfo(url.substring(l))
@@ -444,12 +445,16 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     }
                 });
 
-        ByteBuf internalBuffer = request.content();
-        if (!config.aggregateRequestBodyInMemory() && !method.equalsIgnoreCase("GET")) {
-            return requestBuilder.body(internalBuffer.array()).build();
+        if (FullHttpRequest.class.isAssignableFrom(request.getClass())) {
+            ByteBuf internalBuffer = FullHttpRequest.class.cast(request).content();
+            if (!config.aggregateRequestBodyInMemory() && !method.equalsIgnoreCase("GET")) {
+                return requestBuilder.body(internalBuffer.array()).build();
+            } else {
+                logger.trace("Unable to read in memory the request's bytes. Using stream");
+                return requestBuilder.inputStream(new ByteBufInputStream(internalBuffer)).build();
+            }
         } else {
-            logger.trace("Unable to read in memory the request's bytes. Using stream");
-            return requestBuilder.inputStream(new ByteBufInputStream(internalBuffer)).build();
+            return requestBuilder.build();
         }
     }
 
@@ -497,7 +502,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
 
                 // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
-                AtmosphereRequest.Body b = request.body();
+                AtmosphereRequestImpl.Body b = request.body();
                 if (!aggregateBodyInMemory
                         && !hrequest.getMethod().equals(GET)
                         && !b.isEmpty()
@@ -528,7 +533,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
             }
 
-            response = new AtmosphereResponse.Builder()
+            response = new AtmosphereResponseImpl.Builder()
                     .asyncIOWriter(asyncWriter)
                     .writeHeader(writeHeader)
                     .destroyable(false)

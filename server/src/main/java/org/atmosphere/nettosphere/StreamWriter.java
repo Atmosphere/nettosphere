@@ -61,7 +61,7 @@ public class StreamWriter extends ChannelWriter {
             ByteBuf statusAndHeadersBuffer = writeHeader ?
                     Unpooled.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes("UTF-8")) : Unpooled.EMPTY_BUFFER;
             ByteBuf drain = Unpooled.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
-            channel.write(drain).addListener(new ChannelFutureListener() {
+            channel.writeAndFlush(drain).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
                     chainedBodyBuffer = null;

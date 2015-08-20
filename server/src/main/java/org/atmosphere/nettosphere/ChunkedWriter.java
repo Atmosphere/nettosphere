@@ -58,12 +58,19 @@ public class ChunkedWriter extends ChannelWriter {
         return Unpooled.EMPTY_BUFFER;
     }
 
+    private ByteBuf writeHeadersForHttp(AtmosphereResponse response) throws UnsupportedEncodingException {
+        if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
+            return Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8"));
+        }
+        return Unpooled.EMPTY_BUFFER;
+    }
+
     @Override
     public void close(final AtmosphereResponse response) throws IOException {
         if (!channel.isOpen() || doneProcessing.get()) return;
 
-        ByteBuf writeBuffer = writeHeaders(response);
-        if (writeBuffer.readableBytes() > 0 && response != null) {
+        ByteBuf writeBuffer = writeHeadersForHttp(response);
+        if (writeBuffer.capacity() > 0 && response != null) {
             final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
             try {
                 lock.writeLock().lock();
@@ -101,7 +108,12 @@ public class ChunkedWriter extends ChannelWriter {
         if (!doneProcessing.getAndSet(true) && channel.isOpen()) {
         	ByteBuf writeBuffer = writeHeaders(response);
 
-            writeBuffer = Unpooled.wrappedBuffer(writeBuffer, END);
+            if (writeBuffer.capacity() != 0) {
+                writeBuffer = Unpooled.wrappedBuffer(writeBuffer, END);
+            } else {
+                writeBuffer = Unpooled.buffer(ENDCHUNK.length).writeBytes(ENDCHUNK);
+            }
+
             channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -126,13 +138,16 @@ public class ChunkedWriter extends ChannelWriter {
 
             ByteBuf writeBuffer = writeHeaders(response);
             if (headerWritten.get()) {
-                writeBuffer = Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")));
-                writeBuffer = Unpooled.wrappedBuffer(writeBuffer, DELIMITER);
+                if (writeBuffer.capacity() != 0) {
+                    writeBuffer = Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8")), DELIMITER);
+                } else {
+                    writeBuffer = Unpooled.wrappedBuffer(Integer.toHexString(length - offset).getBytes("UTF-8"), CHUNK_DELIMITER);
+                }
             }
 
             writeBuffer = Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(data, offset, length));
             if (headerWritten.get()) {
-                writeBuffer = Unpooled.wrappedBuffer(writeBuffer, DELIMITER);
+                writeBuffer.writeBytes(CHUNK_DELIMITER);
             }
 
             final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
@@ -141,7 +156,7 @@ public class ChunkedWriter extends ChannelWriter {
                 lock.writeLock().lock();
 
                 // We got closed, so we throw an IOException so the message get cached.
-                if (doneProcessing.get()){
+                if (doneProcessing.get()) {
                     throw new IOException(channel + ": content already processed for " + response.uuid());
                 }
 
@@ -149,11 +164,11 @@ public class ChunkedWriter extends ChannelWriter {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         channelBufferPool.offer(recycle.get());
-                        if (channel.isOpen() && !future.isSuccess()) {
-                            _close(response);
-                        }
                     }
                 });
+            } catch (IOException ex) {
+                logger.warn("", ex);
+                throw ex;
             } finally {
                 lock.writeLock().unlock();
             }

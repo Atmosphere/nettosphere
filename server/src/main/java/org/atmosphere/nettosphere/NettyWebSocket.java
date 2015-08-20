@@ -21,10 +21,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -33,6 +29,9 @@ import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NettyWebSocket extends WebSocket {
 
@@ -78,9 +77,9 @@ public class NettyWebSocket extends WebSocket {
         logger.trace("WebSocket.write()");
 
         if (binaryWrite) {
-            channel.write(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data.getBytes("UTF-8"))));
+            channel.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data.getBytes("UTF-8"))));
         } else {
-            channel.write(new TextWebSocketFrame(data));
+            channel.writeAndFlush(new TextWebSocketFrame(data));
         }
         lastWrite = System.currentTimeMillis();
         return this;
@@ -105,9 +104,9 @@ public class NettyWebSocket extends WebSocket {
         if (!channel.isOpen()) throw new IOException("Connection remotely closed");
 
         if (binaryWrite) {
-            channel.write(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
+            channel.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
         } else {
-            channel.write(new TextWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
+            channel.writeAndFlush(new TextWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
         }
         lastWrite = System.currentTimeMillis();
     }
@@ -124,7 +123,7 @@ public class NettyWebSocket extends WebSocket {
     public void close() {
         AtmosphereResourceImpl impl = AtmosphereResourceImpl.class.cast(resource());
         if (impl != null) {
-            channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+            channel.writeAndFlush(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
         }
     }
 }

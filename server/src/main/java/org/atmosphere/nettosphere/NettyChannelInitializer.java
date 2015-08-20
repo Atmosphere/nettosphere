@@ -16,12 +16,11 @@
 package org.atmosphere.nettosphere;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
@@ -52,8 +51,6 @@ class NettyChannelInitializer extends ChannelInitializer {
         if (config.aggregateRequestBodyInMemory()) {
             pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
         }
-
-        pipeline.addLast("encoder", new HttpResponseEncoder());
 
         if (config.supportChunking()) {
             pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());

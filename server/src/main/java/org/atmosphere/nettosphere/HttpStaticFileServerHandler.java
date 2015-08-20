@@ -122,7 +122,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Obj
 
     public static final AttributeKey<Object> ATTACHMENT =
             AttributeKey.valueOf("HttpStaticFileServerHandler.attachment");
-    
+
     private final static Logger logger = LoggerFactory.getLogger(HttpStaticFileServerHandler.class);
 
     public final static String STATIC_MAPPING = SimpleChannelInboundHandler.class.getName() + ".staticMapping";
@@ -221,7 +221,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Obj
 				@Override
 				public void operationComplete(ChannelProgressiveFuture future)
 						throws Exception {
-                    region.release();					
+                    region.release();
 				}
             });
         }

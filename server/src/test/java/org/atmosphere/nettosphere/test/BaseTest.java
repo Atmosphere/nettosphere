@@ -33,7 +33,7 @@ public abstract class BaseTest {
         try {
             socket = new ServerSocket(0);
 
-            return socket.getLocalPort();
+            return 8080;
         } finally {
             if (socket != null) {
                 socket.close();

@@ -17,12 +17,11 @@ package org.atmosphere.nettosphere.util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.atmosphere.cpr.AtmosphereConfig;
+import org.atmosphere.util.ExecutorsFactory;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-
-import org.atmosphere.cpr.AtmosphereConfig;
-import org.atmosphere.util.ExecutorsFactory;
 
 public class ChannelBufferPool {
     private final ConcurrentLinkedQueue<ByteBuf> pool = new ConcurrentLinkedQueue<ByteBuf>();
