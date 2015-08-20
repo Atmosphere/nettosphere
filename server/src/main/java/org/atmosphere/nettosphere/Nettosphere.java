@@ -19,6 +19,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.MultithreadEventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.ChannelGroupFuture;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -71,22 +73,20 @@ public final class Nettosphere {
     private final AtomicBoolean started = new AtomicBoolean();
     private final ServerBootstrap bootstrapFlashPolicy;
     private final SocketAddress localPolicySocket;
-	private NioEventLoopGroup parentGroup;
-	private NioEventLoopGroup childGroup;
+	private MultithreadEventLoopGroup parentGroup;
+	private MultithreadEventLoopGroup childGroup;
 
     private Nettosphere(Config config) {
         runtime = new BridgeRuntime(config);
         this.channelInitializer = new NettyChannelInitializer(runtime);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
-        // TODO migrate https://github.com/flowersinthesand/nettosphere/commit/47ac25e6ce08e737df1c60b15cac4529f08eefef
-        this.bootstrap = buildBootstrap();
-
-        configureBootstrap(bootstrap, config);
 
         if (config.initParams().containsKey(FLASH_SUPPORT)) {
-            this.bootstrapFlashPolicy = buildBootstrapFlashPolicy();
+            this.bootstrapFlashPolicy = buildBootstrapFlashPolicy(config);
             localPolicySocket = new InetSocketAddress(843);
         } else {
+            this.bootstrap = buildBootstrap(config);
+            configureBootstrap(bootstrap, config);
             this.bootstrapFlashPolicy = null;
             localPolicySocket = null;
         }
@@ -150,10 +150,10 @@ public final class Nettosphere {
         return started.get();
     }
 
-    private ServerBootstrap buildBootstrap() {
+    private ServerBootstrap buildBootstrap(Config config) {
         final ServerBootstrap bootstrap = new ServerBootstrap();
-        parentGroup = new NioEventLoopGroup();
-        childGroup = new NioEventLoopGroup();
+        parentGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
+        childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 		bootstrap
         	.channel(NioServerSocketChannel.class)
         	.group(parentGroup, childGroup);
@@ -162,11 +162,11 @@ public final class Nettosphere {
         return bootstrap;
     }
 
-    private ServerBootstrap buildBootstrapFlashPolicy() {
-        // Configure the server.
+    private ServerBootstrap buildBootstrapFlashPolicy(Config config) {
         final ServerBootstrap bootstrap = new ServerBootstrap();
-        parentGroup = new NioEventLoopGroup();
-        childGroup = new NioEventLoopGroup();
+        parentGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
+        childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
+
 		bootstrap
         	.channel(NioServerSocketChannel.class)
         	.group(parentGroup, childGroup);

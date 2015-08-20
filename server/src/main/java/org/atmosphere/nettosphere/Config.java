@@ -170,6 +170,10 @@ public class Config {
         return b.servletContextAttributes;
     }
 
+    public boolean epoll() {
+        return b.epoll;
+    }
+
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
         private String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
@@ -202,6 +206,7 @@ public class Config {
         private int writeBufferPoolSize = 50;
         private long writeBufferPoolCleanupFrequency = 30000;
         private boolean enablePong = false;
+        public boolean epoll = false;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -568,33 +573,9 @@ public class Config {
         }
 
         /**
-         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for
-         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be
-         * created and never pooled.
-         *
-         * @param writeBufferPoolSize the max size of the pool.
-         * @return this;
-         */
-        public Builder writeBufferPoolSize(int writeBufferPoolSize){
-            this.writeBufferPoolSize = writeBufferPoolSize;
-            return this;
-        }
-
-        /**
-         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default
-         * is 30000.
-         * @param writeBufferPoolCleanupFrequency  the frequency
-         * @return this
-         */
-        public Builder writeBufferPoolCleanupFrequency(long writeBufferPoolCleanupFrequency) {
-            this.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
-            return this;
-        }
-
-        /**
          * Build an instance of this class.
          *
-         * @return
+         * @return this;
          */
         public Config build() {
             if (paths.isEmpty()) {
@@ -611,6 +592,17 @@ public class Config {
          */
         public Builder servletContextAttribute(String name, Object value) {
             servletContextAttributes.put(name,value);
+            return this;
+        }
+
+        /**
+         * Use {@link io.netty.channel.epoll.EpollEventLoopGroup}
+         * @See http://netty.io/wiki/native-transports.html
+         *
+         * @return this
+         */
+        public Builder epoll(boolean epoll) {
+            this.epoll = epoll;
             return this;
         }
     }
