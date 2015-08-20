@@ -80,12 +80,12 @@ public final class Nettosphere {
         runtime = new BridgeRuntime(config);
         this.channelInitializer = new NettyChannelInitializer(runtime);
         this.localSocket = new InetSocketAddress(config.host(), config.port());
+        this.bootstrap = buildBootstrap(config);
 
         if (config.initParams().containsKey(FLASH_SUPPORT)) {
             this.bootstrapFlashPolicy = buildBootstrapFlashPolicy(config);
             localPolicySocket = new InetSocketAddress(843);
         } else {
-            this.bootstrap = buildBootstrap(config);
             configureBootstrap(bootstrap, config);
             this.bootstrapFlashPolicy = null;
             localPolicySocket = null;
