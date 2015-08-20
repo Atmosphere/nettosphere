@@ -439,16 +439,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 byte[] body = EMPTY;
                 if (FullHttpRequest.class.isAssignableFrom(messageEvent.getClass())) {
                     ByteBuf b = FullHttpRequest.class.cast(messageEvent).content();
-                    body = new byte[b.readableBytes()];
-                    b.readBytes(body);
+                    if (b.isReadable()) {
+                        body = new byte[b.readableBytes()];
+                        b.readBytes(body);
+                    }
                 }
-
-                boolean ka = HttpHeaders.isKeepAlive(hrequest);
-                asyncWriter = config.supportChunking() ?
-                        new ChunkedWriter(ctx.channel(), true, ka) :
-                        new StreamWriter(ctx.channel(), true, ka);
-
-                method = hrequest.getMethod().name();
 
                 // First let's try to see if it's a static resources
                 if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
@@ -465,6 +460,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         hrequest.headers().set(STATIC_MAPPING, "false");
                     }
                 }
+
+                boolean ka = HttpHeaders.isKeepAlive(hrequest);
+                asyncWriter = config.supportChunking() ?
+                        new ChunkedWriter(ctx.channel(), true, ka) :
+                        new StreamWriter(ctx.channel(), true, ka);
+
+                method = hrequest.getMethod().name();
 
                 request = createAtmosphereRequest(ctx, hrequest, body);
                 request.setAttribute(KEEP_ALIVE, new Boolean(ka));
@@ -563,13 +565,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         } catch (AtmosphereMappingException ex) {
             if (method.equalsIgnoreCase("GET")) {
                 logger.trace("Unable to map the request {}, trying static file", messageEvent);
-                try {
-                    skipClose = true;
-                    super.channelRead(ctx, messageEvent);
-                } catch (Exception e) {
-                    logger.error("Unable to process request", e);
-                    throw new IOException(e);
-                }
             }
         } catch (Throwable e) {
             logger.error("Unable to process request", e);
@@ -594,14 +589,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    protected void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, Object e) {
+    public void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, FullHttpRequest e) {
         // For websocket, we can't send an error
+        logger.trace("Error {} for {}", status, e);
         if (websocketChannels.contains(ctx.channel())) {
             logger.debug("Error {} for {}", status, e);
             ctx.channel().close().addListener(ChannelFutureListener.CLOSE);
         } else if (e != null) {
-            final HttpRequest request = (HttpRequest) e;
-            if (HttpHeaders.getHeader(request, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
+            if (HttpHeaders.getHeader(e, STATIC_MAPPING, "false").equalsIgnoreCase("false")) {
                 super.sendError(ctx, status, e);
             }
         } else {
@@ -648,8 +643,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e)
-            throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         // Ignore Disconnect exception.
         if (e.getCause() != null
                 && (e.getCause().getClass().equals(ClosedChannelException.class)
