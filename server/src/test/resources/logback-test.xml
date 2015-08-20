@@ -7,6 +7,7 @@
     </appender>
 
     <logger name="org.atmosphere" level="ERROR"/>
+    <logger name="com.sun" level="ERROR"/>
 
     <root>
         <level value="INFO"/>
