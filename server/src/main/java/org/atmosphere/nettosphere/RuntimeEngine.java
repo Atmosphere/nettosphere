@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.atmosphere.nettosphere.BridgeRuntime.NETTY_41_PLUS;
+import static org.atmosphere.nettosphere.HttpStaticFileServerHandler.ATTACHMENT;
 
 /**
  * This class expose some runtime properties of the Netty implementation
@@ -68,11 +69,10 @@ public class RuntimeEngine {
      * @return the associated {@link WebSocket} attached to the {@link Channel}
      */
     public <U> WebSocket findWebSocket(U id) {
-        Channel c = null;
         if (NETTY_41_PLUS) {
-            c = websocketChannels.find((ChannelId) id);
+            Channel c = websocketChannels.find((ChannelId) id);
             if (c != null) {
-                Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
+                Object o = c.attr(ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
                     return WebSocket.class.cast(o);
                 }
@@ -92,7 +92,7 @@ public class RuntimeEngine {
         Set<WebSocket> s = new HashSet<WebSocket>();
         for (Channel c : websocketChannels) {
             if (c != null) {
-                Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
+                Object o = c.attr(ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
                     s.add(WebSocket.class.cast(o));
                 }
