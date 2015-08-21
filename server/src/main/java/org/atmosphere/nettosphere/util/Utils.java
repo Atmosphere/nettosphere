@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -354,5 +355,10 @@ public class Utils {
         public String toString() {
             return "config.noInternalAlloc == true";
         }
+    }
+
+    public final static String id(Channel channel) {
+        InetSocketAddress addr = (InetSocketAddress) channel.localAddress();
+        return addr.getAddress().getHostAddress() + "::" + addr.getPort();
     }
 }

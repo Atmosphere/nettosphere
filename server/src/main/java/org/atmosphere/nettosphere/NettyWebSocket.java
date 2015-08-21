@@ -26,6 +26,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.nettosphere.util.Utils;
 import org.atmosphere.util.IOUtils;
 import org.atmosphere.websocket.WebSocket;
 import org.slf4j.Logger;
@@ -47,6 +48,8 @@ public class NettyWebSocket extends WebSocket {
     private final boolean noInternalAlloc;
     private Future<?> closeFuture;
     private final AtomicBoolean isClosed = new AtomicBoolean();
+
+    private io.netty.channel.ChannelId id;
 
     public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
         super(config);
@@ -71,8 +74,10 @@ public class NettyWebSocket extends WebSocket {
 
         // TODO: Netty 4.1 id()
         if (noInternalAlloc) {
-            InetSocketAddress addr = (InetSocketAddress) channel.localAddress();
-            this.uuid = addr.getAddress().getHostAddress() + "::" + addr.getPort();
+            this.uuid = BridgeRuntime.NETTY_41_PLUS ? channel.id().asLongText() : Utils.id(channel);
+            if (BridgeRuntime.NETTY_41_PLUS) {
+                id = channel.id();
+            }
         }
 
         if (!binaryWrite && r != null && r.getRequest() != null) {
@@ -189,5 +194,9 @@ public class NettyWebSocket extends WebSocket {
 
     protected Future<?> closeFuture() {
         return closeFuture;
+    }
+
+    public io.netty.channel.ChannelId id() {
+        return id;
     }
 }

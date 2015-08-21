@@ -16,11 +16,14 @@
 package org.atmosphere.nettosphere;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelId;
 import io.netty.channel.group.ChannelGroup;
 import org.atmosphere.websocket.WebSocket;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.atmosphere.nettosphere.BridgeRuntime.NETTY_41_PLUS;
 
 /**
  * This class expose some runtime properties of the Netty implementation
@@ -30,9 +33,13 @@ import java.util.Set;
 public class RuntimeEngine {
 
     private final BridgeRuntime runtime;
+    private final ChannelGroup httpChannels;
+    private final ChannelGroup websocketChannels;
 
     public RuntimeEngine(BridgeRuntime runtime) {
         this.runtime = runtime;
+        this.httpChannels = runtime.httpChannels();
+        this.websocketChannels = runtime.websocketChannels();
     }
 
     /**
@@ -41,11 +48,16 @@ public class RuntimeEngine {
      * @param id the unique {@link Channel} ID.
      * @return the underlying {@link Channel}.
      */
-    public Channel find(int id) {
-        Channel c = null; /*runtime.websocketChannels().find(id);
-        if (c == null) {
-            c = runtime.httpChannels().find(id);
-        }   */
+    public <U> Channel find(U id) {
+        Channel c = null;
+        if (NETTY_41_PLUS) {
+            c = websocketChannels.find((ChannelId) id);
+            if (c == null) {
+                c = httpChannels.find((ChannelId) id);
+            }
+        } else {
+            throw new UnsupportedOperationException("You need to use Netty 4.1+ to use this feature");
+        }
         return c;
     }
 
@@ -55,14 +67,19 @@ public class RuntimeEngine {
      * @param id the unique {@link Channel} ID.
      * @return the associated {@link WebSocket} attached to the {@link Channel}
      */
-    public WebSocket findWebSocket(int id) {
-        Channel c = null; /*runtime.websocketChannels().find(id);
-        if (c != null) {
-            Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
-            if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
-                return WebSocket.class.cast(o);
+    public <U> WebSocket findWebSocket(U id) {
+        Channel c = null;
+        if (NETTY_41_PLUS) {
+            c = websocketChannels.find((ChannelId) id);
+            if (c != null) {
+                Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
+                if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
+                    return WebSocket.class.cast(o);
+                }
             }
-        }  */
+        } else {
+            throw new UnsupportedOperationException("You need to use Netty 4.1+ to use this feature");
+        }
         return null;
     }
 
@@ -73,7 +90,7 @@ public class RuntimeEngine {
      */
     public Set<WebSocket> findAllWebSockets() {
         Set<WebSocket> s = new HashSet<WebSocket>();
-        for (Channel c : runtime.websocketChannels()) {
+        for (Channel c : websocketChannels) {
             if (c != null) {
                 Object o = c.attr(HttpStaticFileServerHandler.ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {

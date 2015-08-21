@@ -120,13 +120,25 @@ import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYP
  */
 @Sharable
 public class BridgeRuntime extends HttpStaticFileServerHandler {
+
+    public static boolean NETTY_41_PLUS;
+
+    static {
+        try {
+            Class.forName("io.netty.channel.ChannelId");
+            NETTY_41_PLUS = true;
+        } catch (ClassNotFoundException e) {
+            NETTY_41_PLUS = false;
+        }
+    }
+
     private final static String KEEP_ALIVE = BridgeRuntime.class.getName() + "_keep-alive";
     private static final Logger logger = LoggerFactory.getLogger(BridgeRuntime.class);
 
     private final AtmosphereFramework framework;
     private final Config config;
     private final ScheduledExecutorService suspendTimer;
-    private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<String, HttpSession>();
+    private final ConcurrentHashMap<String, HttpSession> sessions = new ConcurrentHashMap<>();
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebSocketProcessor webSocketProcessor;
     private final ChannelGroup httpChannels = new DefaultChannelGroup("http", ImmediateEventExecutor.INSTANCE);
