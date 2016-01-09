@@ -199,6 +199,10 @@ public class Config {
         return b.binaryWrite;
     }
 
+    public boolean webSocketOnly() {
+        return b.webSocketOnly;
+    }
+
 
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
@@ -240,6 +244,7 @@ public class Config {
         public String subProtocols = "";
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
+        public boolean webSocketOnly;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -713,6 +718,16 @@ public class Config {
          */
         public Builder binaryWrite(boolean binaryWrite) {
             this.binaryWrite = binaryWrite;
+            return this;
+        }
+
+        /**
+         * Only Support WebSocket. All HTTP call will be dropped. Default is false
+         * @param webSocketOnly true if only the websocket protocol needs to be suppored.
+         * @return this
+         */
+        public Builder webSocketOnly(boolean webSocketOnly) {
+            this.webSocketOnly = webSocketOnly;
             return this;
         }
 

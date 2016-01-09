@@ -303,9 +303,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 webSocket = true;
             }
 
-            for (String connection : c) {
-                if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
-                    webSocket = true;
+            if (!webSocket) {
+                for (String connection : c) {
+                    if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
+                        webSocket = true;
+                        break;
+                    }
                 }
             }
 
@@ -546,6 +549,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
+
+        if (config.webSocketOnly()) {
+            logger.trace("Forbidenn {}", ctx);
+            super.sendError(ctx, FORBIDDEN, messageEvent);
+            return;
+        }
 
         boolean skipClose = false;
         AtmosphereResponse response = null;
