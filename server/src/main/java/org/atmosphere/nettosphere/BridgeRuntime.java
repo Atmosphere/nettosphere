@@ -295,9 +295,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         try {
             handleMessageEvent(ctx, messageEvent);
         } finally {
-             if (messageEvent instanceof ReferenceCounted) {
+            if (messageEvent instanceof ReferenceCounted) {
                 ReferenceCounted refMsg = (ReferenceCounted) messageEvent;
-                if(refMsg.refCnt() > 0)
+                if (refMsg.refCnt() > 0)
                     refMsg.release();
             }
         }
@@ -321,9 +321,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 webSocket = true;
             }
 
-            for (String connection : c) {
-                if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
-                    webSocket = true;
+            if (!webSocket) {
+                for (String connection : c) {
+                    if (connection != null && connection.toLowerCase().equalsIgnoreCase("upgrade")) {
+                        webSocket = true;
+                        break;
+                    }
                 }
             }
 
@@ -331,6 +334,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
+
+
+                if (config.webSocketOnly()) {
+                    logger.trace("Forbidenn {}", ctx);
+                    sendHttpResponse(ctx, r, new DefaultHttpResponse(HTTP_1_1, FORBIDDEN));
+                    return;
+                }
+
                 handleHttp(ctx, messageEvent);
             }
         } else if (msg instanceof WebSocketFrame) {
@@ -388,23 +399,20 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         webSocketProcessor.open(webSocket, atmosphereRequest, response);
 
                         if (webSocketTimeout > 0) {
-                            webSocket.closeFuture(suspendTimer.scheduleAtFixedRate(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
-                                        logger.debug("Timing out {}", webSocket);
-                                        webSocket.close();
-                                    }
+                            webSocket.closeFuture(suspendTimer.scheduleAtFixedRate(() -> {
+                                if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
+                                    logger.debug("Timing out {}", webSocket);
+                                    webSocket.close();
                                 }
                             }, webSocketTimeout, webSocketTimeout, TimeUnit.MILLISECONDS));
-                        }                                                                                                                                       
+                        }
                     }
                 }
             });
         }
     }
 
-    private void handleWebSocketFrame(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+    private void handleWebSocketFrame(final ChannelHandlerContext ctx, final Object messageEvent) {
         WebSocketFrame frame = (WebSocketFrame) messageEvent;
 
         logger.trace("Received frame {}", frame.getClass().getName());
@@ -512,19 +520,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .session(session)
                 .cookies(getCookies(request))
                 .queryStrings(qs)
-                .remoteInetSocketAddress(new Callable<InetSocketAddress>() {
-                    @Override
-                    public InetSocketAddress call() throws Exception {
-                        return (InetSocketAddress) ctx.channel().remoteAddress();
-                    }
-                })
-                .localInetSocketAddress(new Callable<InetSocketAddress>() {
-
-                    @Override
-                    public InetSocketAddress call() throws Exception {
-                        return (InetSocketAddress) ctx.channel().localAddress();
-                    }
-                });
+                .remoteInetSocketAddress((Callable<InetSocketAddress>) () -> (InetSocketAddress) ctx.channel().remoteAddress())
+                .localInetSocketAddress((Callable<InetSocketAddress>) () -> (InetSocketAddress) ctx.channel().localAddress());
 
         if (body.length > 0) {
             requestBuilder.body(body);
@@ -534,7 +531,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     }
 
-    private void handleHttp(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+    private void handleHttp(final ChannelHandlerContext ctx, final Object messageEvent) throws IOException {
 
         boolean skipClose = false;
         AtmosphereResponse response = null;

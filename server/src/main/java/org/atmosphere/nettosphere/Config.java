@@ -16,6 +16,8 @@
 package org.atmosphere.nettosphere;
 
 import io.netty.channel.ChannelInboundHandler;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.ssl.SslContext;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
@@ -196,6 +198,10 @@ public class Config {
         return b.binaryWrite;
     }
 
+    public boolean webSocketOnly() {
+        return b.webSocketOnly;
+    }
+
 
     public boolean epoll() {
         return b.epoll;
@@ -241,6 +247,7 @@ public class Config {
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
         public boolean epoll = false;
+        public boolean webSocketOnly;
 
         /**
          * Set an SSLContext in order enable SSL
@@ -322,7 +329,7 @@ public class Config {
         /**
          * When {@link #aggregateRequestBodyInMemory} is true,the maximum length of the aggregated content.
          * If the length of the aggregated content exceeds this value,
-         * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.
+         * a {@link TooLongFrameException} will be raised.
          *
          * @return this
          */
@@ -602,7 +609,7 @@ public class Config {
 
         /**
          * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false
-         * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}
+         * the {@link ChunkedWriteHandler} will not be added to the Netty's {@link ChannelPipeline}
          * <p/>
          * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.
          *
@@ -654,7 +661,7 @@ public class Config {
         }
 
         /**
-         * Do not decode {@link org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame} into a String and instead pass
+         * Do not decode {@link TextWebSocketFrame} into a String and instead pass
          * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.
          *
          * @param textFrameAsBinary
@@ -700,6 +707,16 @@ public class Config {
          */
         public Builder binaryWrite(boolean binaryWrite) {
             this.binaryWrite = binaryWrite;
+            return this;
+        }
+
+        /**
+         * Only Support WebSocket. All HTTP call will be dropped. Default is false
+         * @param webSocketOnly true if only the websocket protocol needs to be suppored.
+         * @return this
+         */
+        public Builder webSocketOnly(boolean webSocketOnly) {
+            this.webSocketOnly = webSocketOnly;
             return this;
         }
 
