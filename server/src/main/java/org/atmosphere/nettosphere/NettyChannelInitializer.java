@@ -21,6 +21,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
@@ -61,7 +62,7 @@ class NettyChannelInitializer extends ChannelInitializer {
         for (ChannelInboundHandler h: config.channelUpstreamHandlers()) {
             pipeline.addLast(h.getClass().getName(), h);
         }
-
+        pipeline.addLast(new WebSocketServerCompressionHandler());
         pipeline.addLast(BridgeRuntime.class.getName(), bridgeRuntime);
 
 	}

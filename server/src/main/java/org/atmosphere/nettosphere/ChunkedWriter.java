@@ -58,6 +58,7 @@ public class ChunkedWriter extends ChannelWriter {
 
     private ByteBuf writeHeadersForHttp(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
+
             return Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8"));
         }
         return Unpooled.EMPTY_BUFFER;

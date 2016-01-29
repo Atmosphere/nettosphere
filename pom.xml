@@ -80,8 +80,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-                <!--<version>4.0.30.Final</version>-->
-                <version>4.1.0.Beta5</version>
+                <version>4.1.0.CR1</version>
             </dependency>
 
             <!-- Test -->
@@ -106,9 +105,8 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>5.8</version>
+                <version>6.9.9</version>
                 <scope>test</scope>
-                <classifier>jdk15</classifier>
             </dependency>
         </dependencies>
     </dependencyManagement>
