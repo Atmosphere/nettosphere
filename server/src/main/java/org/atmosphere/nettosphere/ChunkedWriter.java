@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -50,15 +49,13 @@ public class ChunkedWriter extends ChannelWriter {
 
     private ByteBuf writeHeaders(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
-        	ByteBuf writeBuffer = Unpooled.buffer();
-            return Unpooled.wrappedBuffer(writeBuffer, Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
+            return Unpooled.wrappedBuffer(Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8")));
         }
         return Unpooled.EMPTY_BUFFER;
     }
 
     private ByteBuf writeHeadersForHttp(AtmosphereResponse response) throws UnsupportedEncodingException {
         if (writeHeader && !headerWritten.getAndSet(true) && response != null) {
-
             return Unpooled.wrappedBuffer(constructStatusAndHeaders(response, -1).getBytes("UTF-8"));
         }
         return Unpooled.EMPTY_BUFFER;
@@ -70,7 +67,6 @@ public class ChunkedWriter extends ChannelWriter {
 
         ByteBuf writeBuffer = writeHeadersForHttp(response);
         if (writeBuffer.capacity() > 0 && response != null) {
-            final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
             try {
                 lock.writeLock().lock();
                 channel.writeAndFlush(writeBuffer).addListener(new ChannelFutureListener() {
@@ -147,8 +143,6 @@ public class ChunkedWriter extends ChannelWriter {
             if (headerWritten.get()) {
                 writeBuffer.writeBytes(CHUNK_DELIMITER);
             }
-
-            final AtomicReference<ByteBuf> recycle = new AtomicReference<ByteBuf>(writeBuffer);
 
             try {
                 lock.writeLock().lock();
