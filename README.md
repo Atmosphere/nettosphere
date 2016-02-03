@@ -141,7 +141,8 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
     mvn exec:java -Dexec.arguments='path to your exploded war file'
 
 #### Build Status
-[![Build Status](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/badge/icon)](https://buildhive.cloudbees.com/job/Atmosphere/job/nettosphere/)
+
+[![Build Status](https://api.travis-ci.org/Atmosphere/nettosphere.svg?branch=master)](https://travis-ci.org/Atmosphere/nettosphere)
 
 #### [Change Log](./CHANGELOG.md)
 
