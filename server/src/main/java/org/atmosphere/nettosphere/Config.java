@@ -203,6 +203,10 @@ public class Config {
         return b.webSocketOnly;
     }
 
+    public boolean shareheaders() {
+        return b.shareHeaders;
+    }
+
 
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
@@ -245,6 +249,18 @@ public class Config {
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
         public boolean webSocketOnly;
+        public boolean shareHeaders;
+
+        /**
+         * Share underlying headers map with newly created WebSocket. Best used when {@link #noInternalAlloc} is set to true.
+         * Default is false
+         * @param shareHeaders
+         * @return
+         */
+        public Builder shareHeaders(boolean  shareHeaders) {
+            this.shareHeaders = shareHeaders;
+            return this;
+        }
 
         /**
          * Set an SSLContext in order enable SSL

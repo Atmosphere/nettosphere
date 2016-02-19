@@ -15,7 +15,6 @@
  */
 package org.atmosphere.nettosphere;
 
-import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.util.IOUtils;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,28 +43,18 @@ public class NettyWebSocket extends WebSocket {
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
     private final Channel channel;
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
-    private int bufferBinarySize = Integer.MAX_VALUE;
-    private int bufferStringSize = Integer.MAX_VALUE;
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
     private Future<?> closeFuture;
     private final AtomicBoolean isClosed = new AtomicBoolean();
+    private final Map<String, String> headers;
 
-    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
+    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite, Map<String, String> headers) {
         super(config);
         this.channel = channel;
-
-        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXBINARYSIZE);
-        if (s != null) {
-            bufferBinarySize = Integer.valueOf(s);
-        }
-
-        s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXTEXTSIZE);
-        if (s != null) {
-            bufferStringSize = Integer.valueOf(s);
-        }
         this.noInternalAlloc = noInternalAlloc;
         this.binaryWrite = binaryWrite;
+        this.headers = headers;
         this.lastWrite = System.currentTimeMillis();
     }
 
@@ -182,6 +172,9 @@ public class NettyWebSocket extends WebSocket {
         return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
 
+    public Map<String,String> headers(){
+        return headers;
+    }
     protected WebSocket closeFuture(Future<?> closeFuture) {
         this.closeFuture = closeFuture;
         return this;

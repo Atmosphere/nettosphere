@@ -345,7 +345,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
 
-            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite());
+            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(),
+                    framework.getAtmosphereConfig(),
+                    config.noInternalAlloc(),
+                    config.binaryWrite(),
+                    config.shareheaders() ? getHeaders(request) : null);
+
             final AtmosphereRequest atmosphereRequest
                     = createAtmosphereRequest(ctx, request);
 
@@ -365,34 +370,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                         websocketChannels.add(ctx.getChannel());
 
                         ctx.getChannel().setAttachment(webSocket);
-                        if (request.headers().contains("X-wakeUpNIO")) {
-                            /**
-                             * https://github.com/AsyncHttpClient/async-http-client/issues/471
-                             *
-                             * Netty 3.9.x has an issue and is unable to detect the websocket frame that will be produced if an AtmosphereInterceptor
-                             * like the JavaScriptProtocol write bytes just after the handshake's header. The effect is the message is lost when Netty decode the Handshake
-                             * request. This can be easily reproduced when wAsync is used with NettoSphere as server. For example, the following message
-                             *
-                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                             HTTP/1.1 101 Switching Protocols.
-                             Upgrade: websocket.
-                             Connection: Upgrade.
-                             Sec-WebSocket-Accept: mFFTAW8KVZebToQFZZcFVWmJh8Y=.
-                             .
-
-
-                             T 127.0.0.1:8080 -> 127.0.0.1:51295 [AP]
-                             .21808c569-099b-4d8f-b657-c5965df40449|1391270901601
-
-                             can be lost because the Netty's Decoder fail to realize the handshake contained a response's body. The error doesn't occurs all the time but under
-                             load happens more easily.
-                             */
-                            // Wake up the remote NIO Selector so Netty don't read the hanshake and the first message in a single read.
-                            for (int i = 0; i < 512; i++) {
-                                webSocket.write(" ");
-                            }
-                        }
-
                         if (config.noInternalAlloc()) {
                             webSocket.resource(proxiedResource);
                         }
@@ -479,7 +456,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         String u = requestUri.toURL().toString();
-        int last = u.indexOf("?") == -1 ? u.length() : u.indexOf("?");
+        int last = !u.contains("?") ? u.length() : u.indexOf("?");
         String url = u.substring(0, last);
         int l;
 
