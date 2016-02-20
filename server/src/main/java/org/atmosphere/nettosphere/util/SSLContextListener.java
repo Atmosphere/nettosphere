@@ -26,7 +26,9 @@ public interface SSLContextListener {
 
         @Override
         public void onPostCreate(SSLEngine e) {
-            e.setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"});
+            //TODO make the cipher suites configurable
+            e.setEnabledCipherSuites(new String[]{"TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+                                                  "TLS_DH_anon_WITH_AES_128_CBC_SHA"});
             e.setUseClientMode(false);
         }
     };

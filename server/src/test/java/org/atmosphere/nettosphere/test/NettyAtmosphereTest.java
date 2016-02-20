@@ -637,7 +637,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
-                .setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"})
+                .setEnabledCipherSuites(new String[]{"TLS_DH_anon_WITH_AES_128_CBC_SHA"})
                 .setAcceptAnyCertificate(true)
                 .build());
         try {
@@ -731,7 +731,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
                 .setAcceptAnyCertificate(true)
-                .setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_RC4_128_MD5"})
+                .setEnabledCipherSuites(new String[]{"TLS_DH_anon_WITH_AES_128_CBC_SHA"})
                 .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();
