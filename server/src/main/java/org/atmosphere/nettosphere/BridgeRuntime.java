@@ -94,6 +94,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -363,7 +364,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             if (!config.subProtocols().isEmpty()) {
                 if (request.headers().get("Sec-WebSocket-Protocol") == null || request.headers().get("Sec-WebSocket-Protocol").isEmpty()) {
-                    request.headers().set("Sec-WebSocket-Protocol", "fail");
+                    request.headers().set("Sec-WebSocket-Protocol", UUID.randomUUID().toString());
                 }
             }
 
