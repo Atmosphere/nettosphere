@@ -361,6 +361,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
             webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
 
+            if (!config.subProtocols().isEmpty()) {
+                if (request.headers().get("Sec-WebSocket-Protocol") == null || request.headers().get("Sec-WebSocket-Protocol").isEmpty()) {
+                    request.headers().set("Sec-WebSocket-Protocol", "fail");
+                }
+            }
+
             handshaker.handshake(ctx.getChannel(), request).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
