@@ -156,17 +156,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
                 path += "index.html";
             }
 
-            if (path == null) {
-                found = false;
-                continue;
-            }
-
             file = new File(path);
-            if (file.isHidden() || !file.exists()) {
-                found = false;
-                continue;
-            }
-            if (!file.isFile()) {
+            if (file.isHidden() || !file.exists() || !file.isFile()) {
                 found = false;
                 continue;
             }
