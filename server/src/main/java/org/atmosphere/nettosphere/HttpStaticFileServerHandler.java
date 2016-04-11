@@ -172,10 +172,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         for (String p : paths) {
             String path = p + sanitizeUri(request.getUri());
 
-            if (path == null) {
-                path = "/index.html";
-            }
-
             if (path.endsWith("/") || path.endsWith(File.separator)) {
                 path += "index.html";
             }
@@ -187,7 +183,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             }
 
             file = new File(path);
-            if (file.isHidden() || !file.exists()) {
+            if (file.isHidden() || !file.exists() || !file.isFile()) {
                 found = false;
                 continue;
             }
@@ -200,11 +196,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
 //                }
 //                return;
 //            }
-
-            if (!file.isFile()) {
-                found = false;
-                continue;
-            }
 
             try {
                 raf = new RandomAccessFile(file, "r");
