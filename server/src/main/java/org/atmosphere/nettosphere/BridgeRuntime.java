@@ -44,6 +44,7 @@ import org.atmosphere.websocket.WebSocketProcessor;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -313,7 +314,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
             }
 
-            logger.trace("Handling request {}", r);
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
@@ -390,7 +390,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                 @Override
                                 public void run() {
                                     if (webSocket.lastWriteTimeStampInMilliseconds() != 0 && (System.currentTimeMillis() - webSocket.lastWriteTimeStampInMilliseconds() > webSocketTimeout)) {
-                                        logger.debug("Timing out {}", webSocket);
+                                        logger.debug("Timing out {} at {}", webSocket.uuid(), address(ctx.getChannel()));
                                         webSocket.close();
                                     }
                                 }
@@ -404,8 +404,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
         WebSocketFrame frame = (WebSocketFrame) messageEvent.getMessage();
-
-        logger.trace("Received frame {}", frame.getClass().getName());
 
         // Check for closing frame
         Object attachment = ctx.getChannel().getAttachment();
@@ -502,7 +500,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .method(method)
                 .contentType(ct)
                 .contentLength(cl)
-                        // We need to read attribute after doComet
+                // We need to read attribute after doComet
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
@@ -739,7 +737,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         if (WebSocket.class.isAssignableFrom(o.getClass())) {
             NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
-            logger.trace("Closing {}", webSocket.uuid());
+            logger.trace("Closing {} at {}", webSocket.uuid(), address(e.getChannel()));
 
             try {
                 if (webSocket.closeFuture() != null) {
@@ -748,7 +746,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
                 webSocketProcessor.close(webSocket, 1005);
             } catch (Exception ex) {
-                logger.error("{}", webSocket, ex);
+                logger.error("Exception on {} at {}", webSocket.uuid(), address(e.getChannel()), ex);
             }
         } else if (State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
@@ -757,7 +755,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
-            logger.error("Invalid state {} and Channel {}", o, ctx.getChannel());
+            logger.error("Invalid state {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
         }
     }
 
@@ -768,12 +766,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (e.getCause() != null
                 && (e.getCause().getClass().equals(ClosedChannelException.class)
                 || e.getCause().getClass().equals(IOException.class))) {
-            logger.trace("Exception", e.getCause());
+            logger.trace("Exception on {}", address(e.getChannel()), e.getCause());
         } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
-            logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
+            logger.error("TooLongFrameException. The request will be closed, make sure you " +
+                    "increase the Config.maxChunkContentLength() to a higher value: {}", address(e.getChannel()), e.getCause());
             super.exceptionCaught(ctx, e);
         } else {
-            logger.debug("Exception", e.getCause());
+            logger.debug("exceptionCaught {}", address(e.getChannel()), e.getCause());
             super.exceptionCaught(ctx, e);
         }
     }
@@ -787,6 +786,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         return headers;
+    }
+
+    private String address(Channel channel) {
+        return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
 
     private String getBaseUri(final HttpRequest request) {
