@@ -533,7 +533,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private void handleHttp(final ChannelHandlerContext ctx, final MessageEvent messageEvent) throws URISyntaxException, IOException {
 
         if (config.webSocketOnly()) {
-            logger.trace("Forbidenn {}", ctx);
+            logger.trace("Forbiden {}", ctx);
             super.sendError(ctx, FORBIDDEN, messageEvent);
             return;
         }
@@ -730,34 +730,37 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelClosed(ctx, e);
-        Object o = ctx.getChannel().getAttachment();
+        try {
+            super.channelClosed(ctx, e);
+        } finally {
+            Object o = ctx.getChannel().getAttachment();
 
-        if (o == null) return;
+            if (o == null) return;
 
-        if (WebSocket.class.isAssignableFrom(o.getClass())) {
-            NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
-            logger.trace("Closing {} at {}", webSocket.uuid(), address(e.getChannel()));
+            if (WebSocket.class.isAssignableFrom(o.getClass())) {
+                NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
+                logger.trace("Closing {} at {}", webSocket.uuid(), address(e.getChannel()));
 
-            try {
-                if (webSocket.closeFuture() != null) {
-                    webSocket.closeFuture().cancel(true);
+                try {
+                    if (webSocket.closeFuture() != null) {
+                        webSocket.closeFuture().cancel(true);
+                    }
+
+                    webSocketProcessor.close(webSocket, 1005);
+                } catch (Exception ex) {
+                    logger.error("Exception on {} at {}", webSocket.uuid(), address(e.getChannel()), ex);
                 }
-
-                webSocketProcessor.close(webSocket, 1005);
-            } catch (Exception ex) {
-                logger.error("Exception on {} at {}", webSocket.uuid(), address(e.getChannel()), ex);
-            }
-        } else if (State.class.isAssignableFrom(o.getClass())) {
-            logger.trace("State {}", o);
-            State s = State.class.cast(o);
-            if (s.action.type() == Action.TYPE.SUSPEND) {
-                asynchronousProcessor.endRequest(s.resource(), true);
-            }
-        } else {
-            // Will be null if handled by exceptionCaught
-            if (o != null) {
-                logger.warn("Invalid attachment {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
+            } else if (State.class.isAssignableFrom(o.getClass())) {
+                logger.trace("State {}", o);
+                State s = State.class.cast(o);
+                if (s.action.type() == Action.TYPE.SUSPEND) {
+                    asynchronousProcessor.endRequest(s.resource(), true);
+                }
+            } else {
+                // Will be null if handled by exceptionCaught
+                if (o != null) {
+                    logger.warn("Invalid attachment {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
+                }
             }
         }
     }
@@ -776,6 +779,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
                 super.exceptionCaught(ctx, e);
             } else {
+                logger.error("Unexpected and unhandled I/O Exception", e);
                 super.exceptionCaught(ctx, e);
             }
         } finally {
