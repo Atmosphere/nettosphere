@@ -755,25 +755,45 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
-            logger.error("Invalid state {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
+            // Will be null if handled by exceptionCaught
+            if (o != null) {
+                logger.warn("Invalid attachment {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
+            }
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
-        // Ignore Disconnect exception.
-        if (e.getCause() != null
-                && (e.getCause().getClass().equals(ClosedChannelException.class)
-                || e.getCause().getClass().equals(IOException.class))) {
-            logger.trace("Exception on {}", address(e.getChannel()), e.getCause());
-        } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
-            logger.error("TooLongFrameException. The request will be closed, make sure you " +
-                    "increase the Config.maxChunkContentLength() to a higher value: {}", address(e.getChannel()), e.getCause());
-            super.exceptionCaught(ctx, e);
-        } else {
-            logger.debug("exceptionCaught {}", address(e.getChannel()), e.getCause());
-            super.exceptionCaught(ctx, e);
+
+        boolean propagate = false;
+        try {
+            logger.trace("Unexpected I/O Exception", e);
+            if (e.getCause() != null
+                    && (e.getCause().getClass().equals(ClosedChannelException.class)
+                    || e.getCause().getClass().equals(IOException.class))) {
+                logger.trace("Unexpected I/O Exception", e.getCause());
+                propagate = true;
+            } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
+                logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
+                propagate = true;
+                super.exceptionCaught(ctx, e);
+            } else {
+                super.exceptionCaught(ctx, e);
+            }
+        } finally {
+            if (propagate) {
+                Object o = ctx.getChannel();
+                if (o != null) {
+                    o = ctx.getChannel().getAttachment();
+                    ctx.getChannel().setAttachment(null);
+                    if (WebSocket.class.isAssignableFrom(o.getClass())) {
+                        NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
+                        logger.trace("Closing {}", webSocket.uuid());
+                        webSocketProcessor.close(webSocket, 1006);
+                    }
+                }
+            }
         }
     }
 
