@@ -766,32 +766,27 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
 
-        boolean propagate = false;
         try {
             logger.trace("Unexpected I/O Exception", e);
             if (e.getCause() != null
                     && (e.getCause().getClass().equals(ClosedChannelException.class)
                     || e.getCause().getClass().equals(IOException.class))) {
                 logger.trace("Unexpected I/O Exception", e.getCause());
-                propagate = true;
             } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
                 logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
-                propagate = true;
                 super.exceptionCaught(ctx, e);
             } else {
                 super.exceptionCaught(ctx, e);
             }
         } finally {
-            if (propagate) {
-                Object o = ctx.getChannel();
-                if (o != null) {
-                    o = ctx.getChannel().getAttachment();
-                    ctx.getChannel().setAttachment(null);
-                    if (WebSocket.class.isAssignableFrom(o.getClass())) {
-                        NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
-                        logger.trace("Closing {}", webSocket.uuid());
-                        webSocketProcessor.close(webSocket, 1006);
-                    }
+            Object o = ctx.getChannel();
+            if (o != null) {
+                o = ctx.getChannel().getAttachment();
+                ctx.getChannel().setAttachment(null);
+                if (WebSocket.class.isAssignableFrom(o.getClass())) {
+                    NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
+                    logger.trace("Closing {}", webSocket.uuid());
+                    webSocketProcessor.close(webSocket, 1006);
                 }
             }
         }
