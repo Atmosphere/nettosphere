@@ -346,12 +346,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
         } else {
 
-            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(),
-                    framework.getAtmosphereConfig(),
-                    config.noInternalAlloc(),
-                    config.binaryWrite(),
-                    config.shareheaders() ? getHeaders(request) : null);
-
             final AtmosphereRequest atmosphereRequest
                     = createAtmosphereRequest(ctx, request);
 
@@ -359,6 +353,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 sendError(ctx, BAD_REQUEST, null);
                 return;
             }
+
+            final NettyWebSocket webSocket = new NettyWebSocket(ctx.getChannel(),
+                    framework.getAtmosphereConfig(),
+                    config.noInternalAlloc(),
+                    config.binaryWrite(),
+                    config.shareheaders() ? getHeaders(request) : null);
 
             webSocketProcessor.notifyListener(webSocket, new WebSocketEventListener.WebSocketEvent("", HANDSHAKE, webSocket));
 
@@ -731,13 +731,13 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try {
-            super.channelClosed(ctx, e);
-        } finally {
+            websocketChannels.remove(e.getChannel());
             Object o = ctx.getChannel().getAttachment();
+            ctx.getChannel().setAttachment(null);
 
             if (o == null) return;
 
-            if (WebSocket.class.isAssignableFrom(o.getClass())) {
+            if (o instanceof  WebSocket) {
                 NettyWebSocket webSocket = NettyWebSocket.class.cast(o);
                 logger.trace("Closing {} at {}", webSocket.uuid(), address(e.getChannel()));
 
@@ -762,6 +762,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     logger.warn("Invalid attachment {} and Channel {} at {}", o, ctx.getChannel(), address(e.getChannel()));
                 }
             }
+        } finally {
+            super.channelClosed(ctx, e);
         }
     }
 

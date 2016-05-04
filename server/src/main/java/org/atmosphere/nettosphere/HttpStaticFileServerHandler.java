@@ -208,7 +208,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
         contentType(request, response, file);
         setContentLength(response, fileLength);
-        setDateAndCacheHeaders(response,file);
+        setDateAndCacheHeaders(response, file);
 
         Channel ch = e.getChannel();
 
@@ -246,6 +246,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
+        super.exceptionCaught(ctx, e);
         Channel ch = e.getChannel();
 
         // Prevent recursion when the client close the connection during a write operation. In that
@@ -334,7 +335,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
         if (dot > 0) {
             String ext = substr.substring(dot + 1);
             int queryString = ext.indexOf("?");
-            if (queryString>0){
+            if (queryString > 0) {
                 ext.substring(0, queryString);
             }
             String contentType = MimeType.get(ext, defaultContentType);

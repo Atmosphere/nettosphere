@@ -133,10 +133,14 @@ public class NettyWebSocket extends WebSocket {
     public void close() {
         if (isClosed.getAndSet(true)) return;
 
-        channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
-
-        if (closeFuture != null) {
-            closeFuture.cancel(true);
+        try {
+            channel.write(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+        } finally {
+            if (closeFuture != null) {
+                closeFuture.cancel(true);
+            }
+            headers.clear();
+            channel.close();
         }
     }
 
@@ -171,9 +175,10 @@ public class NettyWebSocket extends WebSocket {
         return ((InetSocketAddress) channel.getRemoteAddress()).getAddress().getHostAddress();
     }
 
-    public Map<String,String> headers(){
+    public Map<String, String> headers() {
         return headers;
     }
+
     protected WebSocket closeFuture(Future<?> closeFuture) {
         this.closeFuture = closeFuture;
         return this;
