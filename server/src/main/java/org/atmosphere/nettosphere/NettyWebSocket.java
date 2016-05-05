@@ -41,7 +41,7 @@ import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
 public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
-    private final Channel channel;
+    private Channel channel;
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
     private boolean binaryWrite = false;
     private final boolean noInternalAlloc;
@@ -142,6 +142,11 @@ public class NettyWebSocket extends WebSocket {
             headers.clear();
             channel.close();
         }
+    }
+
+    public void recycle(){
+        headers.clear();
+        channel = null;
     }
 
     /**

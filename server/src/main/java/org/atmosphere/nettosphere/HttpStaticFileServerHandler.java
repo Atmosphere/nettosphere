@@ -246,7 +246,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
             throws Exception {
-        super.exceptionCaught(ctx, e);
         Channel ch = e.getChannel();
 
         // Prevent recursion when the client close the connection during a write operation. In that
