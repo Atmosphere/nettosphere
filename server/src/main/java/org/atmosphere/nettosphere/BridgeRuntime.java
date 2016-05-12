@@ -749,7 +749,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             } catch (Exception ex) {
                 logger.error("Exception on {} at {}", webSocket.uuid(), address(e.getChannel()), ex);
             }
-        } else if (State.class.isAssignableFrom(o.getClass())) {
+        } else if ( o != null && State.class.isAssignableFrom(o.getClass())) {
             logger.trace("State {}", o);
             State s = State.class.cast(o);
             if (s.action.type() == Action.TYPE.SUSPEND) {
