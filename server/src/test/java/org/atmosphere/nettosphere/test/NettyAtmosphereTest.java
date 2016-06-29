@@ -544,7 +544,9 @@ public class NettyAtmosphereTest extends BaseTest {
 			webSocket.addWebSocketListener(new WebSocketTextListener() {
 				@Override
 				public void onMessage(String message) {
-					responseNo.getAndIncrement();
+					//if not heartbeat increment
+					if(!message.equals("X"))
+							responseNo.getAndIncrement();
 					logger.debug("Received Message: " + responseNo.get() + " " + message);
 				}
 
@@ -571,7 +573,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
 			Thread.sleep(60000);
 
-			assertEquals(responseNo.get(), TOTAL * 2);
+			assertEquals(responseNo.get(), TOTAL);
 			webSocket.close();
 		} finally {
 			c.close();
