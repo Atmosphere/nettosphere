@@ -487,7 +487,7 @@ public class NettyAtmosphereTest extends BaseTest {
 	@Test
 	public void suspendWebSocketTestMultipleRequestReponses() throws Exception {
 		final AtomicInteger responseNo = new AtomicInteger();
-		int TOTAL = 300;
+		int TOTAL = 150;
 		Config config = new Config.Builder().port(port).host("127.0.0.1")
 				.initParam(ApplicationConfig.BROADCASTER_CACHE, UUIDBroadcasterCache.class.getName())
 				.initParam(ApplicationConfig.HEARTBEAT_INTERVAL_IN_SECONDS, "20")
