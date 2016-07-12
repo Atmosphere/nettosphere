@@ -16,7 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>2.4.9 (Netty 3.x) | 3.0.0.RC4 (Netty 4.1.0.Final)</version>
+         <version>2.4.10 (Netty 3.x) | 3.0.0.RC4 (Netty 4.1.0.Final)</version>
      </dependency>
 ```
 
