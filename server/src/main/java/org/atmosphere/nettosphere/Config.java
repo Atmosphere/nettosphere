@@ -28,7 +28,9 @@ import org.atmosphere.nettosphere.util.SSLContextListener;
 import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketProtocol;
 import org.atmosphere.websocket.protocol.SimpleHttpProtocol;
+import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,6 +209,7 @@ public class Config {
         return b.shareHeaders;
     }
 
+    public IOExceptionHandler ioExceptionHandler() { return b.ioExceptionHandler;}
 
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
@@ -245,11 +248,17 @@ public class Config {
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
         private boolean textFrameAsBinary = false;
-        public String subProtocols = "";
+        private String subProtocols = "";
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
-        public boolean webSocketOnly;
-        public boolean shareHeaders;
+        private boolean webSocketOnly;
+        private boolean shareHeaders;
+        private IOExceptionHandler ioExceptionHandler = new IOExceptionHandler() {
+            @Override
+            public boolean of(ChannelHandlerContext ctx, ExceptionEvent e) {
+                return true;
+            }
+        };
 
         /**
          * Share underlying headers map with newly created WebSocket. Best used when {@link #noInternalAlloc} is set to true.
@@ -744,6 +753,16 @@ public class Config {
          */
         public Builder webSocketOnly(boolean webSocketOnly) {
             this.webSocketOnly = webSocketOnly;
+            return this;
+        }
+
+        /**
+         * Set an {@link IOExceptionHandler} to handle unexpected I/O exception
+         * @param ioExceptionHandler
+         * @return this
+         */
+        public Builder ioExceptionHandler(IOExceptionHandler ioExceptionHandler) {
+            this.ioExceptionHandler = ioExceptionHandler;
             return this;
         }
 
