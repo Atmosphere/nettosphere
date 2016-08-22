@@ -158,7 +158,7 @@ public final class Nettosphere {
         parentGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
         childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 		bootstrap
-        	.channel(NioServerSocketChannel.class)
+        	.channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
         	.group(parentGroup, childGroup);
         
         bootstrap.childHandler(channelInitializer);
@@ -171,7 +171,7 @@ public final class Nettosphere {
         childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 
 		bootstrap
-        	.channel(NioServerSocketChannel.class)
+        	.channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
         	.group(parentGroup, childGroup);
 
         // Set up the event pipeline factory.
