@@ -21,6 +21,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.MultithreadEventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.ChannelGroupFuture;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -37,7 +38,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -64,10 +64,10 @@ public final class Nettosphere {
 
     public final static String FLASH_SUPPORT = Nettosphere.class.getName() + ".enableFlash";
     private static final Logger logger = LoggerFactory.getLogger(Nettosphere.class);
-    private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere", 
-    		ImmediateEventExecutor.INSTANCE);
+    private static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("atmosphere",
+            ImmediateEventExecutor.INSTANCE);
     @SuppressWarnings("rawtypes")
-	private final ChannelInitializer channelInitializer;
+    private final ChannelInitializer channelInitializer;
     private final ServerBootstrap bootstrap;
     private final SocketAddress localSocket;
     private final BridgeRuntime runtime;
@@ -75,8 +75,8 @@ public final class Nettosphere {
     private final ServerBootstrap bootstrapFlashPolicy;
     private final SocketAddress localPolicySocket;
     private final RuntimeEngine runtimeEngine;
-	private MultithreadEventLoopGroup parentGroup;
-	private MultithreadEventLoopGroup childGroup;
+    private MultithreadEventLoopGroup parentGroup;
+    private MultithreadEventLoopGroup childGroup;
 
     private Nettosphere(Config config) {
         runtime = new BridgeRuntime(config);
@@ -157,10 +157,10 @@ public final class Nettosphere {
         final ServerBootstrap bootstrap = new ServerBootstrap();
         parentGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
         childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
-		bootstrap
-        	.channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
-        	.group(parentGroup, childGroup);
-        
+        bootstrap
+                .channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+                .group(parentGroup, childGroup);
+
         bootstrap.childHandler(channelInitializer);
         return bootstrap;
     }
@@ -170,9 +170,9 @@ public final class Nettosphere {
         parentGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
         childGroup = config.epoll() ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 
-		bootstrap
-        	.channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
-        	.group(parentGroup, childGroup);
+        bootstrap
+                .channel(config.epoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+                .group(parentGroup, childGroup);
 
         // Set up the event pipeline factory.
         bootstrap.childHandler(new FlashPolicyServerChannelInitializer());
@@ -199,6 +199,7 @@ public final class Nettosphere {
 
     /**
      * Return the {@link RuntimeEngine}
+     *
      * @return the {@link RuntimeEngine}
      */
     public RuntimeEngine runtimeEngine() {

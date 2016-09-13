@@ -293,12 +293,12 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
         try {
-                handleMessageEvent(ctx, messageEvent);
-            } finally {
-                ReferenceCountUtil.release(messageEvent);
+            handleMessageEvent(ctx, messageEvent);
+        } finally {
+            ReferenceCountUtil.release(messageEvent);
         }
     }
-    
+
     private void handleMessageEvent(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent;
 
@@ -417,18 +417,18 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             ctx.channel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing( attachment, body, 0, body.length);
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPing(attachment, body, 0, body.length);
             } else {
                 ctx.channel().writeAndFlush(new PongWebSocketFrame(binaryData));
             }
         } else if (frame instanceof BinaryWebSocketFrame || (frame instanceof TextWebSocketFrame && config.textFrameAsBinary())) {
-            webSocketProcessor.invokeWebSocketProtocol( attachment, body, 0, body.length);
+            webSocketProcessor.invokeWebSocketProtocol(attachment, body, 0, body.length);
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketProcessor.invokeWebSocketProtocol( attachment, ((TextWebSocketFrame) frame).text());
+            webSocketProcessor.invokeWebSocketProtocol(attachment, ((TextWebSocketFrame) frame).text());
         } else if (frame instanceof PongWebSocketFrame) {
 
             if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
-                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong( attachment, body, 0, body.length);
+                WebSocketPingPongListener.class.cast(webSocketProcessor).onPong(attachment, body, 0, body.length);
             }
 
             if (config.enablePong()) {
@@ -501,7 +501,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 .method(method)
                 .contentType(ct)
                 .contentLength(cl)
-                        // We need to read attribute after doComet
+                // We need to read attribute after doComet
                 .destroyable(false)
                 .attributes(attributes)
                 .servletPath(config.mappingPath())
