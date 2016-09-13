@@ -291,6 +291,17 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+        try {
+                handleMessageEvent(ctx, messageEvent);
+            } finally {
+            if (autoRelease) {
+                ReferenceCountUtil.release(msg);
+            }
+        }
+    }
+    
+    private void handleMessageEvent(final ChannelHandlerContext ctx, final Object messageEvent)
+    {
         Object msg = messageEvent;
 
         if (isShutdown.get()) {
