@@ -44,6 +44,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.ImmediateEventExecutor;
+import io.netty.util.ReferenceCountUtil;
 import org.atmosphere.container.NettyCometSupport;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.ApplicationConfig;
@@ -291,6 +292,14 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
+        try {
+                handleMessageEvent(ctx, messageEvent);
+            } finally {
+                ReferenceCountUtil.release(messageEvent);
+        }
+    }
+    
+    private void handleMessageEvent(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
         Object msg = messageEvent;
 
         if (isShutdown.get()) {
