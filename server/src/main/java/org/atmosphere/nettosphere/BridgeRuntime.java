@@ -295,7 +295,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         try {
             handleMessageEvent(ctx, messageEvent);
         } finally {
-            ReferenceCountUtil.release(messageEvent);
+             if (messageEvent instanceof ReferenceCounted) {
+                ReferenceCounted refMsg = (ReferenceCounted) messageEvent;
+                if(refMsg.refCnt() > 0)
+                    refMsg.release();
+            }
         }
     }
 
