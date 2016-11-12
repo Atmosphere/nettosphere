@@ -7,7 +7,7 @@
 <body>
 <div id="overview"><a href="../../../../apidocs/org/atmosphere/nettosphere/Config.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
-<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2015 Async-IO.org</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2016 Async-IO.org</em>
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not</em>
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * use this file except in compliance with the License. You may obtain a copy of</em>
@@ -23,21 +23,21 @@
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">package</strong> org.atmosphere.nettosphere;
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereFramework;
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereHandler;
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereInterceptor;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereResource;
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.Broadcaster;
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.BroadcasterCache;
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.BroadcasterFactory;
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.handler.ReflectorServletProcessor;
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.util.SSLContextListener;
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.WebSocketHandler;
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.WebSocketProtocol;
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.protocol.SimpleHttpProtocol;
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelUpstreamHandler;
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.handler.ssl.SslContext;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelInboundHandler;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> io.netty.handler.ssl.SslContext;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereFramework;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereHandler;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereInterceptor;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereResource;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.Broadcaster;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.BroadcasterCache;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.BroadcasterFactory;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.handler.ReflectorServletProcessor;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.util.SSLContextListener;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.WebSocketHandler;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.WebSocketProtocol;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.websocket.protocol.SimpleHttpProtocol;
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> org.slf4j.LoggerFactory;
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>  
@@ -143,7 +143,7 @@
 <a class="jxr_linenumber" name="L135" href="#L135">135</a>         <strong class="jxr_keyword">return</strong> b.listener;
 <a class="jxr_linenumber" name="L136" href="#L136">136</a>     }
 <a class="jxr_linenumber" name="L137" href="#L137">137</a> 
-<a class="jxr_linenumber" name="L138" href="#L138">138</a>     <strong class="jxr_keyword">public</strong> LinkedList&lt;ChannelUpstreamHandler&gt; channelUpstreamHandlers() {
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>     <strong class="jxr_keyword">public</strong> LinkedList&lt;ChannelInboundHandler&gt; channelUpstreamHandlers() {
 <a class="jxr_linenumber" name="L139" href="#L139">139</a>         <strong class="jxr_keyword">return</strong> b.nettyHandlers;
 <a class="jxr_linenumber" name="L140" href="#L140">140</a>     }
 <a class="jxr_linenumber" name="L141" href="#L141">141</a> 
@@ -167,590 +167,571 @@
 <a class="jxr_linenumber" name="L159" href="#L159">159</a>         <strong class="jxr_keyword">return</strong> b.maxContentLength;
 <a class="jxr_linenumber" name="L160" href="#L160">160</a>     }
 <a class="jxr_linenumber" name="L161" href="#L161">161</a> 
-<a class="jxr_linenumber" name="L162" href="#L162">162</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> writeBufferPoolSize() {
-<a class="jxr_linenumber" name="L163" href="#L163">163</a>         <strong class="jxr_keyword">return</strong> b.writeBufferPoolSize;
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>     <strong class="jxr_keyword">public</strong> List&lt;String&gt; excludedInterceptors() {
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>         <strong class="jxr_keyword">return</strong> b.excludedInterceptors;
 <a class="jxr_linenumber" name="L164" href="#L164">164</a>     }
 <a class="jxr_linenumber" name="L165" href="#L165">165</a> 
-<a class="jxr_linenumber" name="L166" href="#L166">166</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">long</strong> writeBufferPoolCleanupFrequency() {
-<a class="jxr_linenumber" name="L167" href="#L167">167</a>         <strong class="jxr_keyword">return</strong> b.writeBufferPoolCleanupFrequency;
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> enablePong() {
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         <strong class="jxr_keyword">return</strong> b.enablePong;
 <a class="jxr_linenumber" name="L168" href="#L168">168</a>     }
 <a class="jxr_linenumber" name="L169" href="#L169">169</a> 
-<a class="jxr_linenumber" name="L170" href="#L170">170</a>     <strong class="jxr_keyword">public</strong> List&lt;String&gt; excludedInterceptors() {
-<a class="jxr_linenumber" name="L171" href="#L171">171</a>         <strong class="jxr_keyword">return</strong> b.excludedInterceptors;
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> maxWebSocketFrameSize() {
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>         <strong class="jxr_keyword">return</strong> b.maxWebSocketFrameSize;
 <a class="jxr_linenumber" name="L172" href="#L172">172</a>     }
 <a class="jxr_linenumber" name="L173" href="#L173">173</a> 
-<a class="jxr_linenumber" name="L174" href="#L174">174</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> enablePong() {
-<a class="jxr_linenumber" name="L175" href="#L175">175</a>         <strong class="jxr_keyword">return</strong> b.enablePong;
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> textFrameAsBinary() {
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>         <strong class="jxr_keyword">return</strong> b.textFrameAsBinary;
 <a class="jxr_linenumber" name="L176" href="#L176">176</a>     }
 <a class="jxr_linenumber" name="L177" href="#L177">177</a> 
-<a class="jxr_linenumber" name="L178" href="#L178">178</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> maxWebSocketFrameSize() {
-<a class="jxr_linenumber" name="L179" href="#L179">179</a>         <strong class="jxr_keyword">return</strong> b.maxWebSocketFrameSize;
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>     <strong class="jxr_keyword">public</strong> Map&lt;String, Object&gt; servletContextAttributes() {
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>         <strong class="jxr_keyword">return</strong> b.servletContextAttributes;
 <a class="jxr_linenumber" name="L180" href="#L180">180</a>     }
 <a class="jxr_linenumber" name="L181" href="#L181">181</a> 
-<a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> textFrameAsBinary() {
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>         <strong class="jxr_keyword">return</strong> b.textFrameAsBinary;
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">public</strong> String subProtocols() {
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>         <strong class="jxr_keyword">return</strong> b.subProtocols;
 <a class="jxr_linenumber" name="L184" href="#L184">184</a>     }
 <a class="jxr_linenumber" name="L185" href="#L185">185</a> 
-<a class="jxr_linenumber" name="L186" href="#L186">186</a>     <strong class="jxr_keyword">public</strong> Map&lt;String, Object&gt; servletContextAttributes() {
-<a class="jxr_linenumber" name="L187" href="#L187">187</a>         <strong class="jxr_keyword">return</strong> b.servletContextAttributes;
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> noInternalAlloc() {
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>         <strong class="jxr_keyword">return</strong> b.noInternalAlloc;
 <a class="jxr_linenumber" name="L188" href="#L188">188</a>     }
 <a class="jxr_linenumber" name="L189" href="#L189">189</a> 
-<a class="jxr_linenumber" name="L190" href="#L190">190</a>     <strong class="jxr_keyword">public</strong> String subProtocols() {
-<a class="jxr_linenumber" name="L191" href="#L191">191</a>         <strong class="jxr_keyword">return</strong> b.subProtocols;
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> binaryWrite() {
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>         <strong class="jxr_keyword">return</strong> b.binaryWrite;
 <a class="jxr_linenumber" name="L192" href="#L192">192</a>     }
 <a class="jxr_linenumber" name="L193" href="#L193">193</a> 
-<a class="jxr_linenumber" name="L194" href="#L194">194</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> noInternalAlloc() {
-<a class="jxr_linenumber" name="L195" href="#L195">195</a>         <strong class="jxr_keyword">return</strong> b.noInternalAlloc;
-<a class="jxr_linenumber" name="L196" href="#L196">196</a>     }
-<a class="jxr_linenumber" name="L197" href="#L197">197</a> 
-<a class="jxr_linenumber" name="L198" href="#L198">198</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> binaryWrite() {
-<a class="jxr_linenumber" name="L199" href="#L199">199</a>         <strong class="jxr_keyword">return</strong> b.binaryWrite;
-<a class="jxr_linenumber" name="L200" href="#L200">200</a>     }
-<a class="jxr_linenumber" name="L201" href="#L201">201</a> 
-<a class="jxr_linenumber" name="L202" href="#L202">202</a> 
-<a class="jxr_linenumber" name="L203" href="#L203">203</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> {
-<a class="jxr_linenumber" name="L204" href="#L204">204</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;String&gt; paths = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
-<a class="jxr_linenumber" name="L205" href="#L205">205</a>         <strong class="jxr_keyword">private</strong> String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
-<a class="jxr_linenumber" name="L206" href="#L206">206</a>         <strong class="jxr_keyword">private</strong> ExecutorService bossExecutor;
-<a class="jxr_linenumber" name="L207" href="#L207">207</a>         <strong class="jxr_keyword">private</strong> ExecutorService workerExecutor;
-<a class="jxr_linenumber" name="L208" href="#L208">208</a>         <strong class="jxr_keyword">private</strong> String host = <span class="jxr_string">"0.0.0.0"</span>;
-<a class="jxr_linenumber" name="L209" href="#L209">209</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> port = 8080;
-<a class="jxr_linenumber" name="L210" href="#L210">210</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, String&gt; initParams = <strong class="jxr_keyword">new</strong> HashMap&lt;String, String&gt;();
-<a class="jxr_linenumber" name="L211" href="#L211">211</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, Object&gt; servletContextAttributes = <strong class="jxr_keyword">new</strong> HashMap&lt;String, Object&gt;();
-<a class="jxr_linenumber" name="L212" href="#L212">212</a> 
-<a class="jxr_linenumber" name="L213" href="#L213">213</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, AtmosphereHandler&gt; handlers = <strong class="jxr_keyword">new</strong> HashMap&lt;String, AtmosphereHandler&gt;();
-<a class="jxr_linenumber" name="L214" href="#L214">214</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, WebSocketHandler&gt; webSocketHandlers = <strong class="jxr_keyword">new</strong> HashMap&lt;String, WebSocketHandler&gt;();
-<a class="jxr_linenumber" name="L215" href="#L215">215</a> 
-<a class="jxr_linenumber" name="L216" href="#L216">216</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> WebSocketProtocol&gt; webSocketProtocol = SimpleHttpProtocol.<strong class="jxr_keyword">class</strong>;
-<a class="jxr_linenumber" name="L217" href="#L217">217</a> 
-<a class="jxr_linenumber" name="L218" href="#L218">218</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass;
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>         <strong class="jxr_keyword">private</strong> BroadcasterFactory broadcasterFactory;
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> BroadcasterCache&gt; broadcasterCache;
-<a class="jxr_linenumber" name="L221" href="#L221">221</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;AtmosphereInterceptor&gt; interceptors = <strong class="jxr_keyword">new</strong> ArrayList&lt;AtmosphereInterceptor&gt;();
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;String&gt; excludedInterceptors = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
-<a class="jxr_linenumber" name="L223" href="#L223">223</a>         <strong class="jxr_keyword">private</strong> String librariesPath = <span class="jxr_string">"."</span> + File.separator + <span class="jxr_string">"lib"</span>;
-<a class="jxr_linenumber" name="L224" href="#L224">224</a>         <strong class="jxr_keyword">private</strong> String mappingPath = <span class="jxr_string">""</span>;
-<a class="jxr_linenumber" name="L225" href="#L225">225</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;Class&lt;?&gt;&gt; packages = <strong class="jxr_keyword">new</strong> ArrayList&lt;Class&lt;?&gt;&gt;();
-<a class="jxr_linenumber" name="L226" href="#L226">226</a>         <strong class="jxr_keyword">private</strong> SSLContext context;
-<a class="jxr_linenumber" name="L227" href="#L227">227</a>         <strong class="jxr_keyword">private</strong> SslContext sslContext;
-<a class="jxr_linenumber" name="L228" href="#L228">228</a>         <strong class="jxr_keyword">private</strong> <a href="../../../org/atmosphere/nettosphere/util/SSLContextListener.html">SSLContextListener</a> listener = SSLContextListener.DEFAULT;
-<a class="jxr_linenumber" name="L229" href="#L229">229</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> LinkedList&lt;ChannelUpstreamHandler&gt; nettyHandlers = <strong class="jxr_keyword">new</strong> LinkedList&lt;ChannelUpstreamHandler&gt;();
-<a class="jxr_linenumber" name="L230" href="#L230">230</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> supportChunking = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L231" href="#L231">231</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> aggregateRequestBodyInMemory = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L232" href="#L232">232</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> socketNoTcpDelay = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L233" href="#L233">233</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> socketKeepAlive = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L234" href="#L234">234</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> maxContentLength = 65536;
-<a class="jxr_linenumber" name="L235" href="#L235">235</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> writeBufferPoolSize = 50;
-<a class="jxr_linenumber" name="L236" href="#L236">236</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">long</strong> writeBufferPoolCleanupFrequency = 30000;
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> enablePong = false;
-<a class="jxr_linenumber" name="L238" href="#L238">238</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> maxWebSocketFrameSize = 65536;
-<a class="jxr_linenumber" name="L239" href="#L239">239</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> textFrameAsBinary = false;
-<a class="jxr_linenumber" name="L240" href="#L240">240</a>         <strong class="jxr_keyword">public</strong> String subProtocols = <span class="jxr_string">""</span>;
-<a class="jxr_linenumber" name="L241" href="#L241">241</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> noInternalAlloc = false;
-<a class="jxr_linenumber" name="L242" href="#L242">242</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> binaryWrite = false;
-<a class="jxr_linenumber" name="L243" href="#L243">243</a> 
-<a class="jxr_linenumber" name="L244" href="#L244">244</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L245" href="#L245">245</a> <em class="jxr_javadoccomment">         * Set an SSLContext in order enable SSL</em>
-<a class="jxr_linenumber" name="L246" href="#L246">246</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L247" href="#L247">247</a> <em class="jxr_javadoccomment">         * @param context</em>
-<a class="jxr_linenumber" name="L248" href="#L248">248</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L249" href="#L249">249</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L250" href="#L250">250</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContext(SSLContext context) {
-<a class="jxr_linenumber" name="L251" href="#L251">251</a>             <strong class="jxr_keyword">this</strong>.context = context;
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L253" href="#L253">253</a>         }
-<a class="jxr_linenumber" name="L254" href="#L254">254</a> 
-<a class="jxr_linenumber" name="L255" href="#L255">255</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L256" href="#L256">256</a> <em class="jxr_javadoccomment">         * Set the {@link SslContext}</em>
-<a class="jxr_linenumber" name="L257" href="#L257">257</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L258" href="#L258">258</a> <em class="jxr_javadoccomment">         * @param sslContext</em>
-<a class="jxr_linenumber" name="L259" href="#L259">259</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L260" href="#L260">260</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L261" href="#L261">261</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContext(SslContext sslContext) {
-<a class="jxr_linenumber" name="L262" href="#L262">262</a>             <strong class="jxr_keyword">this</strong>.sslContext = sslContext;
-<a class="jxr_linenumber" name="L263" href="#L263">263</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L264" href="#L264">264</a>         }
-<a class="jxr_linenumber" name="L265" href="#L265">265</a> 
-<a class="jxr_linenumber" name="L266" href="#L266">266</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L267" href="#L267">267</a> <em class="jxr_javadoccomment">         * Set the maximum WebSocket Frame Size. Default is 65536</em>
-<a class="jxr_linenumber" name="L268" href="#L268">268</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L269" href="#L269">269</a> <em class="jxr_javadoccomment">         * @param maxWebSocketFrameSize the maximum WebSocket Frame Size.</em>
-<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L272" href="#L272">272</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> maxWebSocketFrameSize(<strong class="jxr_keyword">int</strong> maxWebSocketFrameSize) {
-<a class="jxr_linenumber" name="L273" href="#L273">273</a>             <strong class="jxr_keyword">this</strong>.maxWebSocketFrameSize = maxWebSocketFrameSize;
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L275" href="#L275">275</a>         }
-<a class="jxr_linenumber" name="L276" href="#L276">276</a> 
-<a class="jxr_linenumber" name="L277" href="#L277">277</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L278" href="#L278">278</a> <em class="jxr_javadoccomment">         * Add a {@link SSLContextListener}</em>
-<a class="jxr_linenumber" name="L279" href="#L279">279</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L280" href="#L280">280</a> <em class="jxr_javadoccomment">         * @param listener</em>
-<a class="jxr_linenumber" name="L281" href="#L281">281</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L282" href="#L282">282</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L283" href="#L283">283</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContextListener(<a href="../../../org/atmosphere/nettosphere/util/SSLContextListener.html">SSLContextListener</a> listener) {
-<a class="jxr_linenumber" name="L284" href="#L284">284</a>             <strong class="jxr_keyword">this</strong>.listener = listener;
-<a class="jxr_linenumber" name="L285" href="#L285">285</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L286" href="#L286">286</a>         }
-<a class="jxr_linenumber" name="L287" href="#L287">287</a> 
-<a class="jxr_linenumber" name="L288" href="#L288">288</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L289" href="#L289">289</a> <em class="jxr_javadoccomment">         * Set the mapping path. If you have worked with Servlet, the mapping path is equivalent to the servlet path.</em>
-<a class="jxr_linenumber" name="L290" href="#L290">290</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L291" href="#L291">291</a> <em class="jxr_javadoccomment">         * @param mappingPath the path under which the application will be mapped.</em>
-<a class="jxr_linenumber" name="L292" href="#L292">292</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L293" href="#L293">293</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L294" href="#L294">294</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> mappingPath(String mappingPath) {
-<a class="jxr_linenumber" name="L295" href="#L295">295</a>             <strong class="jxr_keyword">this</strong>.mappingPath = mappingPath;
-<a class="jxr_linenumber" name="L296" href="#L296">296</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L297" href="#L297">297</a>         }
-<a class="jxr_linenumber" name="L298" href="#L298">298</a> 
-<a class="jxr_linenumber" name="L299" href="#L299">299</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_javadoccomment">         * Enable WebSokcet Pong message. Disabled by default.</em>
-<a class="jxr_linenumber" name="L301" href="#L301">301</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L302" href="#L302">302</a> <em class="jxr_javadoccomment">         * @param enablePong Enable WebSokcet Pong message</em>
-<a class="jxr_linenumber" name="L303" href="#L303">303</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L304" href="#L304">304</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L305" href="#L305">305</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> enablePong(<strong class="jxr_keyword">boolean</strong> enablePong) {
-<a class="jxr_linenumber" name="L306" href="#L306">306</a>             <strong class="jxr_keyword">this</strong>.enablePong = enablePong;
-<a class="jxr_linenumber" name="L307" href="#L307">307</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L308" href="#L308">308</a>         }
-<a class="jxr_linenumber" name="L309" href="#L309">309</a> 
-<a class="jxr_linenumber" name="L310" href="#L310">310</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_javadoccomment">         * When {@link #aggregateRequestBodyInMemory} is true,the maximum length of the aggregated content.</em>
-<a class="jxr_linenumber" name="L312" href="#L312">312</a> <em class="jxr_javadoccomment">         * If the length of the aggregated content exceeds this value,</em>
-<a class="jxr_linenumber" name="L313" href="#L313">313</a> <em class="jxr_javadoccomment">         * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.</em>
-<a class="jxr_linenumber" name="L314" href="#L314">314</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L315" href="#L315">315</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L316" href="#L316">316</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L317" href="#L317">317</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> maxChunkContentLength(<strong class="jxr_keyword">int</strong> maxChunkContentLength) {
-<a class="jxr_linenumber" name="L318" href="#L318">318</a>             <strong class="jxr_keyword">this</strong>.maxContentLength = maxChunkContentLength;
-<a class="jxr_linenumber" name="L319" href="#L319">319</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L320" href="#L320">320</a>         }
-<a class="jxr_linenumber" name="L321" href="#L321">321</a> 
-<a class="jxr_linenumber" name="L322" href="#L322">322</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_javadoccomment">         * Set the path to the library when annotation scanning is enabled. Default is "./". Use this method</em>
-<a class="jxr_linenumber" name="L324" href="#L324">324</a> <em class="jxr_javadoccomment">         * when your annotated resource is packaged inside the jar/zip.</em>
-<a class="jxr_linenumber" name="L325" href="#L325">325</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L326" href="#L326">326</a> <em class="jxr_javadoccomment">         * @param librariesPath the path to the library when annotation scanning is enabled.</em>
-<a class="jxr_linenumber" name="L327" href="#L327">327</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L328" href="#L328">328</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L329" href="#L329">329</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> scanLibrary(String librariesPath) {
-<a class="jxr_linenumber" name="L330" href="#L330">330</a>             <strong class="jxr_keyword">this</strong>.librariesPath = librariesPath;
-<a class="jxr_linenumber" name="L331" href="#L331">331</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L332" href="#L332">332</a>         }
-<a class="jxr_linenumber" name="L333" href="#L333">333</a> 
-<a class="jxr_linenumber" name="L334" href="#L334">334</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L335" href="#L335">335</a> <em class="jxr_javadoccomment">         * The path location of the atmosphere.xml file.</em>
-<a class="jxr_linenumber" name="L336" href="#L336">336</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L337" href="#L337">337</a> <em class="jxr_javadoccomment">         * @param atmosphereDotXmlPath path location of the atmosphere.xml file.</em>
-<a class="jxr_linenumber" name="L338" href="#L338">338</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L339" href="#L339">339</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L340" href="#L340">340</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> configFile(String atmosphereDotXmlPath) {
-<a class="jxr_linenumber" name="L341" href="#L341">341</a>             <strong class="jxr_keyword">this</strong>.atmosphereDotXmlPath = atmosphereDotXmlPath;
-<a class="jxr_linenumber" name="L342" href="#L342">342</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L343" href="#L343">343</a>         }
-<a class="jxr_linenumber" name="L344" href="#L344">344</a> 
-<a class="jxr_linenumber" name="L345" href="#L345">345</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L346" href="#L346">346</a> <em class="jxr_javadoccomment">         * The Executor to be used in providing (the) I/O boss-thread(s).</em>
-<a class="jxr_linenumber" name="L347" href="#L347">347</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L348" href="#L348">348</a> <em class="jxr_javadoccomment">         * @param bossExecutor ExecutorService to be used for boss threads.</em>
-<a class="jxr_linenumber" name="L349" href="#L349">349</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L350" href="#L350">350</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L351" href="#L351">351</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> bossExecutor(ExecutorService bossExecutor) {
-<a class="jxr_linenumber" name="L352" href="#L352">352</a>             <strong class="jxr_keyword">this</strong>.bossExecutor = bossExecutor;
-<a class="jxr_linenumber" name="L353" href="#L353">353</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L354" href="#L354">354</a>         }
-<a class="jxr_linenumber" name="L355" href="#L355">355</a> 
-<a class="jxr_linenumber" name="L356" href="#L356">356</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L357" href="#L357">357</a> <em class="jxr_javadoccomment">         * The Executor to be used in providing (the) I/O worker-thread(s).</em>
-<a class="jxr_linenumber" name="L358" href="#L358">358</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L359" href="#L359">359</a> <em class="jxr_javadoccomment">         * @param workerExecutor ExecutorService to be used for worker threads.</em>
-<a class="jxr_linenumber" name="L360" href="#L360">360</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L361" href="#L361">361</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> workerExecutor(ExecutorService workerExecutor) {
-<a class="jxr_linenumber" name="L363" href="#L363">363</a>             <strong class="jxr_keyword">this</strong>.workerExecutor = workerExecutor;
-<a class="jxr_linenumber" name="L364" href="#L364">364</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L365" href="#L365">365</a>         }
-<a class="jxr_linenumber" name="L366" href="#L366">366</a> 
-<a class="jxr_linenumber" name="L367" href="#L367">367</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L368" href="#L368">368</a> <em class="jxr_javadoccomment">         * The server's host</em>
-<a class="jxr_linenumber" name="L369" href="#L369">369</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L370" href="#L370">370</a> <em class="jxr_javadoccomment">         * @param host server's host</em>
-<a class="jxr_linenumber" name="L371" href="#L371">371</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L372" href="#L372">372</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L373" href="#L373">373</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> host(String host) {
-<a class="jxr_linenumber" name="L374" href="#L374">374</a>             <strong class="jxr_keyword">this</strong>.host = host;
-<a class="jxr_linenumber" name="L375" href="#L375">375</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L376" href="#L376">376</a>         }
-<a class="jxr_linenumber" name="L377" href="#L377">377</a> 
-<a class="jxr_linenumber" name="L378" href="#L378">378</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L379" href="#L379">379</a> <em class="jxr_javadoccomment">         * The server's port</em>
-<a class="jxr_linenumber" name="L380" href="#L380">380</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L381" href="#L381">381</a> <em class="jxr_javadoccomment">         * @param port server's port</em>
-<a class="jxr_linenumber" name="L382" href="#L382">382</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L383" href="#L383">383</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L384" href="#L384">384</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> port(<strong class="jxr_keyword">int</strong> port) {
-<a class="jxr_linenumber" name="L385" href="#L385">385</a>             <strong class="jxr_keyword">this</strong>.port = port;
-<a class="jxr_linenumber" name="L386" href="#L386">386</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L387" href="#L387">387</a>         }
-<a class="jxr_linenumber" name="L388" href="#L388">388</a> 
-<a class="jxr_linenumber" name="L389" href="#L389">389</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L390" href="#L390">390</a> <em class="jxr_javadoccomment">         * Add some init param</em>
-<a class="jxr_linenumber" name="L391" href="#L391">391</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L392" href="#L392">392</a> <em class="jxr_javadoccomment">         * @param name  the name</em>
-<a class="jxr_linenumber" name="L393" href="#L393">393</a> <em class="jxr_javadoccomment">         * @param value the value</em>
-<a class="jxr_linenumber" name="L394" href="#L394">394</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L395" href="#L395">395</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L396" href="#L396">396</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> initParam(String name, String value) {
-<a class="jxr_linenumber" name="L397" href="#L397">397</a>             initParams.put(name, value);
-<a class="jxr_linenumber" name="L398" href="#L398">398</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L399" href="#L399">399</a>         }
-<a class="jxr_linenumber" name="L400" href="#L400">400</a> 
-<a class="jxr_linenumber" name="L401" href="#L401">401</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L402" href="#L402">402</a> <em class="jxr_javadoccomment">         * Add a path to scan when looking for static resources like javascript file, html, etc.</em>
-<a class="jxr_linenumber" name="L403" href="#L403">403</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L404" href="#L404">404</a> <em class="jxr_javadoccomment">         * @param path</em>
-<a class="jxr_linenumber" name="L405" href="#L405">405</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L406" href="#L406">406</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L407" href="#L407">407</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path) {
-<a class="jxr_linenumber" name="L408" href="#L408">408</a>             paths.add(path);
-<a class="jxr_linenumber" name="L409" href="#L409">409</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L410" href="#L410">410</a>         }
-<a class="jxr_linenumber" name="L411" href="#L411">411</a> 
-<a class="jxr_linenumber" name="L412" href="#L412">412</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L413" href="#L413">413</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereHandler} that will be mapped to the specified path</em>
-<a class="jxr_linenumber" name="L414" href="#L414">414</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L415" href="#L415">415</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
-<a class="jxr_linenumber" name="L416" href="#L416">416</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler}</em>
-<a class="jxr_linenumber" name="L417" href="#L417">417</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L418" href="#L418">418</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L419" href="#L419">419</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, AtmosphereHandler c) {
-<a class="jxr_linenumber" name="L420" href="#L420">420</a>             handlers.put(path, c);
-<a class="jxr_linenumber" name="L421" href="#L421">421</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L422" href="#L422">422</a>         }
-<a class="jxr_linenumber" name="L423" href="#L423">423</a> 
-<a class="jxr_linenumber" name="L424" href="#L424">424</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L425" href="#L425">425</a> <em class="jxr_javadoccomment">         * Add an {@link WebSocketHandler} that will be mapped to the specified path</em>
-<a class="jxr_linenumber" name="L426" href="#L426">426</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L427" href="#L427">427</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
-<a class="jxr_linenumber" name="L428" href="#L428">428</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler}</em>
-<a class="jxr_linenumber" name="L429" href="#L429">429</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L430" href="#L430">430</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, WebSocketHandler c) {
-<a class="jxr_linenumber" name="L432" href="#L432">432</a>             webSocketHandlers.put(path, c);
-<a class="jxr_linenumber" name="L433" href="#L433">433</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L434" href="#L434">434</a>         }
-<a class="jxr_linenumber" name="L435" href="#L435">435</a> 
-<a class="jxr_linenumber" name="L436" href="#L436">436</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L437" href="#L437">437</a> <em class="jxr_javadoccomment">         * Add an {@link Servlet} that will be mapped to the specified path</em>
-<a class="jxr_linenumber" name="L438" href="#L438">438</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L439" href="#L439">439</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
-<a class="jxr_linenumber" name="L440" href="#L440">440</a> <em class="jxr_javadoccomment">         * @param c    an {@link Servlet}</em>
-<a class="jxr_linenumber" name="L441" href="#L441">441</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L442" href="#L442">442</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L443" href="#L443">443</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, Servlet c) {
-<a class="jxr_linenumber" name="L444" href="#L444">444</a>             handlers.put(path, <strong class="jxr_keyword">new</strong> ReflectorServletProcessor(c));
-<a class="jxr_linenumber" name="L445" href="#L445">445</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L446" href="#L446">446</a>         }
-<a class="jxr_linenumber" name="L447" href="#L447">447</a> 
-<a class="jxr_linenumber" name="L448" href="#L448">448</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L449" href="#L449">449</a> <em class="jxr_javadoccomment">         * Add an {@link Handler} mapped to the default, which is '/*'</em>
-<a class="jxr_linenumber" name="L450" href="#L450">450</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L451" href="#L451">451</a> <em class="jxr_javadoccomment">         * @param handler {@link Handler}</em>
-<a class="jxr_linenumber" name="L452" href="#L452">452</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L453" href="#L453">453</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L454" href="#L454">454</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(<a href="../../../org/atmosphere/nettosphere/Handler.html">Handler</a> handler) {
-<a class="jxr_linenumber" name="L455" href="#L455">455</a>             <strong class="jxr_keyword">return</strong> resource(<span class="jxr_string">"/*"</span>, handler);
-<a class="jxr_linenumber" name="L456" href="#L456">456</a>         }
-<a class="jxr_linenumber" name="L457" href="#L457">457</a> 
-<a class="jxr_linenumber" name="L458" href="#L458">458</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L459" href="#L459">459</a> <em class="jxr_javadoccomment">         * Add an {@link Handler} that will be mapped to the specified path</em>
-<a class="jxr_linenumber" name="L460" href="#L460">460</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L461" href="#L461">461</a> <em class="jxr_javadoccomment">         * @param handler {@link Handler}</em>
-<a class="jxr_linenumber" name="L462" href="#L462">462</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L463" href="#L463">463</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L464" href="#L464">464</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, <strong class="jxr_keyword">final</strong> <a href="../../../org/atmosphere/nettosphere/Handler.html">Handler</a> handler) {
-<a class="jxr_linenumber" name="L465" href="#L465">465</a>             handlers.put(path, <strong class="jxr_keyword">new</strong> AbstractReflectorAtmosphereHandler() {
+<a class="jxr_linenumber" name="L194" href="#L194">194</a> 
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> epoll() {
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>         <strong class="jxr_keyword">return</strong> b.epoll;
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>     }
+<a class="jxr_linenumber" name="L198" href="#L198">198</a> 
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> {
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;String&gt; paths = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>         <strong class="jxr_keyword">private</strong> String atmosphereDotXmlPath = AtmosphereFramework.DEFAULT_ATMOSPHERE_CONFIG_PATH;
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>         <strong class="jxr_keyword">private</strong> ExecutorService bossExecutor;
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>         <strong class="jxr_keyword">private</strong> ExecutorService workerExecutor;
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>         <strong class="jxr_keyword">private</strong> String host = <span class="jxr_string">"0.0.0.0"</span>;
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> port = 8080;
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, String&gt; initParams = <strong class="jxr_keyword">new</strong> HashMap&lt;String, String&gt;();
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, Object&gt; servletContextAttributes = <strong class="jxr_keyword">new</strong> HashMap&lt;String, Object&gt;();
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> 
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, AtmosphereHandler&gt; handlers = <strong class="jxr_keyword">new</strong> HashMap&lt;String, AtmosphereHandler&gt;();
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, WebSocketHandler&gt; webSocketHandlers = <strong class="jxr_keyword">new</strong> HashMap&lt;String, WebSocketHandler&gt;();
+<a class="jxr_linenumber" name="L211" href="#L211">211</a> 
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> WebSocketProtocol&gt; webSocketProtocol = SimpleHttpProtocol.<strong class="jxr_keyword">class</strong>;
+<a class="jxr_linenumber" name="L213" href="#L213">213</a> 
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass;
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>         <strong class="jxr_keyword">private</strong> BroadcasterFactory broadcasterFactory;
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>         <strong class="jxr_keyword">private</strong> Class&lt;? <strong class="jxr_keyword">extends</strong> BroadcasterCache&gt; broadcasterCache;
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;AtmosphereInterceptor&gt; interceptors = <strong class="jxr_keyword">new</strong> ArrayList&lt;AtmosphereInterceptor&gt;();
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;String&gt; excludedInterceptors = <strong class="jxr_keyword">new</strong> ArrayList&lt;String&gt;();
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>         <strong class="jxr_keyword">private</strong> String librariesPath = <span class="jxr_string">"."</span> + File.separator + <span class="jxr_string">"lib"</span>;
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>         <strong class="jxr_keyword">private</strong> String mappingPath = <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> List&lt;Class&lt;?&gt;&gt; packages = <strong class="jxr_keyword">new</strong> ArrayList&lt;Class&lt;?&gt;&gt;();
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>         <strong class="jxr_keyword">private</strong> SSLContext context;
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>         <strong class="jxr_keyword">private</strong> SslContext sslContext;
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>         <strong class="jxr_keyword">private</strong> <a href="../../../org/atmosphere/nettosphere/util/SSLContextListener.html">SSLContextListener</a> listener = SSLContextListener.DEFAULT;
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> LinkedList&lt;ChannelInboundHandler&gt; nettyHandlers = <strong class="jxr_keyword">new</strong> LinkedList&lt;ChannelInboundHandler&gt;();
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> supportChunking = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> aggregateRequestBodyInMemory = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> socketNoTcpDelay = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> socketKeepAlive = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> maxContentLength = 65536;
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> enablePong = false;
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> maxWebSocketFrameSize = 65536;
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> textFrameAsBinary = false;
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>         <strong class="jxr_keyword">public</strong> String subProtocols = <span class="jxr_string">""</span>;
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> noInternalAlloc = false;
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>         <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> binaryWrite = false;
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> epoll = false;
+<a class="jxr_linenumber" name="L238" href="#L238">238</a> 
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L240" href="#L240">240</a> <em class="jxr_javadoccomment">         * Set an SSLContext in order enable SSL</em>
+<a class="jxr_linenumber" name="L241" href="#L241">241</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L242" href="#L242">242</a> <em class="jxr_javadoccomment">         * @param context</em>
+<a class="jxr_linenumber" name="L243" href="#L243">243</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L244" href="#L244">244</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContext(SSLContext context) {
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>             <strong class="jxr_keyword">this</strong>.context = context;
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>         }
+<a class="jxr_linenumber" name="L249" href="#L249">249</a> 
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L251" href="#L251">251</a> <em class="jxr_javadoccomment">         * Set the {@link SslContext}</em>
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L253" href="#L253">253</a> <em class="jxr_javadoccomment">         * @param sslContext</em>
+<a class="jxr_linenumber" name="L254" href="#L254">254</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L255" href="#L255">255</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContext(SslContext sslContext) {
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>             <strong class="jxr_keyword">this</strong>.sslContext = sslContext;
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>         }
+<a class="jxr_linenumber" name="L260" href="#L260">260</a> 
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L262" href="#L262">262</a> <em class="jxr_javadoccomment">         * Set the maximum WebSocket Frame Size. Default is 65536</em>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L264" href="#L264">264</a> <em class="jxr_javadoccomment">         * @param maxWebSocketFrameSize the maximum WebSocket Frame Size.</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L266" href="#L266">266</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> maxWebSocketFrameSize(<strong class="jxr_keyword">int</strong> maxWebSocketFrameSize) {
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>             <strong class="jxr_keyword">this</strong>.maxWebSocketFrameSize = maxWebSocketFrameSize;
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>         }
+<a class="jxr_linenumber" name="L271" href="#L271">271</a> 
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_javadoccomment">         * Add a {@link SSLContextListener}</em>
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a> <em class="jxr_javadoccomment">         * @param listener</em>
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L277" href="#L277">277</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> sslContextListener(<a href="../../../org/atmosphere/nettosphere/util/SSLContextListener.html">SSLContextListener</a> listener) {
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>             <strong class="jxr_keyword">this</strong>.listener = listener;
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>         }
+<a class="jxr_linenumber" name="L282" href="#L282">282</a> 
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L284" href="#L284">284</a> <em class="jxr_javadoccomment">         * Set the mapping path. If you have worked with Servlet, the mapping path is equivalent to the servlet path.</em>
+<a class="jxr_linenumber" name="L285" href="#L285">285</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> <em class="jxr_javadoccomment">         * @param mappingPath the path under which the application will be mapped.</em>
+<a class="jxr_linenumber" name="L287" href="#L287">287</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L288" href="#L288">288</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> mappingPath(String mappingPath) {
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>             <strong class="jxr_keyword">this</strong>.mappingPath = mappingPath;
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>         }
+<a class="jxr_linenumber" name="L293" href="#L293">293</a> 
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L295" href="#L295">295</a> <em class="jxr_javadoccomment">         * Enable WebSokcet Pong message. Disabled by default.</em>
+<a class="jxr_linenumber" name="L296" href="#L296">296</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L297" href="#L297">297</a> <em class="jxr_javadoccomment">         * @param enablePong Enable WebSokcet Pong message</em>
+<a class="jxr_linenumber" name="L298" href="#L298">298</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L299" href="#L299">299</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> enablePong(<strong class="jxr_keyword">boolean</strong> enablePong) {
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>             <strong class="jxr_keyword">this</strong>.enablePong = enablePong;
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>         }
+<a class="jxr_linenumber" name="L304" href="#L304">304</a> 
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L306" href="#L306">306</a> <em class="jxr_javadoccomment">         * When {@link #aggregateRequestBodyInMemory} is true,the maximum length of the aggregated content.</em>
+<a class="jxr_linenumber" name="L307" href="#L307">307</a> <em class="jxr_javadoccomment">         * If the length of the aggregated content exceeds this value,</em>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_javadoccomment">         * a {@link org.jboss.netty.handler.codec.frame.TooLongFrameException} will be raised.</em>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> maxChunkContentLength(<strong class="jxr_keyword">int</strong> maxChunkContentLength) {
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>             <strong class="jxr_keyword">this</strong>.maxContentLength = maxChunkContentLength;
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>         }
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> 
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L318" href="#L318">318</a> <em class="jxr_javadoccomment">         * Set the path to the library when annotation scanning is enabled. Default is "./". Use this method</em>
+<a class="jxr_linenumber" name="L319" href="#L319">319</a> <em class="jxr_javadoccomment">         * when your annotated resource is packaged inside the jar/zip.</em>
+<a class="jxr_linenumber" name="L320" href="#L320">320</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L321" href="#L321">321</a> <em class="jxr_javadoccomment">         * @param librariesPath the path to the library when annotation scanning is enabled.</em>
+<a class="jxr_linenumber" name="L322" href="#L322">322</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> scanLibrary(String librariesPath) {
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>             <strong class="jxr_keyword">this</strong>.librariesPath = librariesPath;
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>         }
+<a class="jxr_linenumber" name="L328" href="#L328">328</a> 
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L330" href="#L330">330</a> <em class="jxr_javadoccomment">         * The path location of the atmosphere.xml file.</em>
+<a class="jxr_linenumber" name="L331" href="#L331">331</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L332" href="#L332">332</a> <em class="jxr_javadoccomment">         * @param atmosphereDotXmlPath path location of the atmosphere.xml file.</em>
+<a class="jxr_linenumber" name="L333" href="#L333">333</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> configFile(String atmosphereDotXmlPath) {
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>             <strong class="jxr_keyword">this</strong>.atmosphereDotXmlPath = atmosphereDotXmlPath;
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>         }
+<a class="jxr_linenumber" name="L339" href="#L339">339</a> 
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L341" href="#L341">341</a> <em class="jxr_javadoccomment">         * The Executor to be used in providing (the) I/O boss-thread(s).</em>
+<a class="jxr_linenumber" name="L342" href="#L342">342</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> <em class="jxr_javadoccomment">         * @param bossExecutor ExecutorService to be used for boss threads.</em>
+<a class="jxr_linenumber" name="L344" href="#L344">344</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L345" href="#L345">345</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> bossExecutor(ExecutorService bossExecutor) {
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>             <strong class="jxr_keyword">this</strong>.bossExecutor = bossExecutor;
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>         }
+<a class="jxr_linenumber" name="L350" href="#L350">350</a> 
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a> <em class="jxr_javadoccomment">         * The Executor to be used in providing (the) I/O worker-thread(s).</em>
+<a class="jxr_linenumber" name="L353" href="#L353">353</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> <em class="jxr_javadoccomment">         * @param workerExecutor ExecutorService to be used for worker threads.</em>
+<a class="jxr_linenumber" name="L355" href="#L355">355</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L356" href="#L356">356</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> workerExecutor(ExecutorService workerExecutor) {
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>             <strong class="jxr_keyword">this</strong>.workerExecutor = workerExecutor;
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>         }
+<a class="jxr_linenumber" name="L361" href="#L361">361</a> 
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> <em class="jxr_javadoccomment">         * The server's host</em>
+<a class="jxr_linenumber" name="L364" href="#L364">364</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L365" href="#L365">365</a> <em class="jxr_javadoccomment">         * @param host server's host</em>
+<a class="jxr_linenumber" name="L366" href="#L366">366</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L367" href="#L367">367</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> host(String host) {
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>             <strong class="jxr_keyword">this</strong>.host = host;
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>         }
+<a class="jxr_linenumber" name="L372" href="#L372">372</a> 
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L374" href="#L374">374</a> <em class="jxr_javadoccomment">         * The server's port</em>
+<a class="jxr_linenumber" name="L375" href="#L375">375</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L376" href="#L376">376</a> <em class="jxr_javadoccomment">         * @param port server's port</em>
+<a class="jxr_linenumber" name="L377" href="#L377">377</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L378" href="#L378">378</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> port(<strong class="jxr_keyword">int</strong> port) {
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>             <strong class="jxr_keyword">this</strong>.port = port;
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>         }
+<a class="jxr_linenumber" name="L383" href="#L383">383</a> 
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L385" href="#L385">385</a> <em class="jxr_javadoccomment">         * Add some init param</em>
+<a class="jxr_linenumber" name="L386" href="#L386">386</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L387" href="#L387">387</a> <em class="jxr_javadoccomment">         * @param name  the name</em>
+<a class="jxr_linenumber" name="L388" href="#L388">388</a> <em class="jxr_javadoccomment">         * @param value the value</em>
+<a class="jxr_linenumber" name="L389" href="#L389">389</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L390" href="#L390">390</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> initParam(String name, String value) {
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>             initParams.put(name, value);
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>         }
+<a class="jxr_linenumber" name="L395" href="#L395">395</a> 
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L397" href="#L397">397</a> <em class="jxr_javadoccomment">         * Add a path to scan when looking for static resources like javascript file, html, etc.</em>
+<a class="jxr_linenumber" name="L398" href="#L398">398</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L399" href="#L399">399</a> <em class="jxr_javadoccomment">         * @param path</em>
+<a class="jxr_linenumber" name="L400" href="#L400">400</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L401" href="#L401">401</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path) {
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>             paths.add(path);
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>         }
+<a class="jxr_linenumber" name="L406" href="#L406">406</a> 
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L408" href="#L408">408</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereHandler} that will be mapped to the specified path</em>
+<a class="jxr_linenumber" name="L409" href="#L409">409</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L410" href="#L410">410</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
+<a class="jxr_linenumber" name="L411" href="#L411">411</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler}</em>
+<a class="jxr_linenumber" name="L412" href="#L412">412</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L413" href="#L413">413</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, AtmosphereHandler c) {
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>             handlers.put(path, c);
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>         }
+<a class="jxr_linenumber" name="L418" href="#L418">418</a> 
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L420" href="#L420">420</a> <em class="jxr_javadoccomment">         * Add an {@link WebSocketHandler} that will be mapped to the specified path</em>
+<a class="jxr_linenumber" name="L421" href="#L421">421</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L422" href="#L422">422</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
+<a class="jxr_linenumber" name="L423" href="#L423">423</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler}</em>
+<a class="jxr_linenumber" name="L424" href="#L424">424</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, WebSocketHandler c) {
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>             webSocketHandlers.put(path, c);
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>         }
+<a class="jxr_linenumber" name="L430" href="#L430">430</a> 
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L432" href="#L432">432</a> <em class="jxr_javadoccomment">         * Add an {@link Servlet} that will be mapped to the specified path</em>
+<a class="jxr_linenumber" name="L433" href="#L433">433</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L434" href="#L434">434</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
+<a class="jxr_linenumber" name="L435" href="#L435">435</a> <em class="jxr_javadoccomment">         * @param c    an {@link Servlet}</em>
+<a class="jxr_linenumber" name="L436" href="#L436">436</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L437" href="#L437">437</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, Servlet c) {
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>             handlers.put(path, <strong class="jxr_keyword">new</strong> ReflectorServletProcessor(c));
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>         }
+<a class="jxr_linenumber" name="L442" href="#L442">442</a> 
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L444" href="#L444">444</a> <em class="jxr_javadoccomment">         * Add an {@link Handler} mapped to the default, which is '/*'</em>
+<a class="jxr_linenumber" name="L445" href="#L445">445</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L446" href="#L446">446</a> <em class="jxr_javadoccomment">         * @param handler {@link Handler}</em>
+<a class="jxr_linenumber" name="L447" href="#L447">447</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L448" href="#L448">448</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(<a href="../../../org/atmosphere/nettosphere/Handler.html">Handler</a> handler) {
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>             <strong class="jxr_keyword">return</strong> resource(<span class="jxr_string">"/*"</span>, handler);
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>         }
+<a class="jxr_linenumber" name="L452" href="#L452">452</a> 
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L454" href="#L454">454</a> <em class="jxr_javadoccomment">         * Add an {@link Handler} that will be mapped to the specified path</em>
+<a class="jxr_linenumber" name="L455" href="#L455">455</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L456" href="#L456">456</a> <em class="jxr_javadoccomment">         * @param handler {@link Handler}</em>
+<a class="jxr_linenumber" name="L457" href="#L457">457</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L458" href="#L458">458</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, <strong class="jxr_keyword">final</strong> <a href="../../../org/atmosphere/nettosphere/Handler.html">Handler</a> handler) {
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>             handlers.put(path, <strong class="jxr_keyword">new</strong> AbstractReflectorAtmosphereHandler() {
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>                 @Override
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> onRequest(AtmosphereResource resource) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>                     handler.handle(resource);
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>                 }
+<a class="jxr_linenumber" name="L465" href="#L465">465</a> 
 <a class="jxr_linenumber" name="L466" href="#L466">466</a>                 @Override
-<a class="jxr_linenumber" name="L467" href="#L467">467</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> onRequest(AtmosphereResource resource) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L468" href="#L468">468</a>                     handler.handle(resource);
-<a class="jxr_linenumber" name="L469" href="#L469">469</a>                 }
-<a class="jxr_linenumber" name="L470" href="#L470">470</a> 
-<a class="jxr_linenumber" name="L471" href="#L471">471</a>                 @Override
-<a class="jxr_linenumber" name="L472" href="#L472">472</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> destroy() {
-<a class="jxr_linenumber" name="L473" href="#L473">473</a>                 }
-<a class="jxr_linenumber" name="L474" href="#L474">474</a>             });
-<a class="jxr_linenumber" name="L475" href="#L475">475</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L476" href="#L476">476</a>         }
-<a class="jxr_linenumber" name="L477" href="#L477">477</a> 
-<a class="jxr_linenumber" name="L478" href="#L478">478</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L479" href="#L479">479</a> <em class="jxr_javadoccomment">         * Add an annotated class. The annotation can be from Atmosphere or Jersey.</em>
-<a class="jxr_linenumber" name="L480" href="#L480">480</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L481" href="#L481">481</a> <em class="jxr_javadoccomment">         * @param c an annotated class. The annotation can be from Atmosphere or Jersey.</em>
-<a class="jxr_linenumber" name="L482" href="#L482">482</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L483" href="#L483">483</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L484" href="#L484">484</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(Class&lt;?&gt; c) {
-<a class="jxr_linenumber" name="L485" href="#L485">485</a>             packages.add(c);
-<a class="jxr_linenumber" name="L486" href="#L486">486</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L487" href="#L487">487</a>         }
-<a class="jxr_linenumber" name="L488" href="#L488">488</a> 
-<a class="jxr_linenumber" name="L489" href="#L489">489</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L490" href="#L490">490</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereHandler} or {@link Servlet} class</em>
-<a class="jxr_linenumber" name="L491" href="#L491">491</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L492" href="#L492">492</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
-<a class="jxr_linenumber" name="L493" href="#L493">493</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler} or {@link Servlet} class</em>
-<a class="jxr_linenumber" name="L494" href="#L494">494</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L495" href="#L495">495</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L496" href="#L496">496</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, Class&lt;?&gt; c) {
-<a class="jxr_linenumber" name="L497" href="#L497">497</a>             <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L498" href="#L498">498</a>                 <strong class="jxr_keyword">if</strong> (AtmosphereHandler.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
-<a class="jxr_linenumber" name="L499" href="#L499">499</a>                     handlers.put(path, AtmosphereHandler.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance()));
-<a class="jxr_linenumber" name="L500" href="#L500">500</a>                 } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (WebSocketHandler.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
-<a class="jxr_linenumber" name="L501" href="#L501">501</a>                     webSocketHandlers.put(path, WebSocketHandler.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance()));
-<a class="jxr_linenumber" name="L502" href="#L502">502</a>                 } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Servlet.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
-<a class="jxr_linenumber" name="L503" href="#L503">503</a>                     handlers.put(path, <strong class="jxr_keyword">new</strong> ReflectorServletProcessor(Servlet.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance())));
-<a class="jxr_linenumber" name="L504" href="#L504">504</a>                 } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L505" href="#L505">505</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalStateException(<span class="jxr_string">"You class must implements AtmosphereHandler or be a Servlet"</span>);
-<a class="jxr_linenumber" name="L506" href="#L506">506</a>                 }
-<a class="jxr_linenumber" name="L507" href="#L507">507</a>             } <strong class="jxr_keyword">catch</strong> (Exception ex) {
-<a class="jxr_linenumber" name="L508" href="#L508">508</a>                 logger.error(<span class="jxr_string">"Invalid resource {}"</span>, c);
-<a class="jxr_linenumber" name="L509" href="#L509">509</a>             }
-<a class="jxr_linenumber" name="L510" href="#L510">510</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L511" href="#L511">511</a>         }
-<a class="jxr_linenumber" name="L512" href="#L512">512</a> 
-<a class="jxr_linenumber" name="L513" href="#L513">513</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L514" href="#L514">514</a> <em class="jxr_javadoccomment">         * Configure the default {@link Broadcaster}</em>
-<a class="jxr_linenumber" name="L515" href="#L515">515</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L516" href="#L516">516</a> <em class="jxr_javadoccomment">         * @param broadcasterClass a Broadcaster</em>
-<a class="jxr_linenumber" name="L517" href="#L517">517</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L518" href="#L518">518</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L519" href="#L519">519</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcaster(Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass) {
-<a class="jxr_linenumber" name="L520" href="#L520">520</a>             <strong class="jxr_keyword">this</strong>.broadcasterClass = broadcasterClass;
-<a class="jxr_linenumber" name="L521" href="#L521">521</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L522" href="#L522">522</a>         }
-<a class="jxr_linenumber" name="L523" href="#L523">523</a> 
-<a class="jxr_linenumber" name="L524" href="#L524">524</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L525" href="#L525">525</a> <em class="jxr_javadoccomment">         * Configure the default {@link BroadcasterFactory}</em>
-<a class="jxr_linenumber" name="L526" href="#L526">526</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L527" href="#L527">527</a> <em class="jxr_javadoccomment">         * @param broadcasterFactory a BroadcasterFactory's class</em>
-<a class="jxr_linenumber" name="L528" href="#L528">528</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L529" href="#L529">529</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L530" href="#L530">530</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcasterFactory(BroadcasterFactory broadcasterFactory) {
-<a class="jxr_linenumber" name="L531" href="#L531">531</a>             <strong class="jxr_keyword">this</strong>.broadcasterFactory = broadcasterFactory;
-<a class="jxr_linenumber" name="L532" href="#L532">532</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L533" href="#L533">533</a>         }
-<a class="jxr_linenumber" name="L534" href="#L534">534</a> 
-<a class="jxr_linenumber" name="L535" href="#L535">535</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L536" href="#L536">536</a> <em class="jxr_javadoccomment">         * Configure the default {@link BroadcasterCache}</em>
-<a class="jxr_linenumber" name="L537" href="#L537">537</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L538" href="#L538">538</a> <em class="jxr_javadoccomment">         * @param broadcasterCache a BroadcasterCache's class</em>
-<a class="jxr_linenumber" name="L539" href="#L539">539</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L540" href="#L540">540</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L541" href="#L541">541</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcasterCache(Class&lt;? <strong class="jxr_keyword">extends</strong> BroadcasterCache&gt; broadcasterCache) {
-<a class="jxr_linenumber" name="L542" href="#L542">542</a>             <strong class="jxr_keyword">this</strong>.broadcasterCache = broadcasterCache;
-<a class="jxr_linenumber" name="L543" href="#L543">543</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L544" href="#L544">544</a>         }
-<a class="jxr_linenumber" name="L545" href="#L545">545</a> 
-<a class="jxr_linenumber" name="L546" href="#L546">546</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L547" href="#L547">547</a> <em class="jxr_javadoccomment">         * Configure the default {@link WebSocketProtocol}</em>
-<a class="jxr_linenumber" name="L548" href="#L548">548</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L549" href="#L549">549</a> <em class="jxr_javadoccomment">         * @param webSocketProtocol a WebSocketProtocol's class</em>
-<a class="jxr_linenumber" name="L550" href="#L550">550</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L551" href="#L551">551</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L552" href="#L552">552</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> webSocketProtocol(Class&lt;? <strong class="jxr_keyword">extends</strong> WebSocketProtocol&gt; webSocketProtocol) {
-<a class="jxr_linenumber" name="L553" href="#L553">553</a>             <strong class="jxr_keyword">this</strong>.webSocketProtocol = webSocketProtocol;
-<a class="jxr_linenumber" name="L554" href="#L554">554</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L555" href="#L555">555</a>         }
-<a class="jxr_linenumber" name="L556" href="#L556">556</a> 
-<a class="jxr_linenumber" name="L557" href="#L557">557</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L558" href="#L558">558</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereInterceptor}</em>
-<a class="jxr_linenumber" name="L559" href="#L559">559</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L560" href="#L560">560</a> <em class="jxr_javadoccomment">         * @param interceptor an {@link AtmosphereInterceptor}</em>
-<a class="jxr_linenumber" name="L561" href="#L561">561</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L562" href="#L562">562</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L563" href="#L563">563</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> interceptor(AtmosphereInterceptor interceptor) {
-<a class="jxr_linenumber" name="L564" href="#L564">564</a>             interceptors.add(interceptor);
-<a class="jxr_linenumber" name="L565" href="#L565">565</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L566" href="#L566">566</a>         }
-<a class="jxr_linenumber" name="L567" href="#L567">567</a> 
-<a class="jxr_linenumber" name="L568" href="#L568">568</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L569" href="#L569">569</a> <em class="jxr_javadoccomment">         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}</em>
-<a class="jxr_linenumber" name="L570" href="#L570">570</a> <em class="jxr_javadoccomment">         * are candidates for being excluded</em>
-<a class="jxr_linenumber" name="L571" href="#L571">571</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L572" href="#L572">572</a> <em class="jxr_javadoccomment">         * @param interceptor an {@link AtmosphereInterceptor}</em>
-<a class="jxr_linenumber" name="L573" href="#L573">573</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L574" href="#L574">574</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L575" href="#L575">575</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> excludeInterceptor(String interceptor) {
-<a class="jxr_linenumber" name="L576" href="#L576">576</a>             excludedInterceptors.add(interceptor);
-<a class="jxr_linenumber" name="L577" href="#L577">577</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L578" href="#L578">578</a>         }
-<a class="jxr_linenumber" name="L579" href="#L579">579</a> 
-<a class="jxr_linenumber" name="L580" href="#L580">580</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L581" href="#L581">581</a> <em class="jxr_javadoccomment">         * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}</em>
-<a class="jxr_linenumber" name="L582" href="#L582">582</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L583" href="#L583">583</a> <em class="jxr_javadoccomment">         * @param h {@link ChannelUpstreamHandler}</em>
-<a class="jxr_linenumber" name="L584" href="#L584">584</a> <em class="jxr_javadoccomment">         * @return this;</em>
-<a class="jxr_linenumber" name="L585" href="#L585">585</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L586" href="#L586">586</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> channelUpstreamHandler(ChannelUpstreamHandler h) {
-<a class="jxr_linenumber" name="L587" href="#L587">587</a>             nettyHandlers.addLast(h);
-<a class="jxr_linenumber" name="L588" href="#L588">588</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L589" href="#L589">589</a>         }
-<a class="jxr_linenumber" name="L590" href="#L590">590</a> 
-<a class="jxr_linenumber" name="L591" href="#L591">591</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L592" href="#L592">592</a> <em class="jxr_javadoccomment">         * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false</em>
-<a class="jxr_linenumber" name="L593" href="#L593">593</a> <em class="jxr_javadoccomment">         * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}</em>
-<a class="jxr_linenumber" name="L594" href="#L594">594</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
-<a class="jxr_linenumber" name="L595" href="#L595">595</a> <em class="jxr_javadoccomment">         * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.</em>
-<a class="jxr_linenumber" name="L596" href="#L596">596</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L597" href="#L597">597</a> <em class="jxr_javadoccomment">         * @param supportChunking false to disable.</em>
-<a class="jxr_linenumber" name="L598" href="#L598">598</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L599" href="#L599">599</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L600" href="#L600">600</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> supportChunking(<strong class="jxr_keyword">boolean</strong> supportChunking) {
-<a class="jxr_linenumber" name="L601" href="#L601">601</a>             <strong class="jxr_keyword">this</strong>.supportChunking = supportChunking;
-<a class="jxr_linenumber" name="L602" href="#L602">602</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L603" href="#L603">603</a>         }
-<a class="jxr_linenumber" name="L604" href="#L604">604</a> 
-<a class="jxr_linenumber" name="L605" href="#L605">605</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L606" href="#L606">606</a> <em class="jxr_javadoccomment">         * By default, Nettosphere aggregate the HTTP request's body in memory an invoke an Atmosphere's components with</em>
-<a class="jxr_linenumber" name="L607" href="#L607">607</a> <em class="jxr_javadoccomment">         * a single {@link AtmosphereResource}. Setting supportChunkAggregator to false will instead invoke Atmosphere's component</em>
-<a class="jxr_linenumber" name="L608" href="#L608">608</a> <em class="jxr_javadoccomment">         * with a new {@link AtmosphereResource} each time the request's body is read in memory. Setting to false</em>
-<a class="jxr_linenumber" name="L609" href="#L609">609</a> <em class="jxr_javadoccomment">         * may significantly increase the performance and reduce memory footprint. Note that setting this value to false</em>
-<a class="jxr_linenumber" name="L610" href="#L610">610</a> <em class="jxr_javadoccomment">         * may deliver to your Atmosphere's component partial body, so your application must make sure to aggregate the</em>
-<a class="jxr_linenumber" name="L611" href="#L611">611</a> <em class="jxr_javadoccomment">         * body before parsing the data if needed. For example, if you are using JSON as format, make sure you parse the</em>
-<a class="jxr_linenumber" name="L612" href="#L612">612</a> <em class="jxr_javadoccomment">         * data incrementally.</em>
-<a class="jxr_linenumber" name="L613" href="#L613">613</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L614" href="#L614">614</a> <em class="jxr_javadoccomment">         * @param aggregateRequestBodyInMemory false to disable.</em>
-<a class="jxr_linenumber" name="L615" href="#L615">615</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L616" href="#L616">616</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L617" href="#L617">617</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> aggregateRequestBodyInMemory(<strong class="jxr_keyword">boolean</strong> aggregateRequestBodyInMemory) {
-<a class="jxr_linenumber" name="L618" href="#L618">618</a>             <strong class="jxr_keyword">this</strong>.aggregateRequestBodyInMemory = aggregateRequestBodyInMemory;
-<a class="jxr_linenumber" name="L619" href="#L619">619</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L620" href="#L620">620</a>         }
-<a class="jxr_linenumber" name="L621" href="#L621">621</a> 
-<a class="jxr_linenumber" name="L622" href="#L622">622</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L623" href="#L623">623</a> <em class="jxr_javadoccomment">         * Set Netty's Bootstrap 'child.tcpDelay'</em>
-<a class="jxr_linenumber" name="L624" href="#L624">624</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L625" href="#L625">625</a> <em class="jxr_javadoccomment">         * @param socketNoTcpDelay</em>
-<a class="jxr_linenumber" name="L626" href="#L626">626</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L627" href="#L627">627</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L628" href="#L628">628</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> socketNoTcpDelay(<strong class="jxr_keyword">boolean</strong> socketNoTcpDelay) {
-<a class="jxr_linenumber" name="L629" href="#L629">629</a>             <strong class="jxr_keyword">this</strong>.socketNoTcpDelay = socketNoTcpDelay;
-<a class="jxr_linenumber" name="L630" href="#L630">630</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L631" href="#L631">631</a>         }
-<a class="jxr_linenumber" name="L632" href="#L632">632</a> 
-<a class="jxr_linenumber" name="L633" href="#L633">633</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L634" href="#L634">634</a> <em class="jxr_javadoccomment">         * Set Netty's Bootstrap 'child.keepAlive'</em>
-<a class="jxr_linenumber" name="L635" href="#L635">635</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L636" href="#L636">636</a> <em class="jxr_javadoccomment">         * @param socketKeepAlive</em>
-<a class="jxr_linenumber" name="L637" href="#L637">637</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L638" href="#L638">638</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L639" href="#L639">639</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> socketKeepAlive(<strong class="jxr_keyword">boolean</strong> socketKeepAlive) {
-<a class="jxr_linenumber" name="L640" href="#L640">640</a>             <strong class="jxr_keyword">this</strong>.socketKeepAlive = socketKeepAlive;
-<a class="jxr_linenumber" name="L641" href="#L641">641</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L642" href="#L642">642</a>         }
-<a class="jxr_linenumber" name="L643" href="#L643">643</a> 
-<a class="jxr_linenumber" name="L644" href="#L644">644</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L645" href="#L645">645</a> <em class="jxr_javadoccomment">         * The internal size of the underlying {@link org.atmosphere.nettosphere.util.ChannelBufferPool} size for</em>
-<a class="jxr_linenumber" name="L646" href="#L646">646</a> <em class="jxr_javadoccomment">         * I/O operation. Default is 50. If set to -1, a new {@link org.jboss.netty.buffer.ChannelBuffer} will be</em>
-<a class="jxr_linenumber" name="L647" href="#L647">647</a> <em class="jxr_javadoccomment">         * created and never pooled.</em>
-<a class="jxr_linenumber" name="L648" href="#L648">648</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L649" href="#L649">649</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolSize the max size of the pool.</em>
-<a class="jxr_linenumber" name="L650" href="#L650">650</a> <em class="jxr_javadoccomment">         * @return this;</em>
-<a class="jxr_linenumber" name="L651" href="#L651">651</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L652" href="#L652">652</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolSize(<strong class="jxr_keyword">int</strong> writeBufferPoolSize) {
-<a class="jxr_linenumber" name="L653" href="#L653">653</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolSize = writeBufferPoolSize;
-<a class="jxr_linenumber" name="L654" href="#L654">654</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L655" href="#L655">655</a>         }
-<a class="jxr_linenumber" name="L656" href="#L656">656</a> 
-<a class="jxr_linenumber" name="L657" href="#L657">657</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L658" href="#L658">658</a> <em class="jxr_javadoccomment">         * The frequency the {@link org.atmosphere.nettosphere.util.ChannelBufferPool} is resized and garbaged. Default</em>
-<a class="jxr_linenumber" name="L659" href="#L659">659</a> <em class="jxr_javadoccomment">         * is 30000.</em>
-<a class="jxr_linenumber" name="L660" href="#L660">660</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L661" href="#L661">661</a> <em class="jxr_javadoccomment">         * @param writeBufferPoolCleanupFrequency the frequency</em>
-<a class="jxr_linenumber" name="L662" href="#L662">662</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L663" href="#L663">663</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L664" href="#L664">664</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> writeBufferPoolCleanupFrequency(<strong class="jxr_keyword">long</strong> writeBufferPoolCleanupFrequency) {
-<a class="jxr_linenumber" name="L665" href="#L665">665</a>             <strong class="jxr_keyword">this</strong>.writeBufferPoolCleanupFrequency = writeBufferPoolCleanupFrequency;
-<a class="jxr_linenumber" name="L666" href="#L666">666</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L667" href="#L667">667</a>         }
-<a class="jxr_linenumber" name="L668" href="#L668">668</a> 
-<a class="jxr_linenumber" name="L669" href="#L669">669</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L670" href="#L670">670</a> <em class="jxr_javadoccomment">         * Do not decode {@link org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame} into a String and instead pass</em>
-<a class="jxr_linenumber" name="L671" href="#L671">671</a> <em class="jxr_javadoccomment">         * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.</em>
-<a class="jxr_linenumber" name="L672" href="#L672">672</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L673" href="#L673">673</a> <em class="jxr_javadoccomment">         * @param textFrameAsBinary</em>
-<a class="jxr_linenumber" name="L674" href="#L674">674</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L675" href="#L675">675</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L676" href="#L676">676</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> textFrameAsBinary(<strong class="jxr_keyword">boolean</strong> textFrameAsBinary) {
-<a class="jxr_linenumber" name="L677" href="#L677">677</a>             <strong class="jxr_keyword">this</strong>.textFrameAsBinary = textFrameAsBinary;
-<a class="jxr_linenumber" name="L678" href="#L678">678</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L679" href="#L679">679</a>         }
-<a class="jxr_linenumber" name="L680" href="#L680">680</a> 
-<a class="jxr_linenumber" name="L681" href="#L681">681</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L682" href="#L682">682</a> <em class="jxr_javadoccomment">         * A coma delimited of allowed WebSocket Sub Protocol (Sec-WebSocket-Protocol)</em>
-<a class="jxr_linenumber" name="L683" href="#L683">683</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L684" href="#L684">684</a> <em class="jxr_javadoccomment">         * @param subProtocols A coma delimited of allowed WebSocket Sub Protocol</em>
-<a class="jxr_linenumber" name="L685" href="#L685">685</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L686" href="#L686">686</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L687" href="#L687">687</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> subProtocols(String subProtocols) {
-<a class="jxr_linenumber" name="L688" href="#L688">688</a>             <strong class="jxr_keyword">this</strong>.subProtocols = subProtocols;
-<a class="jxr_linenumber" name="L689" href="#L689">689</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L690" href="#L690">690</a>         }
-<a class="jxr_linenumber" name="L691" href="#L691">691</a> 
-<a class="jxr_linenumber" name="L692" href="#L692">692</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L693" href="#L693">693</a> <em class="jxr_javadoccomment">         * Proxy {@link org.atmosphere.cpr.AtmosphereRequest}, {@link AtmosphereResource} and {@link org.atmosphere.cpr.AtmosphereRequest}</em>
-<a class="jxr_linenumber" name="L694" href="#L694">694</a> <em class="jxr_javadoccomment">         * with no ops implementations.</em>
-<a class="jxr_linenumber" name="L695" href="#L695">695</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
-<a class="jxr_linenumber" name="L696" href="#L696">696</a> <em class="jxr_javadoccomment">         * Set it to true only if you are using WebSocket with a your own implementation of {@link org.atmosphere.websocket.WebSocketProcessor}. The WebSocketProcessor MUST not invoked those objects and only use the {@link org.atmosphere.websocket.WebSocket} API.</em>
-<a class="jxr_linenumber" name="L697" href="#L697">697</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
-<a class="jxr_linenumber" name="L698" href="#L698">698</a> <em class="jxr_javadoccomment">         * Default is false</em>
-<a class="jxr_linenumber" name="L699" href="#L699">699</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L700" href="#L700">700</a> <em class="jxr_javadoccomment">         * @param noInternalAlloc</em>
-<a class="jxr_linenumber" name="L701" href="#L701">701</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L702" href="#L702">702</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L703" href="#L703">703</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> noInternalAlloc(<strong class="jxr_keyword">boolean</strong> noInternalAlloc) {
-<a class="jxr_linenumber" name="L704" href="#L704">704</a>             <strong class="jxr_keyword">this</strong>.noInternalAlloc = noInternalAlloc;
-<a class="jxr_linenumber" name="L705" href="#L705">705</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L706" href="#L706">706</a>         }
-<a class="jxr_linenumber" name="L707" href="#L707">707</a> 
-<a class="jxr_linenumber" name="L708" href="#L708">708</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L709" href="#L709">709</a> <em class="jxr_javadoccomment">         * Write binary frame when websocket transport is used.</em>
-<a class="jxr_linenumber" name="L710" href="#L710">710</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L711" href="#L711">711</a> <em class="jxr_javadoccomment">         * @param binaryWrite true or false</em>
-<a class="jxr_linenumber" name="L712" href="#L712">712</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L713" href="#L713">713</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L714" href="#L714">714</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> binaryWrite(<strong class="jxr_keyword">boolean</strong> binaryWrite) {
-<a class="jxr_linenumber" name="L715" href="#L715">715</a>             <strong class="jxr_keyword">this</strong>.binaryWrite = binaryWrite;
-<a class="jxr_linenumber" name="L716" href="#L716">716</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L717" href="#L717">717</a>         }
-<a class="jxr_linenumber" name="L718" href="#L718">718</a> 
-<a class="jxr_linenumber" name="L719" href="#L719">719</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L720" href="#L720">720</a> <em class="jxr_javadoccomment">         * Build an instance of this class.</em>
-<a class="jxr_linenumber" name="L721" href="#L721">721</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L722" href="#L722">722</a> <em class="jxr_javadoccomment">         * @return</em>
-<a class="jxr_linenumber" name="L723" href="#L723">723</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L724" href="#L724">724</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a> build() {
-<a class="jxr_linenumber" name="L725" href="#L725">725</a>             <strong class="jxr_keyword">if</strong> (paths.isEmpty()) {
-<a class="jxr_linenumber" name="L726" href="#L726">726</a>                 paths.add(<span class="jxr_string">"/"</span>);
-<a class="jxr_linenumber" name="L727" href="#L727">727</a>             }
-<a class="jxr_linenumber" name="L728" href="#L728">728</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a>(<strong class="jxr_keyword">this</strong>);
-<a class="jxr_linenumber" name="L729" href="#L729">729</a>         }
-<a class="jxr_linenumber" name="L730" href="#L730">730</a> 
-<a class="jxr_linenumber" name="L731" href="#L731">731</a>         <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L732" href="#L732">732</a> <em class="jxr_javadoccomment">         * Set ServletContext Attribute</em>
-<a class="jxr_linenumber" name="L733" href="#L733">733</a> <em class="jxr_javadoccomment">         *</em>
-<a class="jxr_linenumber" name="L734" href="#L734">734</a> <em class="jxr_javadoccomment">         * @param name</em>
-<a class="jxr_linenumber" name="L735" href="#L735">735</a> <em class="jxr_javadoccomment">         * @param value</em>
-<a class="jxr_linenumber" name="L736" href="#L736">736</a> <em class="jxr_javadoccomment">         * @return this</em>
-<a class="jxr_linenumber" name="L737" href="#L737">737</a> <em class="jxr_javadoccomment">         */</em>
-<a class="jxr_linenumber" name="L738" href="#L738">738</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> servletContextAttribute(String name, Object value) {
-<a class="jxr_linenumber" name="L739" href="#L739">739</a>             servletContextAttributes.put(name, value);
-<a class="jxr_linenumber" name="L740" href="#L740">740</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
-<a class="jxr_linenumber" name="L741" href="#L741">741</a>         }
-<a class="jxr_linenumber" name="L742" href="#L742">742</a>     }
-<a class="jxr_linenumber" name="L743" href="#L743">743</a> }
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>                 <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> destroy() {
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>                 }
+<a class="jxr_linenumber" name="L469" href="#L469">469</a>             });
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>         }
+<a class="jxr_linenumber" name="L472" href="#L472">472</a> 
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L474" href="#L474">474</a> <em class="jxr_javadoccomment">         * Add an annotated class. The annotation can be from Atmosphere or Jersey.</em>
+<a class="jxr_linenumber" name="L475" href="#L475">475</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L476" href="#L476">476</a> <em class="jxr_javadoccomment">         * @param c an annotated class. The annotation can be from Atmosphere or Jersey.</em>
+<a class="jxr_linenumber" name="L477" href="#L477">477</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L478" href="#L478">478</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(Class&lt;?&gt; c) {
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>             packages.add(c);
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>         }
+<a class="jxr_linenumber" name="L483" href="#L483">483</a> 
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L485" href="#L485">485</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereHandler} or {@link Servlet} class</em>
+<a class="jxr_linenumber" name="L486" href="#L486">486</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L487" href="#L487">487</a> <em class="jxr_javadoccomment">         * @param path a mapping path</em>
+<a class="jxr_linenumber" name="L488" href="#L488">488</a> <em class="jxr_javadoccomment">         * @param c    an {@link AtmosphereHandler} or {@link Servlet} class</em>
+<a class="jxr_linenumber" name="L489" href="#L489">489</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L490" href="#L490">490</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L491" href="#L491">491</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> resource(String path, Class&lt;?&gt; c) {
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>             <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L493" href="#L493">493</a>                 <strong class="jxr_keyword">if</strong> (AtmosphereHandler.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>                     handlers.put(path, AtmosphereHandler.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance()));
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>                 } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (WebSocketHandler.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
+<a class="jxr_linenumber" name="L496" href="#L496">496</a>                     webSocketHandlers.put(path, WebSocketHandler.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance()));
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>                 } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Servlet.<strong class="jxr_keyword">class</strong>.isAssignableFrom(c)) {
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>                     handlers.put(path, <strong class="jxr_keyword">new</strong> ReflectorServletProcessor(Servlet.<strong class="jxr_keyword">class</strong>.<strong class="jxr_keyword">cast</strong>(c.newInstance())));
+<a class="jxr_linenumber" name="L499" href="#L499">499</a>                 } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalStateException(<span class="jxr_string">"You class must implements AtmosphereHandler or be a Servlet"</span>);
+<a class="jxr_linenumber" name="L501" href="#L501">501</a>                 }
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>             } <strong class="jxr_keyword">catch</strong> (Exception ex) {
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>                 logger.error(<span class="jxr_string">"Invalid resource {}"</span>, c);
+<a class="jxr_linenumber" name="L504" href="#L504">504</a>             }
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>         }
+<a class="jxr_linenumber" name="L507" href="#L507">507</a> 
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L509" href="#L509">509</a> <em class="jxr_javadoccomment">         * Configure the default {@link Broadcaster}</em>
+<a class="jxr_linenumber" name="L510" href="#L510">510</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L511" href="#L511">511</a> <em class="jxr_javadoccomment">         * @param broadcasterClass a Broadcaster</em>
+<a class="jxr_linenumber" name="L512" href="#L512">512</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L513" href="#L513">513</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L514" href="#L514">514</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcaster(Class&lt;? <strong class="jxr_keyword">extends</strong> Broadcaster&gt; broadcasterClass) {
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>             <strong class="jxr_keyword">this</strong>.broadcasterClass = broadcasterClass;
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L517" href="#L517">517</a>         }
+<a class="jxr_linenumber" name="L518" href="#L518">518</a> 
+<a class="jxr_linenumber" name="L519" href="#L519">519</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L520" href="#L520">520</a> <em class="jxr_javadoccomment">         * Configure the default {@link BroadcasterFactory}</em>
+<a class="jxr_linenumber" name="L521" href="#L521">521</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L522" href="#L522">522</a> <em class="jxr_javadoccomment">         * @param broadcasterFactory a BroadcasterFactory's class</em>
+<a class="jxr_linenumber" name="L523" href="#L523">523</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L524" href="#L524">524</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L525" href="#L525">525</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcasterFactory(BroadcasterFactory broadcasterFactory) {
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>             <strong class="jxr_keyword">this</strong>.broadcasterFactory = broadcasterFactory;
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>         }
+<a class="jxr_linenumber" name="L529" href="#L529">529</a> 
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L531" href="#L531">531</a> <em class="jxr_javadoccomment">         * Configure the default {@link BroadcasterCache}</em>
+<a class="jxr_linenumber" name="L532" href="#L532">532</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L533" href="#L533">533</a> <em class="jxr_javadoccomment">         * @param broadcasterCache a BroadcasterCache's class</em>
+<a class="jxr_linenumber" name="L534" href="#L534">534</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L535" href="#L535">535</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> broadcasterCache(Class&lt;? <strong class="jxr_keyword">extends</strong> BroadcasterCache&gt; broadcasterCache) {
+<a class="jxr_linenumber" name="L537" href="#L537">537</a>             <strong class="jxr_keyword">this</strong>.broadcasterCache = broadcasterCache;
+<a class="jxr_linenumber" name="L538" href="#L538">538</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L539" href="#L539">539</a>         }
+<a class="jxr_linenumber" name="L540" href="#L540">540</a> 
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L542" href="#L542">542</a> <em class="jxr_javadoccomment">         * Configure the default {@link WebSocketProtocol}</em>
+<a class="jxr_linenumber" name="L543" href="#L543">543</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L544" href="#L544">544</a> <em class="jxr_javadoccomment">         * @param webSocketProtocol a WebSocketProtocol's class</em>
+<a class="jxr_linenumber" name="L545" href="#L545">545</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L546" href="#L546">546</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> webSocketProtocol(Class&lt;? <strong class="jxr_keyword">extends</strong> WebSocketProtocol&gt; webSocketProtocol) {
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>             <strong class="jxr_keyword">this</strong>.webSocketProtocol = webSocketProtocol;
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>         }
+<a class="jxr_linenumber" name="L551" href="#L551">551</a> 
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L553" href="#L553">553</a> <em class="jxr_javadoccomment">         * Add an {@link AtmosphereInterceptor}</em>
+<a class="jxr_linenumber" name="L554" href="#L554">554</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L555" href="#L555">555</a> <em class="jxr_javadoccomment">         * @param interceptor an {@link AtmosphereInterceptor}</em>
+<a class="jxr_linenumber" name="L556" href="#L556">556</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L557" href="#L557">557</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> interceptor(AtmosphereInterceptor interceptor) {
+<a class="jxr_linenumber" name="L559" href="#L559">559</a>             interceptors.add(interceptor);
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>         }
+<a class="jxr_linenumber" name="L562" href="#L562">562</a> 
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L564" href="#L564">564</a> <em class="jxr_javadoccomment">         * Exclude an {@link AtmosphereInterceptor} from being added, at startup, by Atmosphere. The default's {@link AtmosphereInterceptor}</em>
+<a class="jxr_linenumber" name="L565" href="#L565">565</a> <em class="jxr_javadoccomment">         * are candidates for being excluded</em>
+<a class="jxr_linenumber" name="L566" href="#L566">566</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L567" href="#L567">567</a> <em class="jxr_javadoccomment">         * @param interceptor an {@link AtmosphereInterceptor}</em>
+<a class="jxr_linenumber" name="L568" href="#L568">568</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L569" href="#L569">569</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> excludeInterceptor(String interceptor) {
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>             excludedInterceptors.add(interceptor);
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>         }
+<a class="jxr_linenumber" name="L574" href="#L574">574</a> 
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L576" href="#L576">576</a> <em class="jxr_javadoccomment">         * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}</em>
+<a class="jxr_linenumber" name="L577" href="#L577">577</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L578" href="#L578">578</a> <em class="jxr_javadoccomment">         * @param h {@link ChannelUpstreamHandler}</em>
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> <em class="jxr_javadoccomment">         * @return this;</em>
+<a class="jxr_linenumber" name="L580" href="#L580">580</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> channelUpstreamHandler(ChannelInboundHandler h) {
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>             nettyHandlers.addLast(h);
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>         }
+<a class="jxr_linenumber" name="L585" href="#L585">585</a> 
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L587" href="#L587">587</a> <em class="jxr_javadoccomment">         * Set to false to override the default behavior when writing bytes, which is use chunking. When set to false</em>
+<a class="jxr_linenumber" name="L588" href="#L588">588</a> <em class="jxr_javadoccomment">         * the {@link org.jboss.netty.handler.stream.ChunkedWriteHandler} will not be added to the Netty's {@link org.jboss.netty.channel.ChannelPipeline}</em>
+<a class="jxr_linenumber" name="L589" href="#L589">589</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
+<a class="jxr_linenumber" name="L590" href="#L590">590</a> <em class="jxr_javadoccomment">         * This is strongly recommended to turn chunking to false if you are using websocket to get better performance.</em>
+<a class="jxr_linenumber" name="L591" href="#L591">591</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L592" href="#L592">592</a> <em class="jxr_javadoccomment">         * @param supportChunking false to disable.</em>
+<a class="jxr_linenumber" name="L593" href="#L593">593</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L594" href="#L594">594</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L595" href="#L595">595</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> supportChunking(<strong class="jxr_keyword">boolean</strong> supportChunking) {
+<a class="jxr_linenumber" name="L596" href="#L596">596</a>             <strong class="jxr_keyword">this</strong>.supportChunking = supportChunking;
+<a class="jxr_linenumber" name="L597" href="#L597">597</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>         }
+<a class="jxr_linenumber" name="L599" href="#L599">599</a> 
+<a class="jxr_linenumber" name="L600" href="#L600">600</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L601" href="#L601">601</a> <em class="jxr_javadoccomment">         * By default, Nettosphere aggregate the HTTP request's body in memory an invoke an Atmosphere's components with</em>
+<a class="jxr_linenumber" name="L602" href="#L602">602</a> <em class="jxr_javadoccomment">         * a single {@link AtmosphereResource}. Setting supportChunkAggregator to false will instead invoke Atmosphere's component</em>
+<a class="jxr_linenumber" name="L603" href="#L603">603</a> <em class="jxr_javadoccomment">         * with a new {@link AtmosphereResource} each time the request's body is read in memory. Setting to false</em>
+<a class="jxr_linenumber" name="L604" href="#L604">604</a> <em class="jxr_javadoccomment">         * may significantly increase the performance and reduce memory footprint. Note that setting this value to false</em>
+<a class="jxr_linenumber" name="L605" href="#L605">605</a> <em class="jxr_javadoccomment">         * may deliver to your Atmosphere's component partial body, so your application must make sure to aggregate the</em>
+<a class="jxr_linenumber" name="L606" href="#L606">606</a> <em class="jxr_javadoccomment">         * body before parsing the data if needed. For example, if you are using JSON as format, make sure you parse the</em>
+<a class="jxr_linenumber" name="L607" href="#L607">607</a> <em class="jxr_javadoccomment">         * data incrementally.</em>
+<a class="jxr_linenumber" name="L608" href="#L608">608</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L609" href="#L609">609</a> <em class="jxr_javadoccomment">         * @param aggregateRequestBodyInMemory false to disable.</em>
+<a class="jxr_linenumber" name="L610" href="#L610">610</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L611" href="#L611">611</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> aggregateRequestBodyInMemory(<strong class="jxr_keyword">boolean</strong> aggregateRequestBodyInMemory) {
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>             <strong class="jxr_keyword">this</strong>.aggregateRequestBodyInMemory = aggregateRequestBodyInMemory;
+<a class="jxr_linenumber" name="L614" href="#L614">614</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L615" href="#L615">615</a>         }
+<a class="jxr_linenumber" name="L616" href="#L616">616</a> 
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L618" href="#L618">618</a> <em class="jxr_javadoccomment">         * Set Netty's Bootstrap 'child.tcpDelay'</em>
+<a class="jxr_linenumber" name="L619" href="#L619">619</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L620" href="#L620">620</a> <em class="jxr_javadoccomment">         * @param socketNoTcpDelay</em>
+<a class="jxr_linenumber" name="L621" href="#L621">621</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L622" href="#L622">622</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> socketNoTcpDelay(<strong class="jxr_keyword">boolean</strong> socketNoTcpDelay) {
+<a class="jxr_linenumber" name="L624" href="#L624">624</a>             <strong class="jxr_keyword">this</strong>.socketNoTcpDelay = socketNoTcpDelay;
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>         }
+<a class="jxr_linenumber" name="L627" href="#L627">627</a> 
+<a class="jxr_linenumber" name="L628" href="#L628">628</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L629" href="#L629">629</a> <em class="jxr_javadoccomment">         * Set Netty's Bootstrap 'child.keepAlive'</em>
+<a class="jxr_linenumber" name="L630" href="#L630">630</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L631" href="#L631">631</a> <em class="jxr_javadoccomment">         * @param socketKeepAlive</em>
+<a class="jxr_linenumber" name="L632" href="#L632">632</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L633" href="#L633">633</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L634" href="#L634">634</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> socketKeepAlive(<strong class="jxr_keyword">boolean</strong> socketKeepAlive) {
+<a class="jxr_linenumber" name="L635" href="#L635">635</a>             <strong class="jxr_keyword">this</strong>.socketKeepAlive = socketKeepAlive;
+<a class="jxr_linenumber" name="L636" href="#L636">636</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L637" href="#L637">637</a>         }
+<a class="jxr_linenumber" name="L638" href="#L638">638</a> 
+<a class="jxr_linenumber" name="L639" href="#L639">639</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L640" href="#L640">640</a> <em class="jxr_javadoccomment">         * Do not decode {@link org.jboss.netty.handler.codec.http.websocketx.TextWebSocketFrame} into a String and instead pass</em>
+<a class="jxr_linenumber" name="L641" href="#L641">641</a> <em class="jxr_javadoccomment">         * it to the {@link org.atmosphere.websocket.WebSocketProcessor} as binary.</em>
+<a class="jxr_linenumber" name="L642" href="#L642">642</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L643" href="#L643">643</a> <em class="jxr_javadoccomment">         * @param textFrameAsBinary</em>
+<a class="jxr_linenumber" name="L644" href="#L644">644</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L645" href="#L645">645</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L646" href="#L646">646</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> textFrameAsBinary(<strong class="jxr_keyword">boolean</strong> textFrameAsBinary) {
+<a class="jxr_linenumber" name="L647" href="#L647">647</a>             <strong class="jxr_keyword">this</strong>.textFrameAsBinary = textFrameAsBinary;
+<a class="jxr_linenumber" name="L648" href="#L648">648</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L649" href="#L649">649</a>         }
+<a class="jxr_linenumber" name="L650" href="#L650">650</a> 
+<a class="jxr_linenumber" name="L651" href="#L651">651</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L652" href="#L652">652</a> <em class="jxr_javadoccomment">         * A coma delimited of allowed WebSocket Sub Protocol (Sec-WebSocket-Protocol)</em>
+<a class="jxr_linenumber" name="L653" href="#L653">653</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L654" href="#L654">654</a> <em class="jxr_javadoccomment">         * @param subProtocols A coma delimited of allowed WebSocket Sub Protocol</em>
+<a class="jxr_linenumber" name="L655" href="#L655">655</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L656" href="#L656">656</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L657" href="#L657">657</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> subProtocols(String subProtocols) {
+<a class="jxr_linenumber" name="L658" href="#L658">658</a>             <strong class="jxr_keyword">this</strong>.subProtocols = subProtocols;
+<a class="jxr_linenumber" name="L659" href="#L659">659</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L660" href="#L660">660</a>         }
+<a class="jxr_linenumber" name="L661" href="#L661">661</a> 
+<a class="jxr_linenumber" name="L662" href="#L662">662</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L663" href="#L663">663</a> <em class="jxr_javadoccomment">         * Proxy {@link org.atmosphere.cpr.AtmosphereRequest}, {@link AtmosphereResource} and {@link org.atmosphere.cpr.AtmosphereRequest}</em>
+<a class="jxr_linenumber" name="L664" href="#L664">664</a> <em class="jxr_javadoccomment">         * with no ops implementations.</em>
+<a class="jxr_linenumber" name="L665" href="#L665">665</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
+<a class="jxr_linenumber" name="L666" href="#L666">666</a> <em class="jxr_javadoccomment">         * Set it to true only if you are using WebSocket with a your own implementation of {@link org.atmosphere.websocket.WebSocketProcessor}. The WebSocketProcessor MUST not invoked those objects and only use the {@link org.atmosphere.websocket.WebSocket} API.</em>
+<a class="jxr_linenumber" name="L667" href="#L667">667</a> <em class="jxr_javadoccomment">         * &lt;p/&gt;</em>
+<a class="jxr_linenumber" name="L668" href="#L668">668</a> <em class="jxr_javadoccomment">         * Default is false</em>
+<a class="jxr_linenumber" name="L669" href="#L669">669</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L670" href="#L670">670</a> <em class="jxr_javadoccomment">         * @param noInternalAlloc</em>
+<a class="jxr_linenumber" name="L671" href="#L671">671</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L672" href="#L672">672</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> noInternalAlloc(<strong class="jxr_keyword">boolean</strong> noInternalAlloc) {
+<a class="jxr_linenumber" name="L674" href="#L674">674</a>             <strong class="jxr_keyword">this</strong>.noInternalAlloc = noInternalAlloc;
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L676" href="#L676">676</a>         }
+<a class="jxr_linenumber" name="L677" href="#L677">677</a> 
+<a class="jxr_linenumber" name="L678" href="#L678">678</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L679" href="#L679">679</a> <em class="jxr_javadoccomment">         * Write binary frame when websocket transport is used.</em>
+<a class="jxr_linenumber" name="L680" href="#L680">680</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L681" href="#L681">681</a> <em class="jxr_javadoccomment">         * @param binaryWrite true or false</em>
+<a class="jxr_linenumber" name="L682" href="#L682">682</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L683" href="#L683">683</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L684" href="#L684">684</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> binaryWrite(<strong class="jxr_keyword">boolean</strong> binaryWrite) {
+<a class="jxr_linenumber" name="L685" href="#L685">685</a>             <strong class="jxr_keyword">this</strong>.binaryWrite = binaryWrite;
+<a class="jxr_linenumber" name="L686" href="#L686">686</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L687" href="#L687">687</a>         }
+<a class="jxr_linenumber" name="L688" href="#L688">688</a> 
+<a class="jxr_linenumber" name="L689" href="#L689">689</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L690" href="#L690">690</a> <em class="jxr_javadoccomment">         * Build an instance of this class.</em>
+<a class="jxr_linenumber" name="L691" href="#L691">691</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L692" href="#L692">692</a> <em class="jxr_javadoccomment">         * @return this;</em>
+<a class="jxr_linenumber" name="L693" href="#L693">693</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L694" href="#L694">694</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a> build() {
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>             <strong class="jxr_keyword">if</strong> (paths.isEmpty()) {
+<a class="jxr_linenumber" name="L696" href="#L696">696</a>                 paths.add(<span class="jxr_string">"/"</span>);
+<a class="jxr_linenumber" name="L697" href="#L697">697</a>             }
+<a class="jxr_linenumber" name="L698" href="#L698">698</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../org/atmosphere/nettosphere/Config.html">Config</a>(<strong class="jxr_keyword">this</strong>);
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>         }
+<a class="jxr_linenumber" name="L700" href="#L700">700</a> 
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L702" href="#L702">702</a> <em class="jxr_javadoccomment">         * Set ServletContext Attribute</em>
+<a class="jxr_linenumber" name="L703" href="#L703">703</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L704" href="#L704">704</a> <em class="jxr_javadoccomment">         * @param name</em>
+<a class="jxr_linenumber" name="L705" href="#L705">705</a> <em class="jxr_javadoccomment">         * @param value</em>
+<a class="jxr_linenumber" name="L706" href="#L706">706</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L707" href="#L707">707</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L708" href="#L708">708</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> servletContextAttribute(String name, Object value) {
+<a class="jxr_linenumber" name="L709" href="#L709">709</a>             servletContextAttributes.put(name, value);
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L711" href="#L711">711</a>         }
+<a class="jxr_linenumber" name="L712" href="#L712">712</a> 
+<a class="jxr_linenumber" name="L713" href="#L713">713</a>         <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L714" href="#L714">714</a> <em class="jxr_javadoccomment">         * Use {@link io.netty.channel.epoll.EpollEventLoopGroup}</em>
+<a class="jxr_linenumber" name="L715" href="#L715">715</a> <em class="jxr_javadoccomment">         * @See <a href="http://netty.io/wiki/native-transports.htm" target="alexandria_uri">http://netty.io/wiki/native-transports.htm</a>l</em>
+<a class="jxr_linenumber" name="L716" href="#L716">716</a> <em class="jxr_javadoccomment">         *</em>
+<a class="jxr_linenumber" name="L717" href="#L717">717</a> <em class="jxr_javadoccomment">         * @return this</em>
+<a class="jxr_linenumber" name="L718" href="#L718">718</a> <em class="jxr_javadoccomment">         */</em>
+<a class="jxr_linenumber" name="L719" href="#L719">719</a>         <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/Nettosphere.html">Builder</a> epoll(<strong class="jxr_keyword">boolean</strong> epoll) {
+<a class="jxr_linenumber" name="L720" href="#L720">720</a>             <strong class="jxr_keyword">this</strong>.epoll = epoll;
+<a class="jxr_linenumber" name="L721" href="#L721">721</a>             <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L722" href="#L722">722</a>         }
+<a class="jxr_linenumber" name="L723" href="#L723">723</a>     }
+<a class="jxr_linenumber" name="L724" href="#L724">724</a> }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2016. All rights reserved.</div>
 </body>
 </html>

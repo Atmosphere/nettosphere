@@ -23,64 +23,68 @@
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">package</strong> org.atmosphere.nettosphere.extra;
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.buffer.ChannelBuffer;
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.buffer.ChannelBuffers;
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelFuture;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelFutureListener;
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelHandlerContext;
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ExceptionEvent;
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.MessageEvent;
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.handler.timeout.ReadTimeoutException;
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.util.CharsetUtil;
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>  
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment"> * @author &lt;a href="<a href="http://www.waywardmonkeys.com/" target="alexandria_uri">http://www.waywardmonkeys.com/</a>"&gt;Bruce Mitchener&lt;/a&gt;</em>
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment"> */</em>
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../org/atmosphere/nettosphere/extra/FlashPolicyServerHandler.html">FlashPolicyServerHandler</a> <strong class="jxr_keyword">extends</strong> SimpleChannelUpstreamHandler {
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> io.netty.buffer.ByteBuf;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> io.netty.buffer.Unpooled;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelFuture;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelFutureListener;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelHandlerContext;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.SimpleChannelInboundHandler;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> io.netty.handler.timeout.ReadTimeoutException;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> io.netty.util.CharsetUtil;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <em class="jxr_javadoccomment"> * @author &lt;a href="<a href="http://www.waywardmonkeys.com/" target="alexandria_uri">http://www.waywardmonkeys.com/</a>"&gt;Bruce Mitchener&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../org/atmosphere/nettosphere/extra/FlashPolicyServerHandler.html">FlashPolicyServerHandler</a> <strong class="jxr_keyword">extends</strong> SimpleChannelInboundHandler&lt;Object&gt; {
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String NEWLINE = <span class="jxr_string">"\r\n"</span>;
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String NEWLINE = <span class="jxr_string">"\r\n"</span>;
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>  
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>      @Override
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> messageReceived(ChannelHandlerContext ctx, MessageEvent e) <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_comment">//        Object msg = e.getMessage();</em>
-<a class="jxr_linenumber" name="L39" href="#L39">39</a>          ChannelFuture f = e.getChannel().write(<strong class="jxr_keyword">this</strong>.getPolicyFileContents());
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>          f.addListener(ChannelFutureListener.CLOSE);
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>      }
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>  
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>      <strong class="jxr_keyword">private</strong> ChannelBuffer getPolicyFileContents() <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>          <strong class="jxr_keyword">return</strong> ChannelBuffers.copiedBuffer(
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>              <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>              <span class="jxr_string">"&lt;!DOCTYPE cross-domain-policy SYSTEM \&quot;/xml/dtds/cross-domain-policy.dtd\&quot;&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>              <span class="jxr_string">""</span> + NEWLINE +
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>              <span class="jxr_string">"&lt;!-- Policy file for xmlsocket://socks.example.com --&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>              <span class="jxr_string">"&lt;cross-domain-policy&gt; "</span> + NEWLINE +
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>              <span class="jxr_string">""</span> + NEWLINE +
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>              <span class="jxr_string">"   &lt;!-- This is a master socket policy file --&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>              <span class="jxr_string">"   &lt;!-- No other socket policies on the host will be permitted --&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>              <span class="jxr_string">"   &lt;site-control permitted-cross-domain-policies=\&quot;master-only\&quot;/&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>              <span class="jxr_string">""</span> + NEWLINE +
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>              <span class="jxr_string">"   &lt;!-- Instead of setting to-ports=\&quot;*\&quot;, administrator's can use ranges and commas --&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>              <span class="jxr_string">"   &lt;allow-access-from domain=\&quot;*\&quot; to-ports=\&quot;8080\&quot; /&gt;"</span> + NEWLINE +
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>              <span class="jxr_string">""</span> + NEWLINE +
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>              <span class="jxr_string">"&lt;/cross-domain-policy&gt;"</span> + NEWLINE,
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>              CharsetUtil.US_ASCII);
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>      }
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>  
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>      @Override
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>              <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>          <strong class="jxr_keyword">if</strong> (e.getCause() instanceof ReadTimeoutException) {
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>              System.out.println(<span class="jxr_string">"Connection timed out."</span>);
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>              e.getChannel().close();
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>          } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>              e.getCause().printStackTrace();
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>              e.getChannel().close();
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>          }
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>      }
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>  }
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>      @Override
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> channelRead(ChannelHandlerContext ctx, Object e) <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_comment">//        Object msg = e.getMessage();</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          ChannelFuture f = ctx.channel().write(<strong class="jxr_keyword">this</strong>.getPolicyFileContents());
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          f.addListener(ChannelFutureListener.CLOSE);
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>      }
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>      <strong class="jxr_keyword">private</strong> ByteBuf getPolicyFileContents() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>          <strong class="jxr_keyword">return</strong> Unpooled.copiedBuffer(
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>              <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>              <span class="jxr_string">"&lt;!DOCTYPE cross-domain-policy SYSTEM \&quot;/xml/dtds/cross-domain-policy.dtd\&quot;&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>              <span class="jxr_string">""</span> + NEWLINE +
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>              <span class="jxr_string">"&lt;!-- Policy file for xmlsocket://socks.example.com --&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>              <span class="jxr_string">"&lt;cross-domain-policy&gt; "</span> + NEWLINE +
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>              <span class="jxr_string">""</span> + NEWLINE +
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>              <span class="jxr_string">"   &lt;!-- This is a master socket policy file --&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>              <span class="jxr_string">"   &lt;!-- No other socket policies on the host will be permitted --&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>              <span class="jxr_string">"   &lt;site-control permitted-cross-domain-policies=\&quot;master-only\&quot;/&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>              <span class="jxr_string">""</span> + NEWLINE +
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              <span class="jxr_string">"   &lt;!-- Instead of setting to-ports=\&quot;*\&quot;, administrator's can use ranges and commas --&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>              <span class="jxr_string">"   &lt;allow-access-from domain=\&quot;*\&quot; to-ports=\&quot;8080\&quot; /&gt;"</span> + NEWLINE +
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>              <span class="jxr_string">""</span> + NEWLINE +
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>              <span class="jxr_string">"&lt;/cross-domain-policy&gt;"</span> + NEWLINE,
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>              CharsetUtil.US_ASCII);
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>      }
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>      @Override
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> exceptionCaught(ChannelHandlerContext ctx, Throwable t)
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>              <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          <strong class="jxr_keyword">if</strong> (t.getCause() instanceof ReadTimeoutException) {
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>              System.out.println(<span class="jxr_string">"Connection timed out."</span>);
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>              ctx.channel().close();
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>          } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>              t.getCause().printStackTrace();
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>              ctx.channel().close();
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>          }
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      }
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  	@Override
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  	<strong class="jxr_keyword">protected</strong> <strong class="jxr_keyword">void</strong> channelRead0(ChannelHandlerContext ctx, Object msg)
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  			<strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  		channelRead(ctx, msg);
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  	}
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2016. All rights reserved.</div>
 </body>
 </html>

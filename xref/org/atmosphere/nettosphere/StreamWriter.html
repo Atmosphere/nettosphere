@@ -7,7 +7,7 @@
 <body>
 <div id="overview"><a href="../../../../apidocs/org/atmosphere/nettosphere/StreamWriter.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
-<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2015 Async-IO.org</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2016 Async-IO.org</em>
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not</em>
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * use this file except in compliance with the License. You may obtain a copy of</em>
@@ -23,14 +23,14 @@
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">package</strong> org.atmosphere.nettosphere;
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AsyncIOWriter;
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereResponse;
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.util.Utils;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.buffer.ChannelBuffer;
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.buffer.ChannelBuffers;
-<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.Channel;
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelFuture;
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.jboss.netty.channel.ChannelFutureListener;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> io.netty.buffer.ByteBuf;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> io.netty.buffer.Unpooled;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.Channel;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelFuture;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> io.netty.channel.ChannelFutureListener;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AsyncIOWriter;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.cpr.AtmosphereResponse;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> org.atmosphere.nettosphere.util.Utils;
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.slf4j.LoggerFactory;
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>  
@@ -41,7 +41,7 @@
 <a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment"> */</em>
 <a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../org/atmosphere/nettosphere/StreamWriter.html">StreamWriter</a> <strong class="jxr_keyword">extends</strong> <a href="../../../org/atmosphere/nettosphere/ChannelWriter.html">ChannelWriter</a> {
 <a class="jxr_linenumber" name="L35" href="#L35">35</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger logger = LoggerFactory.getLogger(StreamWriter.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> ChannelBuffer chainedBodyBuffer;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">private</strong> ByteBuf chainedBodyBuffer;
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>  
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">public</strong> <a href="../../../org/atmosphere/nettosphere/StreamWriter.html">StreamWriter</a>(Channel channel, <strong class="jxr_keyword">boolean</strong> writeHeader, <strong class="jxr_keyword">boolean</strong> keepAlive) {
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>          <strong class="jxr_keyword">super</strong>(channel, writeHeader, keepAlive);
@@ -50,14 +50,14 @@
 <a class="jxr_linenumber" name="L42" href="#L42">42</a>  
 <a class="jxr_linenumber" name="L43" href="#L43">43</a>      @Override
 <a class="jxr_linenumber" name="L44" href="#L44">44</a>      <strong class="jxr_keyword">public</strong> AsyncIOWriter asyncWrite(AtmosphereResponse response, byte[] data, <strong class="jxr_keyword">int</strong> offset, <strong class="jxr_keyword">int</strong> length) <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>          chainedBodyBuffer = ChannelBuffers.wrappedBuffer(chainedBodyBuffer, ChannelBuffers.wrappedBuffer(data, offset, length));
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>          chainedBodyBuffer = Unpooled.wrappedBuffer(chainedBodyBuffer, Unpooled.wrappedBuffer(data, offset, length));
 <a class="jxr_linenumber" name="L46" href="#L46">46</a>          lastWrite = System.currentTimeMillis();
 <a class="jxr_linenumber" name="L47" href="#L47">47</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>;
 <a class="jxr_linenumber" name="L48" href="#L48">48</a>      }
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>  
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> setUpBuffers() {
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>          <strong class="jxr_keyword">if</strong> (chainedBodyBuffer == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>              chainedBodyBuffer = ChannelBuffers.EMPTY_BUFFER;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>              chainedBodyBuffer = Unpooled.EMPTY_BUFFER;
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>          }
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>      }
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>  
@@ -67,10 +67,10 @@
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>          <strong class="jxr_keyword">if</strong> (!doneProcessing.getAndSet(<strong class="jxr_keyword">true</strong>) &amp;&amp; channel.isOpen()) {
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>              logger.trace(<span class="jxr_string">"About to flush to {} for {}"</span>, channel, response.uuid());
 <a class="jxr_linenumber" name="L61" href="#L61">61</a>  
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>              ChannelBuffer statusAndHeadersBuffer = writeHeader ?
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>                      ChannelBuffers.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes(<span class="jxr_string">"UTF-8"</span>)) : ChannelBuffers.EMPTY_BUFFER;
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>              ChannelBuffer drain = ChannelBuffers.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>              channel.write(drain).addListener(<strong class="jxr_keyword">new</strong> ChannelFutureListener() {
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>              ByteBuf statusAndHeadersBuffer = writeHeader ?
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>                      Unpooled.wrappedBuffer(constructStatusAndHeaders(response, chainedBodyBuffer.readableBytes()).getBytes(<span class="jxr_string">"UTF-8"</span>)) : Unpooled.EMPTY_BUFFER;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>              ByteBuf drain = Unpooled.wrappedBuffer(statusAndHeadersBuffer, chainedBodyBuffer);
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>              channel.writeAndFlush(drain).addListener(<strong class="jxr_keyword">new</strong> ChannelFutureListener() {
 <a class="jxr_linenumber" name="L66" href="#L66">66</a>                  @Override
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>                  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> operationComplete(ChannelFuture channelFuture) <strong class="jxr_keyword">throws</strong> Exception {
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>                      chainedBodyBuffer = <strong class="jxr_keyword">null</strong>;
@@ -87,6 +87,6 @@
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2016. All rights reserved.</div>
 </body>
 </html>
