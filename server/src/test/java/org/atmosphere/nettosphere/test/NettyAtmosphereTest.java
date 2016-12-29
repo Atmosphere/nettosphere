@@ -621,10 +621,12 @@ public class NettyAtmosphereTest extends BaseTest {
     @Test
     public void httspHandlerTest() throws Exception {
         final SSLContext sslContext = createSSLContext();
+        final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
                 .sslContext(sslContext)
+                .enabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .resource(new Handler() {
 
                     @Override
@@ -638,7 +640,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
-                .setEnabledCipherSuites(new String[]{"TLS_DH_anon_WITH_AES_128_CBC_SHA"})
+                .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .setAcceptAnyCertificate(true)
                 .build());
         try {
@@ -714,10 +716,12 @@ public class NettyAtmosphereTest extends BaseTest {
     public void wssHandlerTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
         final SSLContext sslContext = createSSLContext();
+        final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
                 .sslContext(sslContext)
+                .enabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .resource(new Handler() {
 
                     @Override
@@ -732,7 +736,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
                 .setAcceptAnyCertificate(true)
-                .setEnabledCipherSuites(new String[]{"TLS_DH_anon_WITH_AES_128_CBC_SHA"})
+                .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.servlet.Servlet;
 import java.io.File;
 import java.io.IOException;
@@ -126,13 +127,17 @@ public class Config {
     public SSLContext sslContext() {
         return b.context;
     }
+    
+    public String[] enabledCipherSuites() {
+        return b.enabledCipherSuites;
+    }
 
     public SslContext nettySslContext() {
         return b.sslContext;
     }
 
     public SSLContextListener sslContextListener() {
-        return b.listener;
+        return b.contextListener;
     }
 
     public LinkedList<ChannelInboundHandler> channelUpstreamHandlers() {
@@ -220,8 +225,9 @@ public class Config {
         private String mappingPath = "";
         private final List<Class<?>> packages = new ArrayList<Class<?>>();
         private SSLContext context;
+        private String[] enabledCipherSuites;
         private SslContext sslContext;
-        private SSLContextListener listener = SSLContextListener.DEFAULT;
+        private SSLContextListener contextListener;
         private final LinkedList<ChannelInboundHandler> nettyHandlers = new LinkedList<ChannelInboundHandler>();
         private boolean supportChunking = true;
         private boolean aggregateRequestBodyInMemory = true;
@@ -244,6 +250,17 @@ public class Config {
          */
         public Builder sslContext(SSLContext context) {
             this.context = context;
+            return this;
+        }
+       
+        /**
+         * Set a String[] of cipher suites to be enabled.
+         *
+         * @param String-array of cipher suites to be enabled.
+         * @return this
+         */
+        public Builder enabledCipherSuites(String[] cipherSuitesToEnable) {
+            this.enabledCipherSuites = cipherSuitesToEnable;
             return this;
         }
 
@@ -276,7 +293,7 @@ public class Config {
          * @return this
          */
         public Builder sslContextListener(SSLContextListener listener) {
-            this.listener = listener;
+            this.contextListener = listener;
             return this;
         }
 
@@ -694,6 +711,21 @@ public class Config {
         public Config build() {
             if (paths.isEmpty()) {
                 paths.add("/");
+            }
+            if (context != null) {
+                if (enabledCipherSuites == null) {
+                    throw new IllegalStateException("Incomplete Config: SSLContext requires cipherSuites to be specified.");
+                }
+                if (contextListener == null) {
+                    contextListener = new SSLContextListener() {
+                        
+                        @Override
+                        public void onPostCreate(SSLEngine e) {
+                            e.setEnabledCipherSuites(enabledCipherSuites);
+                            e.setUseClientMode(false);     
+                        }
+                    };
+                }
             }
             return new Config(this);
         }

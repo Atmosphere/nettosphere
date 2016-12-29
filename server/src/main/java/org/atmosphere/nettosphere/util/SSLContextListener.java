@@ -22,17 +22,6 @@ import javax.net.ssl.SSLEngine;
  */
 public interface SSLContextListener {
 
-    SSLContextListener DEFAULT = new SSLContextListener(){
-
-        @Override
-        public void onPostCreate(SSLEngine e) {
-            //TODO make the cipher suites configurable
-            e.setEnabledCipherSuites(new String[]{"TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
-                                                  "TLS_DH_anon_WITH_AES_128_CBC_SHA"});
-            e.setUseClientMode(false);
-        }
-    };
-
     /**
      * Invoked just after the {@link SSLEngine} has been created, but not yet injected in Netty.
      * @param e SSLEngine;
