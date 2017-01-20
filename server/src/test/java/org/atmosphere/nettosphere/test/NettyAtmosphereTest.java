@@ -27,11 +27,16 @@ import com.ning.http.client.ws.WebSocketPingListener;
 import com.ning.http.client.ws.WebSocketPongListener;
 import com.ning.http.client.ws.WebSocketTextListener;
 import com.ning.http.client.ws.WebSocketUpgradeHandler;
+
+import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.cpr.ApplicationConfig;
+import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.HeaderConfig;
+import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.nettosphere.Config;
 import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
@@ -50,8 +55,11 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.servlet.ServletException;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -59,6 +67,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
@@ -474,6 +483,102 @@ public class NettyAtmosphereTest extends BaseTest {
             c.close();
         }
     }
+    
+	@Test
+	public void suspendWebSocketTestMultipleRequestReponses() throws Exception {
+		final AtomicInteger responseNo = new AtomicInteger();
+		int TOTAL = 150;
+		Config config = new Config.Builder().port(port).host("127.0.0.1")
+				.initParam(ApplicationConfig.BROADCASTER_CACHE, UUIDBroadcasterCache.class.getName())
+				.initParam(ApplicationConfig.HEARTBEAT_INTERVAL_IN_SECONDS, "20")
+				.resource("/suspend", new AbstractReflectorAtmosphereHandler() {
+
+					private BroadcasterFactory broadcasterFactory;
+
+					@Override
+					public void init(AtmosphereConfig config) throws ServletException {
+						super.init(config);
+						broadcasterFactory = config.getBroadcasterFactory();
+					}
+
+					@Override
+					public void onRequest(AtmosphereResource ar) throws IOException {
+						if (ar.getRequest().getMethod().equals("GET")) {
+							doGet(ar);
+						} else if (ar.getRequest().getMethod().equals("POST")) {
+							doPost(ar);
+						}
+					}
+
+					public void doGet(final AtmosphereResource ar) {
+						ar.getResponse().setCharacterEncoding(ar.getRequest().getCharacterEncoding());
+						ar.getResponse().setContentType("application/json");
+						ar.getResponse().setCharacterEncoding(StandardCharsets.UTF_8.toString());
+						ar.setBroadcaster(broadcasterFactory.lookup("broadCasterId", true));
+						ar.suspend();
+					}
+
+					public void doPost(AtmosphereResource ar) throws IOException {
+						try {
+							Thread.sleep(300);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						broadcasterFactory.lookup("broadCasterId", false).broadcast(
+								"This is just random text to respond with. :). ");
+					}
+				}).build();
+
+		server = new Nettosphere.Builder().config(config).build();
+		assertNotNull(server);
+		server.start();
+
+		AsyncHttpClient c = new AsyncHttpClient();
+		try {
+			WebSocket webSocket = c.prepareGet(wsUrl + "/suspend").addHeader("Test1", "Test1")
+					.addHeader("Test2", "Test2").addHeader("Test3", "Test3").addHeader("Test4", "Test4")
+					.addHeader("Test5", "Test5").addHeader("Test6", "Test6").addHeader("Test7", "Test7")
+					.execute(new WebSocketUpgradeHandler.Builder().build()).get();
+			assertNotNull(webSocket);
+
+			webSocket.addWebSocketListener(new WebSocketTextListener() {
+				@Override
+				public void onMessage(String message) {
+					//if not heartbeat increment
+					if(!message.equals("X"))
+							responseNo.getAndIncrement();
+					logger.debug("Received Message: " + responseNo.get() + " " + message);
+				}
+
+				@Override
+				public void onOpen(WebSocket websocket) {
+				}
+
+				@Override
+				public void onClose(WebSocket websocket) {
+
+				}
+
+				@Override
+				public void onError(Throwable t) {
+
+				}
+			});
+
+			for (int i = 0; i < TOTAL; i++) {
+				webSocket.sendMessage("Hello.");
+				Thread.sleep(250);
+				logger.debug("Sending Message: " + i);
+			}
+
+			Thread.sleep(60000);
+
+			assertEquals(responseNo.get(), TOTAL);
+			webSocket.close();
+		} finally {
+			c.close();
+		}
+	}
 
     @Test
     public void webSocketHandlerTest() throws Exception {
