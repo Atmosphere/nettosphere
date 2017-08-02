@@ -557,7 +557,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     ByteBuf b = FullHttpRequest.class.cast(messageEvent).content();
                     if (b.isReadable()) {
                         body = new byte[b.readableBytes()];
-                        b.readBytes(body);
+                        b.copy().readBytes(body);
                     }
                 }
 
