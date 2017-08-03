@@ -15,20 +15,42 @@
  */
 package org.atmosphere.nettosphere.test;
 
-import com.ning.http.client.AsyncHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.HttpResponseBodyPart;
-import com.ning.http.client.HttpResponseHeaders;
-import com.ning.http.client.HttpResponseStatus;
-import com.ning.http.client.Response;
-import com.ning.http.client.ws.WebSocket;
-import com.ning.http.client.ws.WebSocketPingListener;
-import com.ning.http.client.ws.WebSocketPongListener;
-import com.ning.http.client.ws.WebSocketTextListener;
-import com.ning.http.client.ws.WebSocketUpgradeHandler;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
+import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.HttpResponseBodyPart;
+import org.asynchttpclient.HttpResponseHeaders;
+import org.asynchttpclient.HttpResponseStatus;
+import org.asynchttpclient.Response;
+import org.asynchttpclient.ws.WebSocket;
+import org.asynchttpclient.ws.WebSocketPingListener;
+import org.asynchttpclient.ws.WebSocketPongListener;
+import org.asynchttpclient.ws.WebSocketTextListener;
+import org.asynchttpclient.ws.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -45,27 +67,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
-import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 public class NettyAtmosphereTest extends BaseTest {
     private final static String RESUME = "Resume";
@@ -121,7 +124,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             Response r = c.prepareGet(targetUrl + "/suspend").execute().get();
 
@@ -179,7 +182,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
 
@@ -191,21 +194,21 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
@@ -274,7 +277,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
@@ -286,21 +289,21 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
@@ -366,7 +369,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
@@ -441,7 +444,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
@@ -499,7 +502,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
@@ -556,7 +559,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
@@ -607,7 +610,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             Response response = c.prepareGet(targetUrl).execute().get();
             assertNotNull(response);
@@ -639,7 +642,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+        AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
                 .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .setAcceptAnyCertificate(true)
                 .build());
@@ -676,7 +679,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+        AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
                 .setAcceptAnyCertificate(true)
                 .build());
         try {
@@ -734,7 +737,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        AsyncHttpClient c = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+        AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
                 .setAcceptAnyCertificate(true)
                 .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .build());
@@ -850,7 +853,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<HttpResponseHeaders> response = new AtomicReference<HttpResponseHeaders>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend?" + X_ATMOSPHERE_TRANSPORT + "=" + HeaderConfig.LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
 
@@ -860,20 +863,20 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
-                    return STATE.CONTINUE;
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
-                    return STATE.CONTINUE;
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     response.set(headers);
                     l.countDown();
-                    return STATE.ABORT;
+                    return State.ABORT;
                 }
 
                 @Override
@@ -938,7 +941,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
@@ -950,21 +953,21 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
@@ -1036,7 +1039,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
@@ -1048,21 +1051,21 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
@@ -1082,7 +1085,7 @@ public class NettyAtmosphereTest extends BaseTest {
             }
             b.append("message");
 
-            Response r = c.preparePost(targetUrl + "/suspend").setContentLength(b.toString().length()).setBody(b.toString()).execute().get();
+            Response r = c.preparePost(targetUrl + "/suspend").setBody(b.toString()).execute().get();
             assertEquals(r.getStatusCode(), 200);
 
             l.await(5, TimeUnit.SECONDS);
@@ -1140,7 +1143,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<Response> response = new AtomicReference<Response>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncHandler<Response>() {
 
@@ -1152,21 +1155,21 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
                     b.accumulate(bodyPart);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                public State onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
                     b.accumulate(responseStatus);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
-                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     b.accumulate(headers);
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
                 @Override
@@ -1186,7 +1189,7 @@ public class NettyAtmosphereTest extends BaseTest {
             }
             b.append("message");
 
-            Response r = c.preparePost(targetUrl + "/suspend").setContentLength(b.toString().length()).setBody(b.toString()).execute().get();
+            Response r = c.preparePost(targetUrl + "/suspend").setBody(b.toString()).execute().get();
             assertEquals(r.getStatusCode(), 200);
 
             l.await(5, TimeUnit.SECONDS);
@@ -1250,7 +1253,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
@@ -1300,7 +1303,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
@@ -1370,7 +1373,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         final AtomicReference<String> response = new AtomicReference<String>();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();

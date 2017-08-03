@@ -55,8 +55,8 @@
             <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
-        	<groupId>com.ning</groupId>
-        	<artifactId>async-http-client</artifactId>
+        	<groupId>org.asynchttpclient</groupId>
+            <artifactId>async-http-client</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

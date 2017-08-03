@@ -15,26 +15,6 @@
  */
 package org.atmosphere.nettosphere.test;
 
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.HttpResponseBodyPart;
-import com.ning.http.client.HttpResponseHeaders;
-import com.ning.http.client.HttpResponseStatus;
-import com.ning.http.client.Response;
-import org.atmosphere.nettosphere.Config;
-import org.atmosphere.nettosphere.Nettosphere;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.STREAMING_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
@@ -42,6 +22,27 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.HttpResponseBodyPart;
+import org.asynchttpclient.HttpResponseHeaders;
+import org.asynchttpclient.HttpResponseStatus;
+import org.asynchttpclient.Response;
+import org.atmosphere.nettosphere.Config;
+import org.atmosphere.nettosphere.Nettosphere;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class NettyJerseyTest extends BaseTest {
 
@@ -74,7 +75,7 @@ public class NettyJerseyTest extends BaseTest {
     public void testSuspendTimeout() {
         logger.info("{}: running test: testSuspendTimeout", getClass().getSimpleName());
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        DefaultAsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             long t1 = System.currentTimeMillis();
             Response r = c.prepareGet(urlTarget).setHeader(X_ATMOSPHERE_TRANSPORT, LONG_POLLING_TRANSPORT).execute().get(20, TimeUnit.SECONDS);
@@ -93,10 +94,10 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = false)
-    public void testProgrammaticResume() {
+    public void testProgrammaticResume() throws IOException {
         logger.info("{}: running test: testProgrammaticResume", getClass().getSimpleName());
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         final AtomicReference<String> location = new AtomicReference<String>();
         final AtomicReference<String> response = new AtomicReference<String>("");
         final CountDownLatch latch = new CountDownLatch(1);
@@ -108,21 +109,21 @@ public class NettyJerseyTest extends BaseTest {
                     fail("onThrowable", throwable);
                 }
 
-                public STATE onBodyPartReceived(HttpResponseBodyPart bp) throws Exception {
+                public State onBodyPartReceived(HttpResponseBodyPart bp) throws Exception {
 
                     logger.info("body part byte string: {}", new String(bp.getBodyPartBytes()));
                     response.set(response.get() + new String(bp.getBodyPartBytes()));
                     locationLatch.countDown();
-                    return STATE.CONTINUE;
+                    return State.CONTINUE;
                 }
 
-                public STATE onStatusReceived(HttpResponseStatus hs) throws Exception {
-                    return STATE.CONTINUE;
+                public State onStatusReceived(HttpResponseStatus hs) throws Exception {
+                    return State.CONTINUE;
                 }
 
-                public STATE onHeadersReceived(HttpResponseHeaders rh) throws Exception {
-                    location.set(rh.getHeaders().getFirstValue("Location"));
-                    return STATE.CONTINUE;
+                public State onHeadersReceived(HttpResponseHeaders rh) throws Exception {
+                    location.set(rh.getHeaders().get("Location"));
+                    return State.CONTINUE;
                 }
 
                 public String onCompleted() throws Exception {
@@ -148,10 +149,10 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testResumeOnBroadcastUsingBroadcasterFactory() {
+    public void testResumeOnBroadcastUsingBroadcasterFactory() throws IOException {
         logger.info("{}: running test: testResumeOnBroadcast", getClass().getSimpleName());
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         long t1 = System.currentTimeMillis();
 
         try {
@@ -169,11 +170,11 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testDelayBroadcast() {
+    public void testDelayBroadcast() throws IOException {
         logger.info("{}: running test: testDelayBroadcast", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
@@ -214,13 +215,13 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testDelayNextBroadcast() {
+    public void testDelayNextBroadcast() throws IOException {
         logger.info("{}: running test: testDelayNextBroadcast", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
 
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
@@ -263,12 +264,12 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testScheduleBroadcast() {
+    public void testScheduleBroadcast() throws IOException {
         logger.info("{}: running test: testScheduleBroadcast", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
@@ -309,12 +310,12 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testBroadcastFilter() {
+    public void testBroadcastFilter() throws IOException {
         logger.info("{}: running test: testBroadcastFilter", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/foreverWithoutComments").setHeader(X_ATMOSPHERE_TRANSPORT, STREAMING_TRANSPORT).execute(new AsyncCompletionHandler<Response>() {
@@ -353,12 +354,12 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = false)
-    public void testAggregateFilter() {
+    public void testAggregateFilter() throws IOException {
         logger.info("{}: running test: testAggregateFilter", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
         long t1 = System.currentTimeMillis();
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/foreverWithoutComments").execute(new AsyncCompletionHandler<Response>() {
@@ -406,11 +407,11 @@ public class NettyJerseyTest extends BaseTest {
     }
 
     @Test(timeOut = 20000, enabled = true)
-    public void testProgrammaticDelayBroadcast() {
+    public void testProgrammaticDelayBroadcast() throws IOException {
         logger.info("{}: running test: testDelayBroadcast", getClass().getSimpleName());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        AsyncHttpClient c = new AsyncHttpClient();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             final AtomicReference<Response> response = new AtomicReference<Response>();
             c.prepareGet(urlTarget + "/forever").setHeader(X_ATMOSPHERE_TRANSPORT, "streaming").execute(new AsyncCompletionHandler<Response>() {
