@@ -43,13 +43,10 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.HttpResponseBodyPart;
-import org.asynchttpclient.HttpResponseHeaders;
 import org.asynchttpclient.HttpResponseStatus;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.ws.WebSocket;
-import org.asynchttpclient.ws.WebSocketPingListener;
-import org.asynchttpclient.ws.WebSocketPongListener;
-import org.asynchttpclient.ws.WebSocketTextListener;
+import org.asynchttpclient.ws.WebSocketListener;
 import org.asynchttpclient.ws.WebSocketUpgradeHandler;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereHandler;
@@ -67,6 +64,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
@@ -206,7 +204,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return State.CONTINUE;
                 }
@@ -301,7 +299,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return State.CONTINUE;
                 }
@@ -374,10 +372,10 @@ public class NettyAtmosphereTest extends BaseTest {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -386,7 +384,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                     l.countDown();
                 }
 
@@ -394,11 +392,11 @@ public class NettyAtmosphereTest extends BaseTest {
                 public void onError(Throwable t) {
                     l.countDown();
                 }
-            }).sendMessage("Ping");
+            }).sendTextFrame("Ping");
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), RESUME);
         } finally {
             c.close();
@@ -448,10 +446,10 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -460,7 +458,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                     l.countDown();
                 }
 
@@ -468,11 +466,11 @@ public class NettyAtmosphereTest extends BaseTest {
                 public void onError(Throwable t) {
                     l.countDown();
                 }
-            }).sendMessage("Ping");
+            }).sendTextFrame("Ping");
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), RESUME);
         } finally {
             c.close();
@@ -506,10 +504,10 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -518,18 +516,18 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                 }
 
                 @Override
                 public void onError(Throwable t) {
                 }
             });
-            webSocket.sendMessage("Hello World from Nettosphere");
+            webSocket.sendTextFrame("Hello World from Nettosphere");
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -563,10 +561,10 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -575,17 +573,17 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                 }
 
                 @Override
                 public void onError(Throwable t) {
                 }
             });
-            webSocket.sendMessage("Hello World from Nettosphere");
+            webSocket.sendTextFrame("Hello World from Nettosphere");
 
             l.await(5, TimeUnit.SECONDS);
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -644,7 +642,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
                 .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
-                .setAcceptAnyCertificate(true)
+                .setUseInsecureTrustManager(true)
                 .build());
         try {
             Response response = c.prepareGet("https://127.0.0.1:" + port).execute().get();
@@ -680,16 +678,16 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
-                .setAcceptAnyCertificate(true)
+        		.setUseInsecureTrustManager(true)
                 .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();
             WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -698,7 +696,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                 }
 
                 @Override
@@ -708,7 +706,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -738,17 +736,17 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
-                .setAcceptAnyCertificate(true)
+        		.setUseInsecureTrustManager(true)
                 .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
                 .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();
             WebSocket webSocket = c.prepareGet("wss://127.0.0.1:" + port).execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -757,7 +755,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                 }
 
                 @Override
@@ -767,7 +765,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
         } finally {
             c.close();
@@ -852,7 +850,7 @@ public class NettyAtmosphereTest extends BaseTest {
         assertNotNull(server);
         server.start();
 
-        final AtomicReference<HttpResponseHeaders> response = new AtomicReference<HttpResponseHeaders>();
+        final AtomicReference<HttpHeaders> response = new AtomicReference<HttpHeaders>();
         AsyncHttpClient c = new DefaultAsyncHttpClient();
         try {
             c.prepareGet(targetUrl + "/suspend?" + X_ATMOSPHERE_TRANSPORT + "=" + HeaderConfig.LONG_POLLING_TRANSPORT).execute(new AsyncHandler<Response>() {
@@ -873,7 +871,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     response.set(headers);
                     l.countDown();
                     return State.ABORT;
@@ -965,7 +963,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return State.CONTINUE;
                 }
@@ -1063,7 +1061,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return State.CONTINUE;
                 }
@@ -1167,7 +1165,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                public State onHeadersReceived(HttpHeaders headers) throws Exception {
                     b.accumulate(headers);
                     return State.CONTINUE;
                 }
@@ -1257,9 +1255,9 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketPongListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onPong(byte[] message) {
+                public void onPongFrame(byte[] message) {
                     response.set(new String(message));
                     l.countDown();
                 }
@@ -1270,7 +1268,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
 
                 }
 
@@ -1278,11 +1276,11 @@ public class NettyAtmosphereTest extends BaseTest {
                 public void onError(Throwable t) {
 
                 }
-            }).sendPing("Hello from Client".getBytes());
+            }).sendPingFrame("Hello from Client".getBytes());
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello from server");
         } finally {
             c.close();
@@ -1307,9 +1305,9 @@ public class NettyAtmosphereTest extends BaseTest {
         try {
             WebSocket webSocket = c.prepareGet(wsUrl + "/pingPong").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketPingListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onPing(byte[] message) {
+                public void onPingFrame(byte[] message) {
                     response.set(new String(message));
                     l.countDown();
                 }
@@ -1320,7 +1318,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
 
                 }
 
@@ -1328,11 +1326,11 @@ public class NettyAtmosphereTest extends BaseTest {
                 public void onError(Throwable t) {
 
                 }
-            }).sendPong("Hello from Client".getBytes());
+            }).sendPongFrame("Hello from Client".getBytes());
 
             l.await(5, TimeUnit.SECONDS);
 
-            webSocket.close();
+            webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello from server");
         } finally {
             c.close();
@@ -1378,10 +1376,10 @@ public class NettyAtmosphereTest extends BaseTest {
             WebSocket webSocket = c.prepareGet(wsUrl + "/suspend")
                     .addHeader("Sec-WebSocket-Protocol", "jfa-protocol").execute(new WebSocketUpgradeHandler.Builder().build()).get();
             assertNotNull(webSocket);
-            webSocket.addWebSocketListener(new WebSocketTextListener() {
+            webSocket.addWebSocketListener(new WebSocketListener() {
                 @Override
-                public void onMessage(String message) {
-                    response.set(message);
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
                     l.countDown();
                 }
 
@@ -1390,7 +1388,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
 
                 @Override
-                public void onClose(WebSocket websocket) {
+                public void onClose(WebSocket websocket, int code, String reason) {
                     l.countDown();
                 }
 

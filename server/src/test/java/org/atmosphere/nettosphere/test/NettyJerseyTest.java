@@ -33,7 +33,6 @@ import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.HttpResponseBodyPart;
-import org.asynchttpclient.HttpResponseHeaders;
 import org.asynchttpclient.HttpResponseStatus;
 import org.asynchttpclient.Response;
 import org.atmosphere.nettosphere.Config;
@@ -43,6 +42,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import io.netty.handler.codec.http.HttpHeaders;
 
 public class NettyJerseyTest extends BaseTest {
 
@@ -121,8 +122,8 @@ public class NettyJerseyTest extends BaseTest {
                     return State.CONTINUE;
                 }
 
-                public State onHeadersReceived(HttpResponseHeaders rh) throws Exception {
-                    location.set(rh.getHeaders().get("Location"));
+                public State onHeadersReceived(HttpHeaders rh) throws Exception {
+                    location.set(rh.get("Location"));
                     return State.CONTINUE;
                 }
 
