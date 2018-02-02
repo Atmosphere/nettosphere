@@ -397,7 +397,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                                     }
                                 }
                             }, webSocketTimeout, webSocketTimeout, TimeUnit.MILLISECONDS));
-                        }
+                        }                                                                                                                                       
                     }
                 }
             });
@@ -413,7 +413,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         WebSocket attachment = WebSocket.class.cast(ctx.channel().attr(ATTACHMENT).get());
         ByteBuf binaryData = frame.content();
         byte[] body = null;
-        if (binaryData.isReadable()) {
+        if (!(frame instanceof TextWebSocketFrame) && binaryData.isReadable()) {
             body = new byte[binaryData.readableBytes()];
             binaryData.readBytes(body);
         }
@@ -565,7 +565,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 if (!hrequest.getUri().contains(HeaderConfig.X_ATMOSPHERE)) {
                     try {
                         hrequest.headers().add(STATIC_MAPPING, "true");
-                        super.channelRead(ctx, messageEvent);
+                        super.channelRead0(ctx, (FullHttpRequest) messageEvent);
 
                         if (HttpHeaders.getHeader(hrequest, SERVICED) != null) {
                             return;
@@ -585,7 +585,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 method = hrequest.getMethod().name();
 
                 request = createAtmosphereRequest(ctx, hrequest, body);
-                request.setAttribute(KEEP_ALIVE, new Boolean(ka));
+                request.setAttribute(KEEP_ALIVE, ka);
 
                 // Hacky. Is the POST doesn't contains a body, we must not close the connection yet.
                 AtmosphereRequestImpl.Body b = request.body();
