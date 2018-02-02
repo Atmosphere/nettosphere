@@ -413,7 +413,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         WebSocket attachment = WebSocket.class.cast(ctx.channel().attr(ATTACHMENT).get());
         ByteBuf binaryData = frame.content();
         byte[] body = null;
-        if (!(frame instanceof TextWebSocketFrame) && binaryData.isReadable()) {
+        if ((config.textFrameAsBinary() || !(frame instanceof TextWebSocketFrame)) && binaryData.isReadable()) {
             body = new byte[binaryData.readableBytes()];
             binaryData.readBytes(body);
         }
