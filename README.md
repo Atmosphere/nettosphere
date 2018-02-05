@@ -53,9 +53,6 @@ or
                  .build();
     server.start();
 ```
-
-All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the-atmosphere-framework-using-websocket-long-polling-and-http-streaming/) API supported. As simple as:
-
 [Top](#Top)
 
 ### Server static and dynamic resources, use atmosphere.xml to configure NettoSphere
@@ -146,13 +143,8 @@ All [Atmosphere](http://jfarcand.wordpress.com/2011/11/07/hitchiker-guide-to-the
 
 #### [Change Log](./CHANGELOG.md)
 
-2.4 release: [2.4.0]()
+3.0.1 release Netty 4.1.20.Final and Atmosphere 2.4.20 support.
 2.3 release: [2.3.3](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.3+is%3Aclosed) [2.3.2](https://goo.gl/gaTKLZ ) [2.3.1](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.1+is%3Aclosed) [2.3.0](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.0+is%3Aclosed)
-
 2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
-
 2.0 release: [2.0.2](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.2&page=1&sort=updated&state=closed) [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
 
-We are on irc.freenode.net under #atmosphere-comet and [Twitter](http://twitter.com/jfarcand)
-
-[![Analytics](https://ga-beacon.appspot.com/UA-31990725-2/Atmosphere/nettosphere)]
