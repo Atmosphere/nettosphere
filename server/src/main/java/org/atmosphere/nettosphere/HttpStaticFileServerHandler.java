@@ -174,12 +174,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
                 path += "index.html";
             }
 
-            if (path.endsWith("/favicon.ico") || path.endsWith(File.separator)) {
-                request.headers().add(SERVICED, "true");
-                found = false;
-                continue;
-            }
-
             file = new File(path);
             if (file.isHidden() || !file.exists() || !file.isFile()) {
                 found = false;
