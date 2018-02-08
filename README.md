@@ -143,7 +143,7 @@ or
 
 #### [Change Log](./CHANGELOG.md)
 
-3.0.1 release Netty 4.1.20.Final and Atmosphere 2.4.20 support.
+3.0.x release Netty 4.1.21.Final and Atmosphere 2.4.20 support.
 2.3 release: [2.3.3](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.3+is%3Aclosed) [2.3.2](https://goo.gl/gaTKLZ ) [2.3.1](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.1+is%3Aclosed) [2.3.0](https://github.com/Atmosphere/nettosphere/issues?q=label%3A2.3.0+is%3Aclosed)
 2.1 release: [2.1.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.1.1&page=1&sort=updated&state=closed)
 2.0 release: [2.0.2](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.2&page=1&sort=updated&state=closed) [2.0.1](https://github.com/Atmosphere/nettosphere/issues?labels=2.0.1&milestone=&page=1&sort=updated&state=closed)
