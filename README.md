@@ -8,7 +8,7 @@ The easiest way to get started with NettoSphere is to download a sample and star
    % ./bin/nettosphere.sh
 ```
 
-[Samples](https://github.com/Atmosphere/atmosphere-samples/tree/master/nettosphere-samples) are the same as then one available in Atmosphere. Bootstrap classes looks like [AtmosphereHandler](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Jersey](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
+[Samples](https://github.com/Atmosphere/atmosphere-samples/tree/master/nettosphere-samples) are the same as the ones available in Atmosphere. Bootstrap classes looks like [Bootstrap](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/chat/src/main/java/org/nettosphere/samples/chat/NettosphereChat.java#L27) or [Bootstrap Jersey](https://github.com/Atmosphere/atmosphere-samples/blob/master/nettosphere-samples/jersey-chat/src/main/java/org/nettosphere/samples/chat/NettosphereJerseyChat.java#L31)
 
 Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphere) or use Maven
 
