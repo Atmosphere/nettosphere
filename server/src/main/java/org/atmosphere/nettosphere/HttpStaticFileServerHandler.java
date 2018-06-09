@@ -146,7 +146,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
     public final static String STATIC_MAPPING = SimpleChannelInboundHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelInboundHandler.class.getName() + ".serviced";
     private final List<String> paths;
-    private String defaultContentType = "text/html";
+    private static final String defaultContentType = "text/html";
 
     public HttpStaticFileServerHandler(List<String> paths) {
         this.paths = paths;
@@ -216,7 +216,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
             long fileLastModifiedSeconds = file.lastModified() / 1000;
             if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
-                sendNotModified(ctx);
+                sendNotModified(ctx, request, file);
                 return;
             }
         }
@@ -351,12 +351,13 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
      * @param ctx
      *            Context
      */
-    private static void sendNotModified(ChannelHandlerContext ctx) {
+    private static void sendNotModified(ChannelHandlerContext ctx, FullHttpRequest request, File resource) {
         FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
         setDateHeader(response);
-
+	    contentType(request, response, resource);
         // Close the connection as soon as the error message is sent.
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+//        ctx.channel().write(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
@@ -410,7 +411,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
     }
 
-    protected void contentType(FullHttpRequest request, HttpResponse response, File resource) {
+    private static void contentType(FullHttpRequest request, HttpResponse response, File resource) {
         String substr;
         String uri = request.getUri();
         int dot = uri.lastIndexOf(".");
@@ -425,7 +426,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             String ext = substr.substring(dot + 1);
             int queryString = ext.indexOf("?");
             if (queryString > 0) {
-                ext.substring(0, queryString);
+                ext = ext.substring(0, queryString);
             }
             String contentType = MimeType.get(ext, defaultContentType);
             response.headers().add(HttpHeaders.Names.CONTENT_TYPE, contentType);
