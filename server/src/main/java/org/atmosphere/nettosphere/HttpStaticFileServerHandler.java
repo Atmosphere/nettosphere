@@ -74,9 +74,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.LOCATION;
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
@@ -205,6 +203,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         }
         request.headers().add(SERVICED, "true");
 
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
         // Cache Validation
         String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
         if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {
@@ -216,7 +216,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
             long fileLastModifiedSeconds = file.lastModified() / 1000;
             if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
-                sendNotModified(ctx, request, file);
+                sendNotModified(ctx);
                 return;
             }
         }
@@ -224,7 +224,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
 
         long fileLength = raf.length();
 
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
         HttpHeaders.setContentLength(response, fileLength);
         contentType(request, response, file);
@@ -351,13 +351,12 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
      * @param ctx
      *            Context
      */
-    private static void sendNotModified(ChannelHandlerContext ctx, FullHttpRequest request, File resource) {
+    private static void sendNotModified(ChannelHandlerContext ctx) {
         FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
         setDateHeader(response);
-	    contentType(request, response, resource);
+
         // Close the connection as soon as the error message is sent.
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-//        ctx.channel().write(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
