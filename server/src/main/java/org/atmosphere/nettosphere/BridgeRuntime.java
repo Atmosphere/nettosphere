@@ -420,7 +420,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (frame instanceof CloseWebSocketFrame) {
             ctx.channel().write(frame).addListener(ChannelFutureListener.CLOSE);
         } else if (frame instanceof PingWebSocketFrame) {
-            if (WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
+            if (body != null && WebSocketPingPongListener.class.isAssignableFrom(webSocketProcessor.getClass())) {
                 WebSocketPingPongListener.class.cast(webSocketProcessor).onPing(attachment, body, 0, body.length);
             } else {
                 ctx.channel().writeAndFlush(new PongWebSocketFrame(binaryData));

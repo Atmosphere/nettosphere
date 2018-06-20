@@ -75,7 +75,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;	
 import static io.netty.handler.codec.http.HttpHeaders.Names.LOCATION;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -146,7 +146,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
     public final static String STATIC_MAPPING = SimpleChannelInboundHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelInboundHandler.class.getName() + ".serviced";
     private final List<String> paths;
-    private String defaultContentType = "text/html";
+    private static final String defaultContentType = "text/html";
 
     public HttpStaticFileServerHandler(List<String> paths) {
         this.paths = paths;
@@ -205,6 +205,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         }
         request.headers().add(SERVICED, "true");
 
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
         // Cache Validation
         String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
         if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {
@@ -224,7 +226,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
 
         long fileLength = raf.length();
 
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
         HttpHeaders.setContentLength(response, fileLength);
         contentType(request, response, file);
@@ -410,7 +412,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
     }
 
-    protected void contentType(FullHttpRequest request, HttpResponse response, File resource) {
+    private static void contentType(FullHttpRequest request, HttpResponse response, File resource) {
         String substr;
         String uri = request.getUri();
         int dot = uri.lastIndexOf(".");
@@ -425,7 +427,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             String ext = substr.substring(dot + 1);
             int queryString = ext.indexOf("?");
             if (queryString > 0) {
-                ext.substring(0, queryString);
+                ext = ext.substring(0, queryString);
             }
             String contentType = MimeType.get(ext, defaultContentType);
             response.headers().add(HttpHeaders.Names.CONTENT_TYPE, contentType);
