@@ -175,7 +175,7 @@ public class Context {
     }
 
     public String getServerInfo() {
-        return "Nettosphere/2.0";
+        return "Nettosphere/3.0";
     }
 
     public String getInitParameter(String name) {
