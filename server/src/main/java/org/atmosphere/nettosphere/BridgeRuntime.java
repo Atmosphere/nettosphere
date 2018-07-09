@@ -575,7 +575,15 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
 
                 boolean ka = HttpHeaders.isKeepAlive(hrequest);
-                asyncWriter = config.supportChunking() ?
+
+                boolean supportChunking = config.supportChunking();
+
+                // Disable Chunking for Http/1.0
+                if(hrequest.protocolVersion().majorVersion() == 1 && hrequest.protocolVersion().minorVersion() == 0){
+                    supportChunking = false;
+                }
+
+                asyncWriter = supportChunking ?
                         new ChunkedWriter(ctx.channel(), true, ka) :
                         new StreamWriter(ctx.channel(), true, ka);
 
