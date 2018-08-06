@@ -64,6 +64,7 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
+import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
@@ -626,7 +627,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     .writeHeader(writeHeader)
                     .destroyable(false)
                     .header("Connection", "Keep-Alive")
-                    .header("Server", "Nettosphere/3.0")
+                    .header("Server", "Nettosphere/" + Version.getDotedVersion())
                     .request(request).build();
 
             if (config.supportChunking()) {
