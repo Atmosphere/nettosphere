@@ -146,7 +146,6 @@ public class NettyWebSocket extends WebSocket {
 
     public void recycle() {
         if (headers != null) headers.clear();
-        channel = null;
     }
 
     /**
