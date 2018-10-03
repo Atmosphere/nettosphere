@@ -24,7 +24,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.TooLongFrameException;
-import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
@@ -105,7 +105,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static io.netty.channel.ChannelHandler.Sharable;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -334,11 +333,9 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             if (webSocket) {
                 handleWebSocketHandshake(ctx, messageEvent);
             } else {
-
-
                 if (config.webSocketOnly()) {
                     logger.trace("Forbidenn {}", ctx);
-                    sendHttpResponse(ctx, r, new DefaultHttpResponse(HTTP_1_1, FORBIDDEN));
+                    sendHttpResponse(ctx, r, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
                     return;
                 }
 
@@ -356,10 +353,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         // Allow only GET methods.
         if (request.getMethod() != GET) {
-            sendHttpResponse(ctx, request, new DefaultHttpResponse(HTTP_1_1, FORBIDDEN));
+            sendHttpResponse(ctx, request, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
             return;
         }
-
+        
         ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
                 config.subProtocols(),
@@ -474,7 +471,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         }
 
         String u = requestUri.toURL().toString();
-        int last = u.indexOf("?") == -1 ? u.length() : u.indexOf("?");
+        int last = !u.contains("?") ? u.length() : u.indexOf("?");
         String url = u.substring(0, last);
         int l;
 
@@ -579,7 +576,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 boolean supportChunking = config.supportChunking();
 
                 // Disable Chunking for Http/1.0
-                if(hrequest.protocolVersion().majorVersion() == 1 && hrequest.protocolVersion().minorVersion() == 0){
+                if (hrequest.protocolVersion().majorVersion() == 1 && hrequest.protocolVersion().minorVersion() == 0) {
                     supportChunking = false;
                 }
 
@@ -840,15 +837,17 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
         // Generate an error page if response status code is not OK (200).
         if (res.getStatus().code() != 200) {
             FullHttpResponse response = (FullHttpResponse) res;
             response.content().writeBytes(Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
-            setContentLength(res, response.content().readableBytes());
+            io.netty.handler.codec.http.HttpUtil.setContentLength(res, response.content().readableBytes());
+            io.netty.handler.codec.http.HttpUtil.setKeepAlive(res, false);
         }
 
         // Send the response and close the connection if necessary.
-        ChannelFuture f = ctx.channel().write(res);
+        ChannelFuture f = ctx.channel().writeAndFlush(res);
         if (!isKeepAlive(req) || res.getStatus().code() != 200) {
             f.addListener(ChannelFutureListener.CLOSE);
         }
