@@ -764,18 +764,28 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
-        // Ignore Disconnect exception.
-        if (e.getCause() != null
-                && (e.getCause().getClass().equals(ClosedChannelException.class)
-                || e.getCause().getClass().equals(IOException.class))) {
-            logger.trace("Exception", e.getCause());
-        } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
-            logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
-            super.exceptionCaught(ctx, e);
-        } else {
-            logger.debug("Exception", e.getCause());
-            super.exceptionCaught(ctx, e);
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e){
+
+        if (config.ioExceptionHandler().of(ctx, e)) {
+            try {
+                if (e.getCause() != null
+                        && (e.getCause().getClass().equals(ClosedChannelException.class)
+                        || e.getCause().getClass().equals(IOException.class))) {
+                    logger.trace("Unexpected I/O Exception", e.getCause());
+                } else if (e.getCause() != null && e.getCause().getClass().equals(TooLongFrameException.class)) {
+                    logger.error("TooLongFrameException. The request will be closed, make sure you increase the Config.maxChunkContentLength() to a higher value.", e.getCause());
+                    super.exceptionCaught(ctx, e);
+                } else {
+                    logger.error("Unexpected and unhandled I/O Exception", e);
+                    super.exceptionCaught(ctx, e);
+                }
+            } finally {
+                try {
+                    ctx.channel().close();
+                } catch (Exception ex) {
+                    logger.trace("", ex);
+                }
+            }
         }
     }
 

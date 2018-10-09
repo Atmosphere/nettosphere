@@ -202,10 +202,10 @@ public class Config {
         return b.webSocketOnly;
     }
 
-
     public boolean epoll() {
         return b.epoll;
     }
+    public IOExceptionHandler ioExceptionHandler() { return b.ioExceptionHandler;}
 
     public final static class Builder {
         private final List<String> paths = new ArrayList<String>();
@@ -243,11 +243,24 @@ public class Config {
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
         private boolean textFrameAsBinary = false;
-        public String subProtocols = "";
+        private String subProtocols = "";
         private boolean noInternalAlloc = false;
         private boolean binaryWrite = false;
-        public boolean epoll = false;
-        public boolean webSocketOnly;
+        private boolean epoll = false;
+        private boolean webSocketOnly;
+        private boolean shareHeaders;
+        private IOExceptionHandler ioExceptionHandler = (ctx, e) -> true;
+
+        /**
+         * Share underlying headers map with newly created WebSocket. Best used when {@link #noInternalAlloc} is set to true.
+         * Default is false
+         * @param shareHeaders
+         * @return
+         */
+        public Builder shareHeaders(boolean  shareHeaders) {
+            this.shareHeaders = shareHeaders;
+            return this;
+        }
 
         /**
          * Set an SSLContext in order enable SSL
@@ -597,9 +610,9 @@ public class Config {
         }
 
         /**
-         * Add a {@link ChannelUpstreamHandler}. All will be executed before {@link BridgeRuntime}
+         * Add a {@link ChannelInboundHandler}. All will be executed before {@link BridgeRuntime}
          *
-         * @param h {@link ChannelUpstreamHandler}
+         * @param h {@link ChannelInboundHandler}
          * @return this;
          */
         public Builder channelUpstreamHandler(ChannelInboundHandler h) {
@@ -717,6 +730,16 @@ public class Config {
          */
         public Builder webSocketOnly(boolean webSocketOnly) {
             this.webSocketOnly = webSocketOnly;
+            return this;
+        }
+
+        /**
+         * Set an {@link IOExceptionHandler} to handle unexpected I/O exception
+         * @param ioExceptionHandler
+         * @return this
+         */
+        public Builder ioExceptionHandler(IOExceptionHandler ioExceptionHandler) {
+            this.ioExceptionHandler = ioExceptionHandler;
             return this;
         }
 
