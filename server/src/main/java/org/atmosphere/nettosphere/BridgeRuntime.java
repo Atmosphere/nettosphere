@@ -759,7 +759,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 asynchronousProcessor.endRequest(s.resource(), true);
             }
         } else {
-            logger.error("Invalid state {} and Channel {}", o, ctx.channel());
+            logger.warn("Invalid state {} and Channel {}", o, ctx.channel());
         }
     }
 
