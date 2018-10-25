@@ -64,6 +64,7 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.FrameworkConfig;
 import org.atmosphere.cpr.HeaderConfig;
 import org.atmosphere.cpr.WebSocketProcessorFactory;
+import org.atmosphere.nettosphere.util.Version;
 import org.atmosphere.util.FakeHttpSession;
 import org.atmosphere.websocket.WebSocket;
 import org.atmosphere.websocket.WebSocketEventListener;
@@ -542,6 +543,8 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         boolean forceSuspend = false;
         boolean aggregateBodyInMemory = config.aggregateRequestBodyInMemory();
 
+        boolean supportChunking = config.supportChunking();
+
         try {
             if (messageEvent instanceof HttpRequest) {
                 final HttpRequest hrequest = (HttpRequest) messageEvent;
@@ -572,8 +575,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                 }
 
                 boolean ka = HttpHeaders.isKeepAlive(hrequest);
-
-                boolean supportChunking = config.supportChunking();
 
                 // Disable Chunking for Http/1.0
                 if (hrequest.protocolVersion().majorVersion() == 1 && hrequest.protocolVersion().minorVersion() == 0) {
@@ -626,10 +627,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
                     .writeHeader(writeHeader)
                     .destroyable(false)
                     .header("Connection", "Keep-Alive")
-                    .header("Server", "Nettosphere/3.0")
+                    .header("Server", "Nettosphere/" + Version.getDotedVersion())
                     .request(request).build();
 
-            if (config.supportChunking()) {
+
+            if (supportChunking) {
                 response.setHeader("Transfer-Encoding", "chunked");
             }
 
