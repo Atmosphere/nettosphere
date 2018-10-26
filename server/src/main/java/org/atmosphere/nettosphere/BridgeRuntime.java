@@ -770,7 +770,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
         if (config.ioExceptionHandler().of(ctx, e)) {
             try {
-                if (e.getCause() != null
+
+                if (e instanceof IOException) {
+                    logger.trace("Unexpected I/O Exception", e);
+                } else if (e.getCause() != null
                         && (e.getCause().getClass().equals(ClosedChannelException.class)
                         || e.getCause().getClass().equals(IOException.class))) {
                     logger.trace("Unexpected I/O Exception", e.getCause());
