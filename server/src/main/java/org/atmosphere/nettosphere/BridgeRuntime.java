@@ -772,7 +772,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             try {
 
                 if (e instanceof IOException) {
-                    logger.trace("Unexpected I/O Exception", e);
+                    logger.trace("Connection closed Exception", e);
                 } else if (e.getCause() != null
                         && (e.getCause().getClass().equals(ClosedChannelException.class)
                         || e.getCause().getClass().equals(IOException.class))) {
