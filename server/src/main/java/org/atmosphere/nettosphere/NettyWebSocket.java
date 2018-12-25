@@ -83,7 +83,7 @@ public class NettyWebSocket extends WebSocket {
     @Override
     public WebSocket write(String data) throws IOException {
         firstWrite.set(true);
-        if (!channel.isOpen()) throw REMOTELY_CLOSED;
+        if (channel == null || !channel.isOpen()) throw REMOTELY_CLOSED;
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data.getBytes("UTF-8"))));
@@ -111,7 +111,7 @@ public class NettyWebSocket extends WebSocket {
     void _write(byte[] data, int offset, int length) throws IOException {
         firstWrite.set(true);
 
-        if (!channel.isOpen()) throw REMOTELY_CLOSED;
+        if (channel == null || !channel.isOpen()) throw REMOTELY_CLOSED;
 
         if (binaryWrite) {
             channel.write(new BinaryWebSocketFrame(ChannelBuffers.wrappedBuffer(data, offset, length)));
@@ -123,6 +123,9 @@ public class NettyWebSocket extends WebSocket {
 
     @Override
     public boolean isOpen() {
+        if (channel == null) {
+            return false;
+        }
         return channel.isOpen();
     }
 
@@ -146,6 +149,7 @@ public class NettyWebSocket extends WebSocket {
 
     public void recycle() {
         if (headers != null) headers.clear();
+        channel = null;
     }
 
     /**
