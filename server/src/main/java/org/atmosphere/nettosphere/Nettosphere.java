@@ -141,6 +141,8 @@ public final class Nettosphere {
             final ChannelGroupFuture future = ALL_CHANNELS.close();
             future.awaitUninterruptibly();
             ALL_CHANNELS.clear();
+            parentGroup.shutdownGracefully();
+            childGroup.shutdownGracefully();
         }
     }
 
