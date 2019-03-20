@@ -137,12 +137,16 @@ public final class Nettosphere {
      */
     public void stop() {
         if (started.getAndSet(false)) {
+          try {
             runtime.destroy();
             final ChannelGroupFuture future = ALL_CHANNELS.close();
             future.awaitUninterruptibly();
             ALL_CHANNELS.clear();
-            parentGroup.shutdownGracefully();
-            childGroup.shutdownGracefully();
+            parentGroup.shutdownGracefully().sync();
+            childGroup.shutdownGracefully().sync();
+          } catch(Exception ex) {
+            logger.error("stop threw", ex);
+          }
         }
     }
 
