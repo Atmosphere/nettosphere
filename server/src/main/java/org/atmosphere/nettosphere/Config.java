@@ -178,6 +178,10 @@ public class Config {
         return b.maxWebSocketFrameSize;
     }
 
+    public int maxWebSocketFrameAggregatorContentLength() {
+        return b.maxWebSocketFrameAggregatorContentLength;
+    }
+
     public boolean textFrameAsBinary() {
         return b.textFrameAsBinary;
     }
@@ -242,6 +246,7 @@ public class Config {
         private int maxContentLength = 65536;
         private boolean enablePong = false;
         private int maxWebSocketFrameSize = 65536;
+        private int maxWebSocketFrameAggregatorContentLength = 65536;
         private boolean textFrameAsBinary = false;
         private String subProtocols = "";
         private boolean noInternalAlloc = false;
@@ -303,6 +308,17 @@ public class Config {
          */
         public Builder maxWebSocketFrameSize(int maxWebSocketFrameSize) {
             this.maxWebSocketFrameSize = maxWebSocketFrameSize;
+            return this;
+        }
+
+        /**
+         * Set the maximum WebSocket Frame Aggregator Content Size. Default is 65536
+         *
+         * @param maxWebSocketFrameAggregatorContentLength the maximum WebSocket Frame Aggregator Content Size.
+         * @return this
+         */
+        public Builder maxWebSocketFrameAggregatorContentLength(int maxWebSocketFrameAggregatorContentLength) {
+            this.maxWebSocketFrameAggregatorContentLength = maxWebSocketFrameAggregatorContentLength;
             return this;
         }
 

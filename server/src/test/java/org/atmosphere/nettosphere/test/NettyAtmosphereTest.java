@@ -58,8 +58,10 @@ import org.atmosphere.nettosphere.Handler;
 import org.atmosphere.nettosphere.Nettosphere;
 import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.atmosphere.websocket.WebSocketHandler;
+import org.atmosphere.websocket.WebSocketHandlerAdapter;
 import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
+import org.atmosphere.websocket.WebSocketProcessor.WebSocketException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -585,6 +587,64 @@ public class NettyAtmosphereTest extends BaseTest {
             l.await(5, TimeUnit.SECONDS);
             webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
+        } finally {
+            c.close();
+        }
+    }
+
+    @Test
+    public void wsFramingTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .resource("/*", new WebSocketHandlerAdapter() {
+
+                    @Override
+                    public void onTextMessage(org.atmosphere.websocket.WebSocket webSocket, String data) throws IOException {
+                        webSocket.write(data);
+                    }
+
+                })
+                .build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
+                .build());
+        try {
+            final AtomicReference<String> response = new AtomicReference<String>();
+            WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketListener() {
+                @Override
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
+
+                @Override
+                public void onClose(WebSocket websocket, int code, String reason) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                }
+            });
+
+            webSocket.sendTextFrame("ECHO", false, 0);
+            webSocket.sendContinuationFrame("ECHO", true, 0);
+
+            l.await(5, TimeUnit.SECONDS);
+
+            webSocket.sendCloseFrame();
+            assertEquals(response.get(), "ECHOECHO");
         } finally {
             c.close();
         }
