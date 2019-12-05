@@ -147,9 +147,18 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public void close() {
+        _close(new CloseWebSocketFrame());
+    }
+
+    @Override
+    public void close(int statusCode, String reasonText) {
+        _close(new CloseWebSocketFrame(statusCode, reasonText));
+    }
+
+    private void  _close(CloseWebSocketFrame closeFrame) {
         if (isClosed.getAndSet(true)) return;
 
-        channel.writeAndFlush(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+        channel.writeAndFlush(closeFrame).addListener(ChannelFutureListener.CLOSE);
 
         if (closeFuture != null) {
             closeFuture.cancel(true);
