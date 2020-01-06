@@ -1,5 +1,5 @@
 /**
- * Copyright 2008-2019 Async-IO.org
+ * Copyright 2008-2020 Async-IO.org
  */
 package org.atmosphere.nettosphere;
 
