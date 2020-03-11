@@ -18,12 +18,7 @@ package org.atmosphere.nettosphere;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.atmosphere.cpr.ApplicationConfig;
+import io.netty.handler.codec.http.websocketx.*;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.nettosphere.util.Utils;
@@ -34,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -42,6 +38,7 @@ import static org.atmosphere.nettosphere.util.Utils.REMOTELY_CLOSED;
 public class NettyWebSocket extends WebSocket {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocket.class);
+
     private final Channel channel;
     private final AtomicBoolean firstWrite = new AtomicBoolean(false);
     private boolean binaryWrite = false;
@@ -50,20 +47,14 @@ public class NettyWebSocket extends WebSocket {
     private final AtomicBoolean isClosed = new AtomicBoolean();
 
     private io.netty.channel.ChannelId id;
+    private NettyWebSocketFragmenter fragmenter;
 
-    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite) {
+    public NettyWebSocket(Channel channel, AtmosphereConfig config, boolean noInternalAlloc, boolean binaryWrite, int maxFrameSize) {
         super(config);
         this.channel = channel;
 
-        String s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXBINARYSIZE);
-        if (s != null) {
-            Integer.valueOf(s);
-        }
+        this.fragmenter = new NettyWebSocketFragmenter(channel, maxFrameSize);
 
-        s = config.getInitParameter(ApplicationConfig.WEBSOCKET_MAXTEXTSIZE);
-        if (s != null) {
-            Integer.valueOf(s);
-        }
         this.noInternalAlloc = noInternalAlloc;
         this.binaryWrite = binaryWrite;
         this.lastWrite = System.currentTimeMillis();
@@ -96,22 +87,11 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public WebSocket write(String data) throws IOException {
-        firstWrite.set(true);
-        if (!channel.isOpen()) throw REMOTELY_CLOSED;
-        logger.trace("WebSocket.write() as binary {}", binaryWrite);
-
-        if (binaryWrite) {
-            channel.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data.getBytes("UTF-8"))));
-        } else {
-            channel.writeAndFlush(new TextWebSocketFrame(data));
-        }
-        lastWrite = System.currentTimeMillis();
-        return this;
+        return write(data.getBytes(StandardCharsets.UTF_8));
     }
 
     public WebSocket write(byte[] data) throws IOException {
-        _write(data, 0, data.length);
-        return this;
+        return write(data, 0, data.length);
     }
 
     /**
@@ -119,22 +99,15 @@ public class NettyWebSocket extends WebSocket {
      */
     @Override
     public WebSocket write(byte[] data, int offset, int length) throws IOException {
-        _write(data, offset, length);
-        return this;
-    }
-
-    void _write(byte[] data, int offset, int length) throws IOException {
         firstWrite.set(true);
 
         if (!channel.isOpen()) throw REMOTELY_CLOSED;
         logger.trace("WebSocket.write() as binary {}", binaryWrite);
 
-        if (binaryWrite) {
-            channel.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
-        } else {
-            channel.writeAndFlush(new TextWebSocketFrame(Unpooled.wrappedBuffer(data, offset, length)));
-        }
+        fragmenter.write(data, offset, length, binaryWrite);
         lastWrite = System.currentTimeMillis();
+
+        return this;
     }
 
     @Override
