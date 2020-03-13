@@ -837,6 +837,7 @@ public class NettyAtmosphereTest extends BaseTest {
         final CountDownLatch l = new CountDownLatch(1);
         final SSLContext sslContext = createSSLContext();
         final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
+        final int port = 8443;
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
