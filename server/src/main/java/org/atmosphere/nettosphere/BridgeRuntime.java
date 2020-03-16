@@ -369,7 +369,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         if (handshaker == null) {
             wsFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            final NettyWebSocket webSocket = new NettyWebSocket(ctx.channel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite());
+            final NettyWebSocket webSocket = new NettyWebSocket(ctx.channel(), framework.getAtmosphereConfig(), config.noInternalAlloc(), config.binaryWrite(), config.maxWebSocketFrameSize());
             final AtmosphereRequest atmosphereRequest = createAtmosphereRequest(ctx, request, EMPTY);
 
             if (!webSocketProcessor.handshake(atmosphereRequest)) {

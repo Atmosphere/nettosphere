@@ -537,6 +537,65 @@ public class NettyAtmosphereTest extends BaseTest {
     }
 
     @Test
+    public void webSocketFragmenterTest() throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final AtomicBoolean handshake = new AtomicBoolean(true);
+        String responseText = "Hello World from Nettosphere";
+
+        Config config = new Config.Builder()
+                .port(port)
+                .host("127.0.0.1")
+                .maxWebSocketFrameSize(responseText.length() - 2)
+                .resource(new Handler() {
+
+                    @Override
+                    public void handle(AtmosphereResource r) {
+                        if (!handshake.getAndSet(false)) {
+                            r.getResponse().write(responseText);
+                        }
+                    }
+                }).build();
+
+        server = new Nettosphere.Builder().config(config).build();
+        assertNotNull(server);
+        server.start();
+
+        final AtomicReference<String> response = new AtomicReference<String>();
+        AsyncHttpClient c = new DefaultAsyncHttpClient();
+        try {
+            WebSocket webSocket = c.prepareGet(wsUrl).execute(new WebSocketUpgradeHandler.Builder().build()).get();
+            assertNotNull(webSocket);
+            webSocket.addWebSocketListener(new WebSocketListener() {
+                @Override
+                public void onTextFrame(String payload, boolean finalFragment, int rsv) {
+                    response.set(payload);
+                    l.countDown();
+                }
+
+                @Override
+                public void onOpen(WebSocket websocket) {
+                }
+
+                @Override
+                public void onClose(WebSocket websocket, int code, String reason) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                }
+            });
+            webSocket.sendTextFrame("Hello");
+
+            l.await(5, TimeUnit.SECONDS);
+
+            webSocket.sendCloseFrame();
+            assertEquals(response.get(), responseText);
+        } finally {
+            c.close();
+        }
+    }
+
+    @Test
     public void textFrameAsBinaryTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
 
@@ -778,6 +837,7 @@ public class NettyAtmosphereTest extends BaseTest {
         final CountDownLatch l = new CountDownLatch(1);
         final SSLContext sslContext = createSSLContext();
         final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
+        final int port = 8443;
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
