@@ -19,7 +19,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
          <version>3.2.0</version>
      </dependency>
 ```
-
+![JDK8](https://github.com/Atmosphere/nettosphere/workflows/JDK8/badge.svg) ![JDK11](https://github.com/Atmosphere/nettosphere/workflows/JDK11/badge.svg) ![JDK13](https://github.com/Atmosphere/nettosphere/workflows/JDK13/badge.svg)
 ### Super Simple Web Application
 
 ```java
