@@ -22,9 +22,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
@@ -32,12 +29,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.JdkSslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
@@ -61,7 +58,6 @@ import org.atmosphere.websocket.WebSocketHandler;
 import org.atmosphere.websocket.WebSocketHandlerAdapter;
 import org.atmosphere.websocket.WebSocketPingPongListener;
 import org.atmosphere.websocket.WebSocketProcessor;
-import org.atmosphere.websocket.WebSocketProcessor.WebSocketException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -739,14 +735,15 @@ public class NettyAtmosphereTest extends BaseTest {
     }
 
     @Test
-    public void httspHandlerTest() throws Exception {
-        final SSLContext sslContext = createSSLContext();
-        final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
+    public void httpsHandlerTest() throws Exception {
+        final SslContext sslClientContext = SslContextBuilder.forClient().build();
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        SslContext sslServer = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
-                .sslContext(sslContext)
-                .enabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
+                .sslContext(sslServer)
+                .enabledCipherSuites(sslServer.cipherSuites().toArray(new String[]{}))
                 .resource(new Handler() {
 
                     @Override
@@ -760,7 +757,7 @@ public class NettyAtmosphereTest extends BaseTest {
         server.start();
 
         AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
-                .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
+                .setEnabledCipherSuites(sslClientContext.cipherSuites().toArray(new String[]{}))
                 .setUseInsecureTrustManager(true)
                 .build());
         try {
@@ -835,14 +832,15 @@ public class NettyAtmosphereTest extends BaseTest {
     @Test
     public void wssHandlerTest() throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        final SSLContext sslContext = createSSLContext();
-        final String cipherSuiteForTestingOnly_WEAK_butPreinstalled = "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
+        final SslContext sslClientContext = SslContextBuilder.forClient().build();
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        SslContext sslServer = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
         final int port = 8443;
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
-                .sslContext(sslContext)
-                .enabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
+                .sslContext(sslServer)
+                .enabledCipherSuites(sslServer.cipherSuites().toArray(new String[]{}))
                 .resource(new Handler() {
 
                     @Override
@@ -857,7 +855,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
         AsyncHttpClient c = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder()
         		.setUseInsecureTrustManager(true)
-                .setEnabledCipherSuites(new String[]{cipherSuiteForTestingOnly_WEAK_butPreinstalled})
+                .setEnabledCipherSuites(sslClientContext.cipherSuites().toArray(new String[]{}))
                 .build());
         try {
             final AtomicReference<String> response = new AtomicReference<String>();
@@ -892,30 +890,6 @@ public class NettyAtmosphereTest extends BaseTest {
         }
     }
 
-    private static SSLContext createSSLContext() {
-        try {
-            InputStream keyStoreStream = BaseTest.class.getResourceAsStream("ssltest-cacerts.jks");
-            char[] keyStorePassword = "changeit".toCharArray();
-            KeyStore ks = KeyStore.getInstance("JKS");
-            ks.load(keyStoreStream, keyStorePassword);
-
-            // Set up key manager factory to use our key store
-            char[] certificatePassword = "changeit".toCharArray();
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(ks, certificatePassword);
-
-            // Initialize the SSLContext to work with our key managers.
-            KeyManager[] keyManagers = kmf.getKeyManagers();
-            TrustManager[] trustManagers = new TrustManager[]{DUMMY_TRUST_MANAGER};
-            SecureRandom secureRandom = new SecureRandom();
-
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(keyManagers, trustManagers, secureRandom);
-            return sslContext;
-        } catch (Exception e) {
-            throw new Error("Failed to initialize SSLContext", e);
-        }
-    }
 
     private static final AtomicBoolean TRUST_SERVER_CERT = new AtomicBoolean(true);
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
