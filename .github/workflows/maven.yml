@@ -1,4 +1,4 @@
-name: jdk8
+name: JDK8
 
 on: [push]
 
