@@ -81,7 +81,7 @@ public class NettyAtmosphereTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void start() throws IOException {
-        port = 8080;
+        port = findFreePort();
         targetUrl = "http://127.0.0.1:" + port;
         wsUrl = "ws://127.0.0.1:" + port;
     }
@@ -835,7 +835,7 @@ public class NettyAtmosphereTest extends BaseTest {
         final SslContext sslClientContext = SslContextBuilder.forClient().build();
         SelfSignedCertificate ssc = new SelfSignedCertificate();
         SslContext sslServer = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
-        final int port = 8443;
+        final int port = findFreePort();
         Config config = new Config.Builder()
                 .port(port)
                 .host("127.0.0.1")
@@ -881,7 +881,7 @@ public class NettyAtmosphereTest extends BaseTest {
                 }
             });
 
-            l.await(5, TimeUnit.SECONDS);
+            l.await(30, TimeUnit.SECONDS);
 
             webSocket.sendCloseFrame();
             assertEquals(response.get(), "Hello World from Nettosphere");
