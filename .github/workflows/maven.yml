@@ -1,4 +1,4 @@
-name: Java CI
+name: jdk8
 
 on: [push]
 
