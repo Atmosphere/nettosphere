@@ -80,7 +80,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-                <version>4.1.42.Final</version>
+                <version>4.1.48.Final</version>
             </dependency>
 
             <!-- Test -->
@@ -279,6 +279,6 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.8</source.property>
         <target.property>1.8</target.property>
-        <atmosphere.version>2.5.12</atmosphere.version>
+        <atmosphere.version>2.5.14</atmosphere.version>
     </properties>
 </project>
