@@ -136,7 +136,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>${source.property}</source>
                     <target>${target.property}</target>
@@ -156,7 +156,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
@@ -164,12 +164,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.2</version>
+                <version>2.5.3</version>
                 <!--$NO-MVN-MAN-VER$-->
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.0</version>
                 <configuration>
                     <filesets>
                         <fileset>
@@ -204,7 +204,7 @@
                         <inherited>true</inherited>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.2.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -285,6 +285,6 @@
         <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
         <source.property>1.8</source.property>
         <target.property>1.8</target.property>
-        <atmosphere.version>2.5.14</atmosphere.version>
+        <atmosphere.version>2.6.0</atmosphere.version>
     </properties>
 </project>
