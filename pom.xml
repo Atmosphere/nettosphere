@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -10,7 +9,7 @@
     <groupId>org.atmosphere</groupId>
     <artifactId>nettosphere-project</artifactId>
     <name>Nettosphere Project</name>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>3.2.2</version>
     <packaging>pom</packaging>
     <description>
         NettoSphere: A HTTP/WebSocket server powered by Atmosphere and Netty Framework
@@ -20,7 +19,7 @@
         <connection>scm:git:git@github.com:Atmosphere/nettosphere.git</connection>
         <url>https://github.com/Atmosphere/nettosphere</url>
         <developerConnection>scm:git:git@github.com:Atmosphere/nettosphere.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>nettosphere-project-3.2.2</tag>
     </scm>
     <issueManagement>
         <system>github</system>
@@ -256,7 +255,7 @@
                         <link>http://docs.oracle.com/javaee/6/docs/api/</link>
                         <link>http://docs.oracle.com/javase/6/docs/api/</link>
                     </links>
-                    <excludePackageNames/>
+                    <excludePackageNames />
                 </configuration>
             </plugin>
             <plugin>
