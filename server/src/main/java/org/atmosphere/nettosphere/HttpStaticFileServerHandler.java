@@ -282,7 +282,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         // Prevent recursion when the client close the connection during a write operation. In that
         // scenario the sendError will be invoked, but will fail since the channel has already been closed
         // For an unknown reason,
-        if (ch.attr(ATTACHMENT) != null && Error.class.isAssignableFrom(ch.attr(ATTACHMENT).get().getClass())) {
+        if (ch.attr(ATTACHMENT) != null
+                && ch.attr(ATTACHMENT).get() != null
+                && Error.class.isAssignableFrom(ch.attr(ATTACHMENT).get().getClass())) {
+            logger.trace("Possible recursion exceptionCaught on channel {}", ch);
             return;
         }
 
