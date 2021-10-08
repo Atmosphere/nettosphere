@@ -109,6 +109,7 @@ import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.atmosphere.cpr.ApplicationConfig.ALLOW_WEBSOCKET_STATUS_CODE_1005_AS_DISCONNECT;
 import static org.atmosphere.cpr.AtmosphereFramework.REFLECTOR_ATMOSPHEREHANDLER;
 import static org.atmosphere.cpr.HeaderConfig.SSE_TRANSPORT;
 import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
@@ -158,6 +159,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
         super(config.path());
         this.config = config;
         framework = new AtmosphereFramework();
+        framework.addInitParameter(ALLOW_WEBSOCKET_STATUS_CODE_1005_AS_DISCONNECT, "true");
 
         if (config.broadcaster() != null) {
             framework.setDefaultBroadcasterClassName(config.broadcaster().getName());
