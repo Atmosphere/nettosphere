@@ -16,6 +16,7 @@
 package org.atmosphere.nettosphere.util;
 
 import io.netty.channel.Channel;
+import org.atmosphere.util.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -32,23 +33,25 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static org.atmosphere.cpr.FrameworkConfig.JERSEY_CONTAINER;
+
 public class Utils {
 
-    public static final IOException REMOTELY_CLOSED = new IOException("Connection remotely closed");
+    public static IOException REMOTELY_CLOSED = new IOException("Connection remotely closed");
 
     {
         REMOTELY_CLOSED.setStackTrace(new StackTraceElement[]{});
     }
 
-    private final static NoAlloc NO_ALLOC = new NoAlloc();
+    private static NoAlloc NO_ALLOC = new NoAlloc();
 
-    public static final IOException ioExceptionForChannel(Channel channel, String uuid) {
+    public static IOException ioExceptionForChannel(Channel channel, String uuid) {
         IOException ioe = new IOException(channel + ": content already processed for " + uuid);
         ioe.setStackTrace(new StackTraceElement[]{});
         return ioe;
     }
 
-    public final static URLClassLoader createURLClassLoader(String dirPath) throws IOException {
+    public static URLClassLoader createURLClassLoader(String dirPath) throws IOException {
 
         String path;
         File file;
@@ -351,14 +354,23 @@ public class Utils {
 
     }
 
-    private final static class NoAlloc {
+    private static class NoAlloc {
         public String toString() {
             return "config.noInternalAlloc == true";
         }
     }
 
-    public final static String id(Channel channel) {
+    public static String id(Channel channel) {
         InetSocketAddress addr = (InetSocketAddress) channel.localAddress();
         return addr.getAddress().getHostAddress() + "::" + addr.getPort();
+    }
+
+    public static boolean isJersey() {
+        try {
+            IOUtils.loadClass(Utils.class, JERSEY_CONTAINER);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

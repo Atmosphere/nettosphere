@@ -21,10 +21,12 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import org.atmosphere.nettosphere.util.Utils;
 
 import javax.net.ssl.SSLEngine;
 
@@ -52,8 +54,12 @@ class NettyChannelInitializer extends ChannelInitializer {
             pipeline.addLast("ssl", config.nettySslContext().newHandler(ch.alloc()));
         }
 
-        pipeline.addLast("decoder", new HttpRequestDecoder());
-
+        // For backward compatibility
+        if (Utils.isJersey()) {
+            pipeline.addLast("decoder", new HttpRequestDecoder());
+        } else {
+            pipeline.addLast(new HttpServerCodec());
+        }
         pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
 
         if (config.supportChunking()) {

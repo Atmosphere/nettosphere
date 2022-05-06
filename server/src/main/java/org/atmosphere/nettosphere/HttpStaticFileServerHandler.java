@@ -46,16 +46,19 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import org.atmosphere.nettosphere.util.MimeType;
+import org.atmosphere.nettosphere.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +78,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;	
+import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.LOCATION;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -85,6 +88,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_MODIFIED;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
@@ -163,6 +167,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             sendError(ctx, METHOD_NOT_ALLOWED, request);
             return;
         }
+        final boolean keepAlive = HttpUtil.isKeepAlive(request);
 
         File file = null;
         RandomAccessFile raf = null;
@@ -180,15 +185,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
                 continue;
             }
 
-//            if (file.isDirectory()) {
-//                if (uri.endsWith("/")) {
-//                    sendListing(ctx, file);
-//                } else {
-//                    sendRedirect(ctx, uri + '/');
-//                }
-//                return;
-//            }
-
             try {
                 raf = new RandomAccessFile(file, "r");
                 found = true;
@@ -205,7 +201,9 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         }
         request.headers().add(SERVICED, "true");
 
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        if (Utils.isJersey()) {
+            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        }
 
         // Cache Validation
         String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
@@ -223,17 +221,17 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             }
         }
 
-
         long fileLength = raf.length();
-
-
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
-        HttpHeaders.setContentLength(response, fileLength);
-        contentType(request, response, file);
+        HttpUtil.setContentLength(response, fileLength);
+        setContentTypeHeader(response, file);
         setDateAndCacheHeaders(response, file);
-//        if (HttpHeaders.isKeepAlive(request)) {
-//            response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-//        }
+
+        if (!keepAlive) {
+            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+        } else if (request.protocolVersion().equals(HTTP_1_0)) {
+            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        }
 
         // Write the initial line and the header.
         ctx.write(response);
@@ -270,8 +268,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             }
         });
 
-        // Close the connection when the whole content is written out.
-        lastContentFuture.addListener(ChannelFutureListener.CLOSE);
+        if (!keepAlive) {
+             // Close the connection when the whole content is written out.
+             lastContentFuture.addListener(ChannelFutureListener.CLOSE);
+         }
     }
 
     @Override
