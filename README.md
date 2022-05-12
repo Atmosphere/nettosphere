@@ -16,7 +16,7 @@ Download Nettosphere [here](http://search.maven.org/#search%7Cga%7C1%7Cnettosphe
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>nettosphere</artifactId>
-         <version>3.2.5</version>
+         <version>3.2.6</version>
      </dependency>
 ```
 ![jdk8](https://github.com/Atmosphere/nettosphere/workflows/jdk8/badge.svg)
