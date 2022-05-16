@@ -216,7 +216,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
                 sendNotModified(ctx);
                 return;
             }
-        }                                                                                                                 fdsfsd
+        }
 
         long fileLength = raf.length();
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
