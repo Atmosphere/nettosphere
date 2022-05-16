@@ -206,6 +206,14 @@ public class Config {
         return b.webSocketOnly;
     }
 
+    public boolean webSocketCompression() {
+        return b.webSocketCompression;
+    }
+
+    public boolean forceResponseWriteCompatibility() {
+        return b.forceResponseWriteCompatibility;
+    }
+
     public boolean epoll() {
         return b.epoll;
     }
@@ -253,6 +261,8 @@ public class Config {
         private boolean binaryWrite = false;
         private boolean epoll = false;
         private boolean webSocketOnly;
+        private boolean webSocketCompression;
+        private boolean forceResponseWriteCompatibility;
         private boolean shareHeaders;
         private IOExceptionHandler ioExceptionHandler = (ctx, e) -> true;
 
@@ -746,6 +756,26 @@ public class Config {
          */
         public Builder webSocketOnly(boolean webSocketOnly) {
             this.webSocketOnly = webSocketOnly;
+            return this;
+        }
+
+        /**
+         * true if webSocket compression needs to be used. Default is false
+         * @param webSocketCompression true if webSocket compression needs to be used
+         * @return this
+         */
+        public Builder webSocketCompression(boolean webSocketCompression) {
+            this.webSocketCompression = webSocketCompression;
+            return this;
+        }
+
+        /**
+         * true if Jersey or an external server that manipulate the response
+         * @param forceResponseWriteCompatibility true if Jersey or an external server that manipulate the response
+         * @return this
+         */
+        public Builder forceResponseWriteCompatibility(boolean forceResponseWriteCompatibility) {
+            this.forceResponseWriteCompatibility = forceResponseWriteCompatibility;
             return this;
         }
 

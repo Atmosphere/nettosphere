@@ -16,7 +16,6 @@
 package org.atmosphere.nettosphere.util;
 
 import io.netty.channel.Channel;
-import org.atmosphere.util.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -32,8 +31,6 @@ import java.nio.channels.FileChannel;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
-import static org.atmosphere.cpr.FrameworkConfig.JERSEY_CONTAINER;
 
 public class Utils {
 
@@ -365,12 +362,4 @@ public class Utils {
         return addr.getAddress().getHostAddress() + "::" + addr.getPort();
     }
 
-    public static boolean isJersey() {
-        try {
-            IOUtils.loadClass(Utils.class, JERSEY_CONTAINER);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

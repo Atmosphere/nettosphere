@@ -20,13 +20,12 @@ import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import org.atmosphere.nettosphere.util.Utils;
 
 import javax.net.ssl.SSLEngine;
 
@@ -40,8 +39,8 @@ class NettyChannelInitializer extends ChannelInitializer {
         config = bridgeRuntime.config();
     }
 
-	@Override
-	protected void initChannel(Channel ch) throws Exception {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
         final ChannelPipeline pipeline = ch.pipeline();
 
         if (config.sslContext() != null) {
@@ -54,20 +53,27 @@ class NettyChannelInitializer extends ChannelInitializer {
             pipeline.addLast("ssl", config.nettySslContext().newHandler(ch.alloc()));
         }
 
-        pipeline.addLast("decoder", new HttpRequestDecoder());
+        if (config.forceResponseWriteCompatibility()) {
+            pipeline.addLast("encoder", new HttpResponseEncoder());
+        } else {
+            pipeline.addLast("decoder", new HttpServerCodec());
+        }
         pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
 
         if (config.supportChunking()) {
             pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         }
 
-        for (ChannelInboundHandler h: config.channelUpstreamHandlers()) {
+        for (ChannelInboundHandler h : config.channelUpstreamHandlers()) {
             pipeline.addLast(h.getClass().getName(), h);
         }
-        pipeline.addLast(new WebSocketServerCompressionHandler());
+
+        if (config.webSocketCompression()) {
+            pipeline.addLast(new WebSocketServerCompressionHandler());
+        }
+
         pipeline.addLast(new WebSocketFrameAggregator(config.maxWebSocketFrameAggregatorContentLength()));
         pipeline.addLast(BridgeRuntime.class.getName(), bridgeRuntime);
-
-	}
+    }
 
 }

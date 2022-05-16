@@ -15,19 +15,7 @@
  */
 package org.atmosphere.nettosphere.test;
 
-import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
-import static org.atmosphere.cpr.HeaderConfig.STREAMING_TRANSPORT;
-import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
+import io.netty.handler.codec.http.HttpHeaders;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.AsyncHttpClient;
@@ -43,7 +31,18 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import io.netty.handler.codec.http.HttpHeaders;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.atmosphere.cpr.HeaderConfig.LONG_POLLING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.STREAMING_TRANSPORT;
+import static org.atmosphere.cpr.HeaderConfig.X_ATMOSPHERE_TRANSPORT;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class NettyJerseyTest extends BaseTest {
 
@@ -62,6 +61,7 @@ public class NettyJerseyTest extends BaseTest {
                 .port(port)
                 .host("127.0.0.1")
                 .resource(Resource.class)
+                .forceResponseWriteCompatibility(true)
                 .build();
         server = new Nettosphere.Builder().config(config).build();
         server.start();

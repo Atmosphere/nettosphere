@@ -71,7 +71,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
@@ -148,11 +147,11 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
 
     public final static String STATIC_MAPPING = SimpleChannelInboundHandler.class.getName() + ".staticMapping";
     public final static String SERVICED = SimpleChannelInboundHandler.class.getName() + ".serviced";
-    private final List<String> paths;
+    private final Config config;
     private static final String defaultContentType = "text/html";
 
-    public HttpStaticFileServerHandler(List<String> paths) {
-        this.paths = paths;
+    public HttpStaticFileServerHandler(Config config) {
+        this.config = config;
     }
 
     @Override
@@ -171,7 +170,7 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         File file = null;
         RandomAccessFile raf = null;
         boolean found = true;
-        for (String p : paths) {
+        for (String p : config.path()) {
             String path = p + sanitizeUri(request.getUri());
 
             if (path.endsWith("/") || path.endsWith(File.separator)) {
@@ -199,8 +198,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
             return;
         }
         request.headers().add(SERVICED, "true");
-
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
 
         // Cache Validation
         String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
@@ -233,6 +230,10 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         // Write the initial line and the header.
         ctx.write(response);
 
+        if (config.forceResponseWriteCompatibility()) {
+            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        }
+        
         // Write the content.
         ChannelFuture sendFileFuture;
         ChannelFuture lastContentFuture;

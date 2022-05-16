@@ -156,7 +156,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     private final byte[] EMPTY = new byte[0];
 
     public BridgeRuntime(final Config config) {
-        super(config.path());
+        super(config);
         this.config = config;
         framework = new AtmosphereFramework();
         framework.addInitParameter(ALLOW_WEBSOCKET_STATUS_CODE_1005_AS_DISCONNECT, "true");
@@ -359,8 +359,11 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             sendHttpResponse(ctx, request, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
             return;
         }
-        
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
+        if (config.forceResponseWriteCompatibility()) {
+            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        }
+
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
                 config.subProtocols(),
                 false,
@@ -854,7 +857,10 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
-        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        if (config.forceResponseWriteCompatibility()) {
+            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+        }
+
         // Generate an error page if response status code is not OK (200).
         if (res.getStatus().code() != 200) {
             FullHttpResponse response = (FullHttpResponse) res;
