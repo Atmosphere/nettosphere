@@ -54,12 +54,7 @@ class NettyChannelInitializer extends ChannelInitializer {
             pipeline.addLast("ssl", config.nettySslContext().newHandler(ch.alloc()));
         }
 
-        // For backward compatibility
-        if (Utils.isJersey()) {
-            pipeline.addLast("decoder", new HttpRequestDecoder());
-        } else {
-            pipeline.addLast(new HttpServerCodec());
-        }
+        pipeline.addLast("decoder", new HttpRequestDecoder());
         pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
 
         if (config.supportChunking()) {
