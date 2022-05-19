@@ -360,9 +360,7 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
             return;
         }
 
-        if (config.forceResponseWriteCompatibility()) {
-            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
-        }
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
 
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
                 config.subProtocols(),
@@ -857,9 +855,6 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
     }
 
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
-        if (config.forceResponseWriteCompatibility()) {
-            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
-        }
 
         // Generate an error page if response status code is not OK (200).
         if (res.getStatus().code() != 200) {

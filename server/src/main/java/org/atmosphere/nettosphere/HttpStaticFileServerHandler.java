@@ -230,10 +230,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         // Write the initial line and the header.
         ctx.write(response);
 
-        if (config.forceResponseWriteCompatibility()) {
-            ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
-        }
-        
+        ctx.pipeline().addBefore(BridgeRuntime.class.getName(), "encoder", new HttpResponseEncoder());
+
         // Write the content.
         ChannelFuture sendFileFuture;
         ChannelFuture lastContentFuture;

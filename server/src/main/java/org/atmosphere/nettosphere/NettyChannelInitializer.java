@@ -21,7 +21,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslHandler;
@@ -53,11 +52,7 @@ class NettyChannelInitializer extends ChannelInitializer {
             pipeline.addLast("ssl", config.nettySslContext().newHandler(ch.alloc()));
         }
 
-        if (config.forceResponseWriteCompatibility()) {
-            pipeline.addLast("encoder", new HttpRequestDecoder());
-        } else {
-            pipeline.addLast("decoder", new HttpServerCodec());
-        }
+        pipeline.addLast("decoder", new HttpRequestDecoder());
         pipeline.addLast("aggregator", new HttpObjectAggregator(config.maxChunkContentLength()));
 
         if (config.supportChunking()) {
