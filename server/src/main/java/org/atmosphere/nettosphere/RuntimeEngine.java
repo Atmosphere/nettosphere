@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 Async-IO.org
+ * Copyright 2008-2025 Async-IO.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -74,7 +74,7 @@ public class RuntimeEngine {
             if (c != null) {
                 Object o = c.attr(ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
-                    return WebSocket.class.cast(o);
+                    return (WebSocket) o;
                 }
             }
         } else {
@@ -94,7 +94,7 @@ public class RuntimeEngine {
             if (c != null) {
                 Object o = c.attr(ATTACHMENT).get();
                 if (o != null && WebSocket.class.isAssignableFrom(o.getClass())) {
-                    s.add(WebSocket.class.cast(o));
+                    s.add((WebSocket) o);
                 }
             }
         }
@@ -118,5 +118,7 @@ public class RuntimeEngine {
     public ChannelGroup websocketChannels() {
         return runtime.websocketChannels();
     }
+
+    
 
 }
