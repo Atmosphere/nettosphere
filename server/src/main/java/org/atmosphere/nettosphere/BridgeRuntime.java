@@ -95,12 +95,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -123,6 +118,7 @@ import static org.atmosphere.websocket.WebSocketEventListener.WebSocketEvent.TYP
 @Sharable
 public class BridgeRuntime extends HttpStaticFileServerHandler {
 
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     public static boolean NETTY_41_PLUS;
 
     static {
@@ -294,15 +290,21 @@ public class BridgeRuntime extends HttpStaticFileServerHandler {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
-        try {
-            handleMessageEvent(ctx, messageEvent);
-        } finally {
-            if (messageEvent instanceof ReferenceCounted) {
-                ReferenceCounted refMsg = (ReferenceCounted) messageEvent;
-                if (refMsg.refCnt() > 0)
-                    refMsg.release();
+        executor.execute(() -> {
+            try {
+                handleMessageEvent(ctx, messageEvent);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (messageEvent instanceof ReferenceCounted) {
+                    ReferenceCounted refMsg = (ReferenceCounted) messageEvent;
+                    if (refMsg.refCnt() > 0)
+                        refMsg.release();
+                }
             }
-        }
+        });
     }
 
     private void handleMessageEvent(final ChannelHandlerContext ctx, final Object messageEvent) throws URISyntaxException, IOException {
